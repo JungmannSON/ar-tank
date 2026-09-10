@@ -3,974 +3,208 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport"
-      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-
+      content="width=device-width,initial-scale=1,
+               maximum-scale=1,user-scalable=no">
 <title>CUBE-01</title>
-
 <style>
-*{
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-}
-
 html,body{
   margin:0;
   width:100%;
   height:100%;
   overflow:hidden;
   background:#000;
-  font-family:Arial,sans-serif;
-  touch-action:none;
 }
-
-/* Echte Kamera */
 #camera{
   position:fixed;
   inset:0;
   width:100%;
   height:100%;
   object-fit:cover;
-  z-index:0;
 }
-
-/* Three.js */
 #scene{
   position:fixed;
   inset:0;
-  z-index:1;
-  pointer-events:auto;
 }
-
-canvas{
-  display:block;
-}
-
-/* HUD */
-#hud{
-  position:fixed;
-  inset:0;
-  z-index:5;
-  pointer-events:none;
-  color:#fff;
-}
-
-#title{
-  position:absolute;
-  top:25px;
-  left:22px;
-  font-size:24px;
-  font-weight:800;
-  letter-spacing:4px;
-  color:#00f5ff;
-  text-shadow:0 0 15px #00f5ff;
-}
-
-#status{
-  position:absolute;
-  top:60px;
-  left:24px;
-  font-size:11px;
-  letter-spacing:2px;
-  opacity:.8;
-}
-
-#distance{
-  position:absolute;
-  top:25px;
-  right:20px;
-  text-align:right;
-  font-size:13px;
-  letter-spacing:1px;
-}
-
-#distance strong{
-  display:block;
-  font-size:25px;
-  color:#4ade80;
-  text-shadow:0 0 12px #4ade80;
-}
-
-#memory{
-  position:absolute;
-  bottom:25px;
-  left:20px;
-  font-size:11px;
-  letter-spacing:1px;
-  opacity:.85;
-}
-
 #start{
   position:fixed;
-  z-index:20;
+  z-index:10;
   left:50%;
   top:50%;
   transform:translate(-50%,-50%);
   padding:18px 25px;
-  border:1px solid #00f5ff;
-  background:rgba(0,0,0,.8);
+  background:#000;
+  border:2px solid #00f5ff;
   color:#00f5ff;
-  font-weight:bold;
-  letter-spacing:3px;
-  border-radius:10px;
-}
-
-#start.hidden{
-  display:none;
-}
-
-#hint{
-  position:absolute;
-  bottom:60px;
-  width:100%;
-  text-align:center;
-  font-size:10px;
-  letter-spacing:2px;
-  opacity:.5;
+  font-size:16px;
 }
 </style>
 </head>
-
 <body>
-
 <video id="camera"
        autoplay
-       muted
-       playsinline></video>
-
+       playsinline
+       muted></video>
 <div id="scene"></div>
-
-<div id="hud">
-  <div id="title">CUBE-01</div>
-  <div id="status">INITIALIZING</div>
-
-  <div id="distance">
-    USER DISTANCE
-    <strong id="distanceValue">--</strong>
-  </div>
-
-  <div id="memory">
-    MEMORY: <span id="memoryValue">0</span>
-  </div>
-
-  <div id="hint">
-    TOUCH CUBE · MOVE CLOSER · MOVE AWAY
-  </div>
-</div>
-
-<button id="start">START CUBE-01</button>
-
+<button id="start">
+  KAMERA STARTEN
+</button>
 <script type="module">
-
 import * as THREE from
 "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
-
-import {
-  FilesetResolver,
-  FaceDetector
-} from
-"https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22";
-
-/* =========================================================
-   CAMERA
-========================================================= */
-
-const video = document.getElementById("camera");
-const startButton = document.getElementById("start");
-
-let stream = null;
-let detector = null;
-
-async function startCamera(){
-
-  try{
-
-    stream = await navigator.mediaDevices.getUserMedia({
-      video:{
-        facingMode:{
-          ideal:"user"
+/* =========================
+   KAMERA
+========================= */
+const video =
+  document.getElementById("camera");
+const start =
+  document.getElementById("start");
+start.onclick = async () => {
+  try {
+    const stream =
+      await navigator.mediaDevices.getUserMedia({
+        video:{
+          facingMode:"environment"
         },
-        width:{
-          ideal:1280
-        },
-        height:{
-          ideal:720
-        }
-      },
-      audio:false
-    });
-
+        audio:false
+      });
     video.srcObject = stream;
-
-    await video.play();
-
-    startButton.classList.add("hidden");
-
-    document.getElementById("status").textContent =
-      "CAMERA ONLINE";
-
-    await initFaceDetection();
-
-  }catch(error){
-
-    console.error(error);
-
-    document.getElementById("status").textContent =
-      "CAMERA ERROR";
-
+    start.style.display = "none";
+  } catch(error) {
     alert(
-      "Kamerazugriff nicht möglich.\n\n" +
-      "Bitte Kamera erlauben und die Seite über HTTPS öffnen."
+      "Kamera konnte nicht gestartet werden.\n\n" +
+      error.message
     );
   }
-}
-
-startButton.addEventListener("click",startCamera);
-
-
-/* =========================================================
-   FACE DETECTION
-========================================================= */
-
-async function initFaceDetection(){
-
-  const vision =
-    await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
-    );
-
-  detector =
-    await FaceDetector.createFromOptions(
-      vision,
-      {
-        baseOptions:{
-          modelAssetPath:
-          "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite",
-          delegate:"GPU"
-        },
-
-        runningMode:"VIDEO",
-
-        minDetectionConfidence:0.5
-      }
-    );
-
-  document.getElementById("status").textContent =
-    "USER SENSOR ONLINE";
-
-  detectUser();
-}
-
-
-/*
-  Kamera -> Gesicht -> Größe im Bild -> Distanzschätzung
-
-  Wichtig:
-  Das ist zunächst ein relativer/geschätzter Abstand.
-  Kein echter LiDAR-Messwert.
-*/
-
-let distance = null;
-let previousDistance = null;
-let approachSpeed = 0;
-
-const ASSUMED_FACE_WIDTH = 0.16;
-const FOCAL_LENGTH = 700;
-
-function estimateDistance(faceWidth){
-
-  if(faceWidth <= 0) return null;
-
-  return (
-    FOCAL_LENGTH *
-    ASSUMED_FACE_WIDTH /
-    faceWidth
-  );
-}
-
-function detectUser(){
-
-  if(
-    detector &&
-    video.readyState >= 2
-  ){
-
-    const result =
-      detector.detectForVideo(
-        video,
-        performance.now()
-      );
-
-    if(result.detections.length > 0){
-
-      const face =
-        result.detections[0].boundingBox;
-
-      const d =
-        estimateDistance(face.width);
-
-      if(d){
-
-        distance = THREE.MathUtils.clamp(
-          d,
-          0.3,
-          8
-        );
-
-        if(previousDistance !== null){
-
-          approachSpeed =
-            previousDistance - distance;
-        }
-
-        previousDistance = distance;
-
-        document.getElementById(
-          "distanceValue"
-        ).textContent =
-          distance.toFixed(2) + " m";
-
-      }
-
-      document.getElementById(
-        "status"
-      ).textContent =
-        "USER DETECTED";
-
-    }else{
-
-      document.getElementById(
-        "status"
-      ).textContent =
-        "SEARCHING USER";
-
-      distance = null;
-    }
-  }
-
-  requestAnimationFrame(detectUser);
-}
-
-
-/* =========================================================
-   MEMORY
-========================================================= */
-
-const MEMORY_KEY = "CUBE01_MEMORY";
-
-let memory =
-  JSON.parse(
-    localStorage.getItem(MEMORY_KEY) || "[]"
-  );
-
-const sides = {
-
-  SIDE_01:[],
-  SIDE_02:[],
-  SIDE_03:[],
-  SIDE_04:[],
-  SIDE_05:[],
-  SIDE_06:[]
 };
-
-for(const event of memory){
-
-  if(sides[event.side]){
-    sides[event.side].push(event);
-  }
-}
-
-function saveMemory(side,type){
-
-  const event = {
-
-    time:Date.now(),
-
-    side,
-
-    type,
-
-    distance:
-      distance !== null
-        ? Number(distance.toFixed(2))
-        : null,
-
-    approach:
-      Number(approachSpeed.toFixed(3))
-
-  };
-
-  memory.push(event);
-
-  sides[side].push(event);
-
-  /*
-    Speicher begrenzen.
-    Der Würfel entwickelt dadurch einen
-    kleinen dauerhaften lokalen Zustand.
-  */
-
-  if(memory.length > 200){
-
-    memory.shift();
-  }
-
-  localStorage.setItem(
-    MEMORY_KEY,
-    JSON.stringify(memory)
-  );
-
-  document.getElementById(
-    "memoryValue"
-  ).textContent = memory.length;
-}
-
-document.getElementById(
-  "memoryValue"
-).textContent = memory.length;
-
-
-/* =========================================================
+/* =========================
    THREE.JS
-========================================================= */
-
+========================= */
 const scene =
   new THREE.Scene();
-
 const camera =
   new THREE.PerspectiveCamera(
-    55,
+    60,
     innerWidth / innerHeight,
     0.1,
     100
   );
-
-camera.position.z = 5.5;
-
+camera.position.z = 4;
 const renderer =
   new THREE.WebGLRenderer({
-    antialias:true,
-    alpha:true
+    alpha:true,
+    antialias:true
   });
-
 renderer.setPixelRatio(
   Math.min(devicePixelRatio,2)
 );
-
 renderer.setSize(
   innerWidth,
   innerHeight
 );
-
-renderer.outputColorSpace =
-  THREE.SRGBColorSpace;
-
-document.getElementById(
-  "scene"
-).appendChild(renderer.domElement);
-
-
-/* =========================================================
-   LIGHT
-========================================================= */
-
+document
+  .getElementById("scene")
+  .appendChild(renderer.domElement);
+/* =========================
+   LICHT
+========================= */
 scene.add(
   new THREE.AmbientLight(
     0xffffff,
-    0.7
+    2
   )
 );
-
-const light =
-  new THREE.PointLight(
-    0x00ffff,
-    5,
-    10
+/* =========================
+   WÜRFEL
+========================= */
+const geometry =
+  new THREE.BoxGeometry(
+    1,
+    1,
+    1
   );
-
-light.position.set(
-  2,2,4
-);
-
-scene.add(light);
-
-
-/* =========================================================
-   CUBE-01
-========================================================= */
-
-const artifact =
-  new THREE.Group();
-
-scene.add(artifact);
-
-
-/* Core */
-
-const coreMaterial =
+const material =
   new THREE.MeshStandardMaterial({
     color:0x00f5ff,
     emissive:0x00f5ff,
-    emissiveIntensity:4,
-    metalness:.8,
+    emissiveIntensity:2,
+    metalness:.7,
     roughness:.2
   });
-
-const core =
+const cube =
   new THREE.Mesh(
-    new THREE.IcosahedronGeometry(
-      .48,
-      2
-    ),
-    coreMaterial
+    geometry,
+    material
   );
-
-artifact.add(core);
-
-
-/* Energy core */
-
-const energyMaterial =
-  new THREE.MeshBasicMaterial({
-    color:0x4ade80,
-    transparent:true,
-    opacity:.85
-  });
-
-const energy =
-  new THREE.Mesh(
-    new THREE.IcosahedronGeometry(
-      .21,
-      1
-    ),
-    energyMaterial
-  );
-
-artifact.add(energy);
-
-
-/* =========================================================
-   FRAME
-========================================================= */
-
-const frameMaterial =
-  new THREE.MeshStandardMaterial({
-    color:0x00f5ff,
-    emissive:0x00f5ff,
-    emissiveIntensity:2.5,
-    metalness:.9,
-    roughness:.15
-  });
-
-const bars = [];
-
-const barPositions = [
-
-  [0,0,0,0,0,0],
-
-  [0,0,0,0,Math.PI/2,0],
-
-  [0,0,0,Math.PI/2,0,0]
-
-];
-
-for(const p of barPositions){
-
-  const bar =
-    new THREE.Mesh(
-      new THREE.BoxGeometry(
-        1.7,.075,.075
-      ),
-      frameMaterial
-    );
-
-  bar.rotation.set(
-    p[3],
-    p[4],
-    p[5]
-  );
-
-  artifact.add(bar);
-  bars.push(bar);
-}
-
-
-/* =========================================================
-   FLOATING FRAGMENTS
-========================================================= */
-
-const fragments = [];
-
-for(let i=0;i<8;i++){
-
-  const material =
-    new THREE.MeshStandardMaterial({
-      color:
-        i % 2
-        ? 0x00f5ff
-        : 0x4ade80,
-
-      emissive:
-        i % 2
-        ? 0x00f5ff
-        : 0x4ade80,
-
-      emissiveIntensity:2,
-
-      metalness:.7,
-      roughness:.2
-    });
-
-  const fragment =
-    new THREE.Mesh(
-      new THREE.OctahedronGeometry(
-        .12,
-        0
-      ),
-      material
-    );
-
-  const angle =
-    i / 8 * Math.PI * 2;
-
-  fragment.position.set(
-    Math.cos(angle) * 1.15,
-    Math.sin(angle) * 1.15,
-    (i % 2 ? .4 : -.4)
-  );
-
-  artifact.add(fragment);
-
-  fragments.push({
-    mesh:fragment,
-    base:fragment.position.clone()
-  });
-}
-
-
-/* =========================================================
-   INTERACTION
-========================================================= */
-
-let targetRotationX = 0;
-let targetRotationY = 0;
-
+scene.add(cube);
+/* =========================
+   TOUCH
+========================= */
 let rotationX = 0;
 let rotationY = 0;
-
-let activeSide = 0;
-
-const sideNames = [
-  "SIDE_01",
-  "SIDE_02",
-  "SIDE_03",
-  "SIDE_04",
-  "SIDE_05",
-  "SIDE_06"
-];
-
-
-/* Touch rotation */
-
-let dragging = false;
-let lastX = 0;
-let lastY = 0;
-
+let lastX = null;
+let lastY = null;
 renderer.domElement.addEventListener(
   "pointerdown",
   e => {
-
-    dragging = true;
-
     lastX = e.clientX;
     lastY = e.clientY;
   }
 );
-
 renderer.domElement.addEventListener(
   "pointermove",
   e => {
-
-    if(!dragging) return;
-
-    const dx =
-      e.clientX - lastX;
-
-    const dy =
-      e.clientY - lastY;
-
-    targetRotationY += dx * .01;
-    targetRotationX += dy * .01;
-
+    if(lastX === null) return;
+    rotationY +=
+      (e.clientX-lastX) * .01;
+    rotationX +=
+      (e.clientY-lastY) * .01;
     lastX = e.clientX;
     lastY = e.clientY;
   }
 );
-
 renderer.domElement.addEventListener(
   "pointerup",
   () => {
-
-    dragging = false;
-
-    /*
-      Jede direkte Berührung speichert
-      eine Interaktion auf einer Würfelseite.
-    */
-
-    activeSide =
-      (activeSide + 1) % 6;
-
-    saveMemory(
-      sideNames[activeSide],
-      "TOUCH"
-    );
+    lastX = null;
+    lastY = null;
   }
 );
-
-
-/* =========================================================
-   COLOR ENGINE
-========================================================= */
-
-const colors = [
-  0x00f5ff,
-  0x4ade80,
-  0xff2aa8,
-  0xffd000,
-  0x8b5cff,
-  0xff5c00
-];
-
-let colorIndex = 0;
-let colorTimer = 0;
-
-
-/* =========================================================
+/* =========================
    ANIMATION
-========================================================= */
-
-const clock =
-  new THREE.Clock();
-
+========================= */
 function animate(){
-
   requestAnimationFrame(
     animate
   );
-
   const t =
-    clock.getElapsedTime();
-
-
-  /*
-    Grundbewegung
-  */
-
-  artifact.position.y =
-    Math.sin(t * 1.2) * .15;
-
-
-  /*
-    Eigene Rotation
-  */
-
-  rotationX +=
-    (targetRotationX - rotationX)
-    * .08;
-
-  rotationY +=
-    (targetRotationY - rotationY)
-    * .08;
-
-  artifact.rotation.x =
-    rotationX;
-
-  artifact.rotation.y =
-    rotationY;
-
-
-  /*
-    Permanente Distanz als Input
-  */
-
-  let energyLevel = 1;
-
-  if(distance !== null){
-
-    /*
-      näher = mehr Energie
-    */
-
-    energyLevel =
-      THREE.MathUtils.clamp(
-        3.5 - distance * .45,
-        1,
-        3.5
-      );
-
-    /*
-      Annäherung erzeugt zusätzlichen Impuls
-    */
-
-    if(approachSpeed > .01){
-
-      artifact.position.y +=
-        Math.sin(t * 8) *
-        Math.min(
-          approachSpeed * 2,
-          .12
-        );
-    }
-  }
-
-
-  /*
-    Energie
-  */
-
-  const pulse =
-    1 +
-    Math.sin(t * 4) * .25;
-
-  coreMaterial.emissiveIntensity =
-    2 * energyLevel * pulse;
-
-  energyMaterial.opacity =
-    .45 +
-    .35 * pulse;
-
-  light.intensity =
-    2 + energyLevel * 2;
-
-
-  /*
-    Farbwechsel
-  */
-
-  colorTimer += .01;
-
-  if(
-    colorTimer >
-    Math.max(
-      .5,
-      2.5 - energyLevel * .5
-    )
-  ){
-
-    colorTimer = 0;
-
-    colorIndex =
-      (colorIndex + 1)
-      % colors.length;
-
-    const c =
-      colors[colorIndex];
-
-    coreMaterial.color.setHex(c);
-    coreMaterial.emissive.setHex(c);
-
-    frameMaterial.color.setHex(c);
-    frameMaterial.emissive.setHex(c);
-
-    light.color.setHex(c);
-  }
-
-
-  /*
-    Fragmente reagieren auf Distanz
-  */
-
-  let unfold = .15;
-
-  if(distance !== null){
-
-    unfold =
-      THREE.MathUtils.clamp(
-        1.6 - distance * .15,
-        .15,
-        1.2
-      );
-  }
-
-  fragments.forEach(
-    (f,i) => {
-
-      const angle =
-        i / 8 * Math.PI * 2;
-
-      const radius =
-        1.15 + unfold * .35;
-
-      f.mesh.position.x =
-        Math.cos(angle) *
-        radius;
-
-      f.mesh.position.y =
-        Math.sin(angle) *
-        radius;
-
-      f.mesh.position.z =
-        f.base.z +
-        Math.sin(
-          t * 2 + i
-        ) * .12;
-
-      f.mesh.rotation.x =
-        t * (1+i*.1);
-
-      f.mesh.rotation.y =
-        t * .8;
-    }
-  );
-
-
-  /*
-    Core Rotation
-  */
-
-  core.rotation.x =
-    t * .4;
-
-  core.rotation.y =
-    t * .7;
-
-  energy.rotation.x =
-    -t * .8;
-
-  energy.rotation.y =
-    t * 1.1;
-
-
+    performance.now()/1000;
+  cube.position.y =
+    Math.sin(t*1.5)*.25;
+  cube.rotation.x =
+    rotationX + t*.25;
+  cube.rotation.y =
+    rotationY + t*.45;
+  material.emissiveIntensity =
+    1.5 +
+    Math.sin(t*4)*.5;
   renderer.render(
     scene,
     camera
   );
 }
-
 animate();
-
-
-/* =========================================================
+/* =========================
    RESIZE
-========================================================= */
-
-window.addEventListener(
-  "resize",
-  () => {
-
-    camera.aspect =
-      innerWidth / innerHeight;
-
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(
-      innerWidth,
-      innerHeight
-    );
-  }
-);
-
+========================= */
+window.onresize = () => {
+  camera.aspect =
+    innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(
+    innerWidth,
+    innerHeight
+  );
+};
 </script>
-
 </body>
 </html>
