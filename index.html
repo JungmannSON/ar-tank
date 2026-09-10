@@ -4,1054 +4,322 @@
 <meta charset="UTF-8">
 <meta name="viewport"
       content="width=device-width,
-               initial-scale=1,
-               maximum-scale=1,
-               user-scalable=no,
-               viewport-fit=cover">
-
-<title>CUBE-01 // UNKNOWN ARTIFACT</title>
-
+      initial-scale=1,
+      maximum-scale=1,
+      user-scalable=no,
+      viewport-fit=cover">
+<title>AR PANZER // iPhone</title>
+<!-- =====================================================
+     MODEL-VIEWER
+===================================================== -->
+<script type="module"
+src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js">
+</script>
 <style>
 * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
 }
-
-html, body {
+html,
+body {
     margin: 0;
+    padding: 0;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #020306;
-    color: #dffcff;
-    font-family: monospace;
-    touch-action: none;
+    background: #000;
+    font-family: Arial, sans-serif;
 }
-
-#scene {
+/* =====================================================
+   3D MODEL
+===================================================== */
+model-viewer {
     position: fixed;
     inset: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    --poster-color: transparent;
 }
-
-canvas {
-    display: block;
-}
-
+/* =====================================================
+   HUD
+===================================================== */
 #hud {
     position: fixed;
-    inset: 0;
+    left: 14px;
+    right: 14px;
+    top: calc(
+        10px +
+        env(safe-area-inset-top)
+    );
+    z-index: 20;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     pointer-events: none;
 }
-
-.top {
-    position: absolute;
-    top: env(safe-area-inset-top, 16px);
-    left: 16px;
-    right: 16px;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.title {
-    font-size: 14px;
-    letter-spacing: 4px;
+.hudBox {
+    padding: 8px 10px;
+    background:
+        rgba(0,0,0,.65);
+    border:
+        1px solid
+        rgba(0,245,255,.55);
     color: #00f5ff;
-    text-shadow: 0 0 12px #00f5ff;
-}
-
-.status {
-    margin-top: 8px;
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: #729ca2;
-}
-
-#state {
-    color: #4ade80;
-}
-
-.bottom {
-    position: absolute;
-    left: 16px;
-    right: 16px;
-    bottom: calc(env(safe-area-inset-bottom, 16px) + 16px);
-}
-
-.panel {
-    border: 1px solid rgba(0,245,255,.22);
-    background: rgba(2,5,8,.72);
-    backdrop-filter: blur(12px);
-    padding: 12px;
-}
-
-.info {
-    display: flex;
-    justify-content: space-between;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: #638b91;
-}
-
-#message {
-    margin-top: 7px;
-    color: #dffcff;
     font-size: 11px;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
 }
-
-.reset {
-    position: absolute;
-    right: 16px;
-    bottom: 16px;
-
+/* =====================================================
+   INFO
+===================================================== */
+#info {
+    position: fixed;
+    left: 15px;
+    right: 15px;
+    bottom: calc(
+        90px +
+        env(safe-area-inset-bottom)
+    );
+    z-index: 20;
+    padding: 14px;
+    background:
+        rgba(0,0,0,.75);
+    border:
+        1px solid
+        rgba(0,245,255,.45);
+    color: #aaa;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.5;
+}
+/* =====================================================
+   AR BUTTON
+===================================================== */
+#ar-button {
+    position: fixed;
+    left: 50%;
+    bottom: calc(
+        22px +
+        env(safe-area-inset-bottom)
+    );
+    transform:
+        translateX(-50%);
+    z-index: 30;
     pointer-events: auto;
-
-    border: 1px solid rgba(0,245,255,.4);
-    background: rgba(0,10,14,.8);
+    padding: 16px 25px;
+    border:
+        1px solid
+        #00f5ff;
+    border-radius: 5px;
+    background:
+        #00f5ff;
+    color: #000;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+/* =====================================================
+   AR AKTIV
+===================================================== */
+model-viewer[ar-status="session-started"]
+~ #info {
+    display: none;
+}
+/* =====================================================
+   START SCREEN
+===================================================== */
+#startScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    padding: 30px;
+    text-align: center;
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(0,245,255,.12),
+            rgba(0,0,0,.96)
+        );
+    color: white;
+}
+#startScreen h1 {
+    margin: 0;
     color: #00f5ff;
-
-    padding: 9px 12px;
-    font-family: monospace;
-    font-size: 9px;
+    font-size: 29px;
+    letter-spacing: 5px;
+}
+#startScreen p {
+    max-width: 330px;
+    margin: 0;
+    color: #aaa;
+    line-height: 1.5;
+}
+#startButton {
+    padding: 16px 25px;
+    border:
+        1px solid
+        #00f5ff;
+    background:
+        #00f5ff;
+    color: #000;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: bold;
     letter-spacing: 2px;
 }
 </style>
 </head>
-
 <body>
-
-<div id="scene"></div>
-
-<div id="hud">
-
-    <div class="top">
-        <div>
-            <div class="title">CUBE-01</div>
-            <div class="status">
-                UNKNOWN ARTIFACT //
-                STATE:
-                <span id="state">DORMANT</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="bottom">
-        <div class="panel">
-            <div class="info">
-                <span>INTERACTION</span>
-                <span id="gesture">WAITING</span>
-            </div>
-            <div id="message">
-                Touch the artifact.
-            </div>
-        </div>
-    </div>
-
-    <button class="reset" id="reset">
-        RESET
+<!-- =====================================================
+     ECHTES 3D-OBJEKT
+===================================================== -->
+<model-viewer
+    id="tank"
+    src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+    alt="3D Panzer Testmodell"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    camera-controls
+    touch-action="pan-y"
+    shadow-intensity="1"
+    exposure="1"
+    scale="0.5 0.5 0.5"
+    camera-orbit="0deg 75deg 3m">
+    <!-- AR BUTTON -->
+    <button
+        id="ar-button"
+        slot="ar-button">
+        3D-OBJEKT IN AR
     </button>
-
+</model-viewer>
+<!-- =====================================================
+     HUD
+===================================================== -->
+<div id="hud">
+    <div class="hudBox">
+        AR // TANK
+    </div>
+    <div
+        class="hudBox"
+        id="status">
+        3D // LOADING
+    </div>
 </div>
-
-<script type="module">
-
-import * as THREE from
-"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
-
-
-/* =========================================================
-   SYSTEM STATE
-   ========================================================= */
-
-const STATE = {
-    DORMANT: "DORMANT",
-    AWAKE: "AWAKE",
-    EXPLORE: "EXPLORE",
-    UNFOLD: "UNFOLD",
-    RESONANCE: "RESONANCE"
-};
-
-let currentState = STATE.DORMANT;
-
-
-/* =========================================================
-   THREE.JS
-   ========================================================= */
-
-const scene = new THREE.Scene();
-
-scene.fog = new THREE.FogExp2(
-    0x020306,
-    0.035
-);
-
-const camera = new THREE.PerspectiveCamera(
-    55,
-    innerWidth / innerHeight,
-    0.01,
-    100
-);
-
-camera.position.set(
-    0,
-    0,
-    6
-);
-
-
-const renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    alpha: true
-});
-
-renderer.setPixelRatio(
-    Math.min(devicePixelRatio, 2)
-);
-
-renderer.setSize(
-    innerWidth,
-    innerHeight
-);
-
-renderer.outputColorSpace =
-    THREE.SRGBColorSpace;
-
-document
-    .getElementById("scene")
-    .appendChild(renderer.domElement);
-
-
-/* =========================================================
-   LIGHT
-   ========================================================= */
-
-scene.add(
-    new THREE.AmbientLight(
-        0x304044,
-        1.2
-    )
-);
-
-const pointLight =
-    new THREE.PointLight(
-        0x00f5ff,
-        8,
-        10
-    );
-
-pointLight.position.set(
-    0,
-    1,
-    2
-);
-
-scene.add(pointLight);
-
-
-/* =========================================================
-   ARTIFACT ROOT
-   ========================================================= */
-
-const artifact =
-    new THREE.Group();
-
-scene.add(artifact);
-
-artifact.position.y = 0;
-
-
-/* =========================================================
-   MATERIALS
-   ========================================================= */
-
-const darkMaterial =
-    new THREE.MeshStandardMaterial({
-        color: 0x05070a,
-        metalness: 0.9,
-        roughness: 0.22
-    });
-
-const darkMaterial2 =
-    new THREE.MeshStandardMaterial({
-        color: 0x10151a,
-        metalness: 1,
-        roughness: 0.16
-    });
-
-const cyanMaterial =
-    new THREE.MeshBasicMaterial({
-        color: 0x00f5ff
-    });
-
-const greenMaterial =
-    new THREE.MeshBasicMaterial({
-        color: 0x4ade80
-    });
-
-
-/* =========================================================
-   CORE
-   ========================================================= */
-
-const core =
-    new THREE.Mesh(
-        new THREE.IcosahedronGeometry(
-            0.52,
-            1
-        ),
-        darkMaterial2
-    );
-
-artifact.add(core);
-
-
-/* glowing core */
-
-const coreGlow =
-    new THREE.Mesh(
-        new THREE.IcosahedronGeometry(
-            0.27,
-            1
-        ),
-        cyanMaterial
-    );
-
-coreGlow.scale.setScalar(.8);
-
-artifact.add(coreGlow);
-
-
-/* =========================================================
-   CUBE FRAME
-   ========================================================= */
-
-const frames = [];
-
-function createFrame(
-    position,
-    rotation
-) {
-
-    const geometry =
-        new THREE.BoxGeometry(
-            1.75,
-            0.07,
-            0.07
-        );
-
-    const mesh =
-        new THREE.Mesh(
-            geometry,
-            darkMaterial
-        );
-
-    mesh.position.copy(position);
-    mesh.rotation.copy(rotation);
-
-    artifact.add(mesh);
-
-    frames.push(mesh);
-
-    return mesh;
-}
-
-
-/* six structural directions */
-
-createFrame(
-    new THREE.Vector3(0, .9, 0),
-    new THREE.Euler(0,0,0)
-);
-
-createFrame(
-    new THREE.Vector3(0,-.9, 0),
-    new THREE.Euler(0,0,0)
-);
-
-createFrame(
-    new THREE.Vector3(.9,0,0),
-    new THREE.Euler(0,0,Math.PI/2)
-);
-
-createFrame(
-    new THREE.Vector3(-.9,0,0),
-    new THREE.Euler(0,0,Math.PI/2)
-);
-
-createFrame(
-    new THREE.Vector3(0,0,.9),
-    new THREE.Euler(0,Math.PI/2,0)
-);
-
-createFrame(
-    new THREE.Vector3(0,0,-.9),
-    new THREE.Euler(0,Math.PI/2,0)
-);
-
-
-/* =========================================================
-   ENERGY LINES
-   ========================================================= */
-
-const lines = [];
-
-function createLine(
-    scale,
-    rotation
-) {
-
-    const geometry =
-        new THREE.BoxGeometry(
-            1.35,
-            .018,
-            .018
-        );
-
-    const mesh =
-        new THREE.Mesh(
-            geometry,
-            cyanMaterial
-        );
-
-    mesh.scale.copy(scale);
-    mesh.rotation.copy(rotation);
-
-    artifact.add(mesh);
-    lines.push(mesh);
-
-    return mesh;
-}
-
-createLine(
-    new THREE.Vector3(1,1,1),
-    new THREE.Euler(0,0,0)
-);
-
-createLine(
-    new THREE.Vector3(1,1,1),
-    new THREE.Euler(0,Math.PI/2,0)
-);
-
-createLine(
-    new THREE.Vector3(1,1,1),
-    new THREE.Euler(0,0,Math.PI/2)
-);
-
-
-/* =========================================================
-   FLOATING FRAGMENTS
-   ========================================================= */
-
-const fragments = [];
-
-for(let i=0;i<8;i++){
-
-    const geometry =
-        new THREE.OctahedronGeometry(
-            .11,
-            0
-        );
-
-    const mesh =
-        new THREE.Mesh(
-            geometry,
-            darkMaterial2
-        );
-
-    const angle =
-        i / 8 * Math.PI * 2;
-
-    mesh.position.set(
-        Math.cos(angle) * 1.25,
-        Math.sin(angle * 1.7) * .7,
-        Math.sin(angle) * 1.25
-    );
-
-    mesh.userData.base =
-        mesh.position.clone();
-
-    mesh.userData.angle =
-        angle;
-
-    artifact.add(mesh);
-
-    fragments.push(mesh);
-}
-
-
-/* =========================================================
-   INTERACTION STATE
-   ========================================================= */
-
-let rotationX = 0;
-let rotationY = 0;
-
-let targetRotationX = 0;
-let targetRotationY = 0;
-
-let unfoldAmount = 0;
-
-let touchStart = null;
-let lastTouch = null;
-
-let longPressTimer = null;
-
-let pinchStartDistance = null;
-let pinchStartUnfold = 0;
-
-
-/* =========================================================
-   UI
-   ========================================================= */
-
-const stateElement =
-    document.getElementById("state");
-
-const gestureElement =
-    document.getElementById("gesture");
-
-const messageElement =
-    document.getElementById("message");
-
-
-function setState(state){
-
-    currentState = state;
-
-    stateElement.textContent =
-        state;
-
-    if(state === STATE.DORMANT){
-
-        messageElement.textContent =
-            "Touch the artifact.";
-
-    }
-
-    if(state === STATE.AWAKE){
-
-        messageElement.textContent =
-            "The artifact has detected you.";
-
-    }
-
-    if(state === STATE.EXPLORE){
-
-        messageElement.textContent =
-            "Its geometry responds to your movement.";
-
-    }
-
-    if(state === STATE.UNFOLD){
-
-        messageElement.textContent =
-            "Internal structure exposed.";
-
-    }
-
-    if(state === STATE.RESONANCE){
-
-        messageElement.textContent =
-            "RESONANCE // UNKNOWN SIGNAL";
-    }
-}
-
-
-/* =========================================================
-   TAP
-   ========================================================= */
-
-function tapInteraction(){
-
-    if(currentState === STATE.DORMANT){
-
-        setState(
-            STATE.AWAKE
-        );
-
-        return;
-    }
-
-    if(currentState === STATE.AWAKE){
-
-        setState(
-            STATE.EXPLORE
-        );
-
-        return;
-    }
-
-    if(currentState === STATE.EXPLORE){
-
-        setState(
-            STATE.UNFOLD
-        );
-
-        unfoldAmount =
-            Math.max(
-                unfoldAmount,
-                .65
-            );
-
-        return;
-    }
-
-    if(currentState === STATE.UNFOLD){
-
-        setState(
-            STATE.RESONANCE
-        );
-
-        return;
-    }
-
-    if(currentState === STATE.RESONANCE){
-
-        setState(
-            STATE.DORMANT
-        );
-
-        return;
-    }
-}
-
-
-/* =========================================================
-   TOUCH HANDLING
-   ========================================================= */
-
-renderer.domElement.addEventListener(
-    "touchstart",
-    e => {
-
-        gestureElement.textContent =
-            "TOUCH";
-
-        if(e.touches.length === 1){
-
-            const t =
-                e.touches[0];
-
-            touchStart = {
-                x: t.clientX,
-                y: t.clientY
-            };
-
-            lastTouch = {
-                x: t.clientX,
-                y: t.clientY
-            };
-
-            clearTimeout(
-                longPressTimer
-            );
-
-            longPressTimer =
-                setTimeout(() => {
-
-                    setState(
-                        STATE.RESONANCE
-                    );
-
-                    gestureElement.textContent =
-                        "LONG PRESS";
-
-                }, 650);
-        }
-
-        if(e.touches.length === 2){
-
-            clearTimeout(
-                longPressTimer
-            );
-
-            pinchStartDistance =
-                distance(
-                    e.touches[0],
-                    e.touches[1]
-                );
-
-            pinchStartUnfold =
-                unfoldAmount;
-
-            gestureElement.textContent =
-                "PINCH";
-        }
-
-    },
-    {passive:false}
-);
-
-
-renderer.domElement.addEventListener(
-    "touchmove",
-    e => {
-
-        e.preventDefault();
-
-        if(e.touches.length === 1){
-
-            clearTimeout(
-                longPressTimer
-            );
-
-            const t =
-                e.touches[0];
-
-            const dx =
-                t.clientX -
-                lastTouch.x;
-
-            const dy =
-                t.clientY -
-                lastTouch.y;
-
-            targetRotationY +=
-                dx * .008;
-
-            targetRotationX +=
-                dy * .008;
-
-            lastTouch = {
-                x: t.clientX,
-                y: t.clientY
-            };
-
-            if(currentState === STATE.AWAKE){
-
-                setState(
-                    STATE.EXPLORE
-                );
-            }
-
-            gestureElement.textContent =
-                "DRAG";
-        }
-
-        if(e.touches.length === 2){
-
-            clearTimeout(
-                longPressTimer
-            );
-
-            const d =
-                distance(
-                    e.touches[0],
-                    e.touches[1]
-                );
-
-            if(pinchStartDistance){
-
-                const delta =
-                    (d - pinchStartDistance)
-                    / 300;
-
-                unfoldAmount =
-                    THREE.MathUtils.clamp(
-                        pinchStartUnfold +
-                        delta,
-                        0,
-                        1
-                    );
-
-                if(unfoldAmount > .45){
-
-                    setState(
-                        STATE.UNFOLD
-                    );
-                }
-            }
-
-            gestureElement.textContent =
-                "PINCH";
-        }
-
-    },
-    {passive:false}
-);
-
-
-renderer.domElement.addEventListener(
-    "touchend",
-    e => {
-
-        clearTimeout(
-            longPressTimer
-        );
-
-        if(
-            e.changedTouches.length === 1 &&
-            touchStart
-        ){
-
-            const t =
-                e.changedTouches[0];
-
-            const dx =
-                t.clientX -
-                touchStart.x;
-
-            const dy =
-                t.clientY -
-                touchStart.y;
-
-            const distanceMoved =
-                Math.sqrt(
-                    dx*dx + dy*dy
-                );
-
-            if(distanceMoved < 15){
-
-                tapInteraction();
-
-            }
-        }
-
-        touchStart = null;
-
-        gestureElement.textContent =
-            "WAITING";
-    },
-    {passive:false}
-);
-
-
-/* =========================================================
-   PINCH DISTANCE
-   ========================================================= */
-
-function distance(a,b){
-
-    const dx =
-        a.clientX -
-        b.clientX;
-
-    const dy =
-        a.clientY -
-        b.clientY;
-
-    return Math.sqrt(
-        dx*dx + dy*dy
-    );
-}
-
-
-/* =========================================================
-   RESET
-   ========================================================= */
-
-document
-    .getElementById("reset")
-    .addEventListener(
-        "click",
-        () => {
-
-            setState(
-                STATE.DORMANT
-            );
-
-            unfoldAmount = 0;
-
-            targetRotationX = 0;
-            targetRotationY = 0;
-
-        }
-    );
-
-
-/* =========================================================
-   ANIMATION
-   ========================================================= */
-
-const clock =
-    new THREE.Clock();
-
-function animate(){
-
-    requestAnimationFrame(
-        animate
-    );
-
-    const time =
-        clock.getElapsedTime();
-
-
-    /* smooth rotation */
-
-    rotationX +=
-        (targetRotationX -
-         rotationX) * .08;
-
-    rotationY +=
-        (targetRotationY -
-         rotationY) * .08;
-
-
-    artifact.rotation.x =
-        rotationX;
-
-    artifact.rotation.y =
-        rotationY;
-
-
-    /* floating */
-
-    artifact.position.y =
-        Math.sin(time * 1.1)
-        * .10;
-
-
-    /* core */
-
-    core.rotation.x =
-        time * .25;
-
-    core.rotation.y =
-        time * .37;
-
-
-    coreGlow.rotation.x =
-        -time * .4;
-
-    coreGlow.rotation.y =
-        time * .55;
-
-
-    /* resonance */
-
-    if(
-        currentState === STATE.RESONANCE
-    ){
-
-        const pulse =
-            1 +
-            Math.sin(time * 8)
-            * .08;
-
-        coreGlow.scale.setScalar(
-            pulse
-        );
-
-        pointLight.intensity =
-            8 +
-            Math.sin(time * 8)
-            * 5;
-
-    } else {
-
-        pointLight.intensity =
-            8;
-
-    }
-
-
-    /* unfold */
-
-    const targetUnfold =
-        currentState === STATE.UNFOLD ||
-        currentState === STATE.RESONANCE
-            ? Math.max(
-                unfoldAmount,
-                .65
-              )
-            : unfoldAmount;
-
-    unfoldAmount +=
-        (targetUnfold -
-         unfoldAmount) * .06;
-
-
-    fragments.forEach(
-        (fragment,i) => {
-
-            const angle =
-                fragment.userData.angle;
-
-            const radius =
-                1.25 +
-                unfoldAmount * .9;
-
-            const target =
-                new THREE.Vector3(
-                    Math.cos(angle) *
-                    radius,
-
-                    Math.sin(
-                        angle * 1.7 +
-                        time * .5
-                    ) *
-                    (.7 +
-                     unfoldAmount * .5),
-
-                    Math.sin(angle) *
-                    radius
-                );
-
-            fragment.position.lerp(
-                target,
-                .08
-            );
-
-            fragment.rotation.x =
-                time * (.4 + i*.03);
-
-            fragment.rotation.y =
-                time * (.6 + i*.04);
-        }
-    );
-
-
-    /* energy lines */
-
-    lines.forEach(
-        (line,i) => {
-
-            const pulse =
-                .8 +
-                Math.sin(
-                    time * 2 + i
-                ) * .2;
-
-            line.scale.z =
-                pulse;
-
-        }
-    );
-
-
-    renderer.render(
-        scene,
-        camera
-    );
-}
-
-animate();
-
-
-/* =========================================================
-   RESIZE
-   ========================================================= */
-
-window.addEventListener(
-    "resize",
+<!-- =====================================================
+     INFO
+===================================================== -->
+<div id="info">
+    Lade echtes 3D-Modell ...
+</div>
+<!-- =====================================================
+     START SCREEN
+===================================================== -->
+<div id="startScreen">
+    <h1>
+        AR // TANK
+    </h1>
+    <p>
+        Dieser Test lädt ein echtes
+        3D-Modell.
+        <br><br>
+        Danach kannst du versuchen,
+        es räumlich in deiner Umgebung
+        zu platzieren.
+    </p>
+    <button id="startButton">
+        3D-AR TESTEN
+    </button>
+</div>
+<script>
+/* =====================================================
+   ELEMENTE
+===================================================== */
+const tank =
+    document.getElementById("tank");
+const startScreen =
+    document.getElementById("startScreen");
+const startButton =
+    document.getElementById("startButton");
+const status =
+    document.getElementById("status");
+const info =
+    document.getElementById("info");
+/* =====================================================
+   3D GELADEN
+===================================================== */
+tank.addEventListener(
+    "load",
     () => {
-
-        camera.aspect =
-            innerWidth /
-            innerHeight;
-
-        camera.updateProjectionMatrix();
-
-        renderer.setSize(
-            innerWidth,
-            innerHeight
-        );
+        status.textContent =
+            "3D // ONLINE";
+        info.innerHTML =
+            "ECHTES 3D-MODELL GELADEN<br><br>" +
+            "Tippe auf <b>3D-OBJEKT IN AR</b>.";
     }
 );
-
+/* =====================================================
+   FEHLER
+===================================================== */
+tank.addEventListener(
+    "error",
+    () => {
+        status.textContent =
+            "3D // ERROR";
+        info.innerHTML =
+            "Das 3D-Modell konnte nicht geladen werden.";
+    }
+);
+/* =====================================================
+   START
+===================================================== */
+startButton.addEventListener(
+    "click",
+    () => {
+        startScreen.style.display =
+            "none";
+        info.innerHTML =
+            "3D // BEREIT<br><br>" +
+            "Tippe unten auf " +
+            "<b>3D-OBJEKT IN AR</b>.";
+    }
+);
+/* =====================================================
+   AR STATUS
+===================================================== */
+tank.addEventListener(
+    "ar-status",
+    event => {
+        const state =
+            event.detail.status;
+        console.log(
+            "AR:",
+            state
+        );
+        if(
+            state ===
+            "session-started"
+        ) {
+            status.textContent =
+                "AR // ACTIVE";
+            info.style.display =
+                "none";
+        }
+        if(
+            state ===
+            "not-presenting"
+        ) {
+            status.textContent =
+                "3D // ONLINE";
+            info.style.display =
+                "block";
+        }
+    }
+);
 </script>
-
 </body>
 </html>
