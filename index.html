@@ -2,1565 +2,285 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-
-<meta name="viewport"
-      content="width=device-width,
-               initial-scale=1,
-               maximum-scale=1,
-               user-scalable=no,
-               viewport-fit=cover">
-
-<title>CUBE-01 // UNKNOWN ARTIFACT</title>
-
+<title>CUBE-01 // AR</title>
+<script type="module"
+  src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.3.1/model-viewer.min.js">
+</script>
 <style>
-
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-}
-
 html,
 body {
     margin: 0;
     width: 100%;
     height: 100%;
     overflow: hidden;
-
-    background:
-        radial-gradient(
-            circle at center,
-            #07151a 0%,
-            #020508 45%,
-            #000 100%
-        );
-
-    color: #dffcff;
-
-    font-family:
-        monospace;
-
-    touch-action: none;
+    background: #000;
 }
-
-#scene {
-    position: fixed;
-    inset: 0;
-}
-
-canvas {
-    display: block;
-}
-
-
-/* ==============================
-   HUD
-============================== */
-
-#hud {
-    position: fixed;
-    inset: 0;
-
-    pointer-events: none;
-}
-
-.header {
-    position: absolute;
-
-    top:
-        calc(
-            env(safe-area-inset-top)
-            + 16px
-        );
-
-    left: 16px;
-    right: 16px;
-
-    display: flex;
-    justify-content: space-between;
-}
-
-.logo {
-    font-size: 15px;
-    letter-spacing: 5px;
-
-    color: #00f5ff;
-
-    text-shadow:
-        0 0 8px #00f5ff,
-        0 0 25px #00f5ff;
-}
-
-.subtitle {
-    margin-top: 6px;
-
-    font-size: 9px;
-    letter-spacing: 2px;
-
-    color: #52767b;
-}
-
-.state {
-    font-size: 9px;
-    letter-spacing: 2px;
-
-    color: #4ade80;
-}
-
-
-/* ==============================
-   CENTER RETICLE
-============================== */
-
-.reticle {
-    position: absolute;
-
-    left: 50%;
-    top: 50%;
-
-    width: 30px;
-    height: 30px;
-
-    transform:
-        translate(-50%, -50%);
-
-    opacity: .22;
-}
-
-.reticle::before,
-.reticle::after {
-    content: "";
-
-    position: absolute;
-
-    background: #00f5ff;
-}
-
-.reticle::before {
-    left: 50%;
-    top: 0;
-
-    width: 1px;
-    height: 100%;
-}
-
-.reticle::after {
-    top: 50%;
-    left: 0;
-
+model-viewer {
     width: 100%;
-    height: 1px;
+    height: 100%;
+    background: transparent;
 }
-
-
-/* ==============================
-   BOTTOM PANEL
-============================== */
-
-.bottom {
-    position: absolute;
-
-    left: 16px;
-    right: 16px;
-
-    bottom:
-        calc(
-            env(safe-area-inset-bottom)
-            + 16px
-        );
-}
-
-.panel {
-
-    padding: 12px;
-
-    border:
-        1px solid
-        rgba(0,245,255,.20);
-
-    background:
-        rgba(0,8,12,.70);
-
-    backdrop-filter:
-        blur(14px);
-
-    box-shadow:
-        0 0 30px
-        rgba(0,245,255,.04);
-}
-
-.panel-top {
-
-    display: flex;
-
-    justify-content:
-        space-between;
-
-    font-size: 8px;
-
-    letter-spacing: 2px;
-
-    color: #52767b;
-}
-
-#gesture {
+#start {
+    position: fixed;
+    z-index: 10;
+    left: 50%;
+    bottom: 35px;
+    transform: translateX(-50%);
+    padding: 15px 22px;
+    border: 1px solid #00f5ff;
+    background: rgba(0,10,14,.9);
     color: #00f5ff;
-}
-
-#message {
-
-    margin-top: 8px;
-
-    font-size: 11px;
-
-    letter-spacing: 1px;
-
-    color: #dffcff;
-}
-
-
-/* ==============================
-   RESET
-============================== */
-
-#reset {
-
-    position: absolute;
-
-    right: 16px;
-
-    bottom:
-        calc(
-            env(safe-area-inset-bottom)
-            + 95px
-        );
-
-    pointer-events: auto;
-
-    padding:
-        9px 13px;
-
-    background:
-        rgba(0,10,14,.8);
-
-    border:
-        1px solid
-        rgba(0,245,255,.35);
-
-    color: #00f5ff;
-
     font-family: monospace;
-
-    font-size: 8px;
-
+    font-size: 12px;
     letter-spacing: 2px;
 }
-
+#status {
+    position: fixed;
+    z-index: 20;
+    top: 25px;
+    left: 20px;
+    color: #00f5ff;
+    font-family: monospace;
+    font-size: 11px;
+}
 </style>
 </head>
-
-
 <body>
-
-
-<div id="scene"></div>
-
-
-<div id="hud">
-
-    <div class="header">
-
-        <div>
-
-            <div class="logo">
-                CUBE-01
-            </div>
-
-            <div class="subtitle">
-                UNKNOWN TECHNOLOGICAL ARTIFACT
-            </div>
-
-        </div>
-
-        <div>
-
-            <div class="state">
-                STATE:
-                <span id="state">
-                    DORMANT
-                </span>
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="reticle"></div>
-
-
-    <div class="bottom">
-
-        <div class="panel">
-
-            <div class="panel-top">
-
-                <span>
-                    INTERACTION
-                </span>
-
-                <span id="gesture">
-                    WAITING
-                </span>
-
-            </div>
-
-            <div id="message">
-                Touch the artifact.
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <button id="reset">
-        RESET
-    </button>
-
+<div id="status">
+    CUBE-01 // INITIALIZING
 </div>
-
-
-
+<button
+    id="start"
+    slot="ar-button">
+    🧊 CUBE-01 IN AR
+</button>
+</model-viewer>
 <script type="module">
-
 import * as THREE from
 "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
-
-
-
-/* =========================================================
-   SYSTEM STATES
-========================================================= */
-
-const STATES = {
-
-    DORMANT:
-        "DORMANT",
-
-    AWAKE:
-        "AWAKE",
-
-    EXPLORE:
-        "EXPLORE",
-
-    UNFOLD:
-        "UNFOLD",
-
-    RESONANCE:
-        "RESONANCE"
-
-};
-
-
-let state =
-    STATES.DORMANT;
-
-
-
-/* =========================================================
-   SCENE
-========================================================= */
-
+import { GLTFExporter } from
+"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/exporters/GLTFExporter.js";
+/* =====================================================
+   THREE.JS SZENE
+===================================================== */
 const scene =
     new THREE.Scene();
-
-
-scene.fog =
-    new THREE.FogExp2(
-        0x020508,
-        0.035
-    );
-
-
-
-/* =========================================================
-   CAMERA
-========================================================= */
-
-const camera =
-    new THREE.PerspectiveCamera(
-        55,
-        innerWidth / innerHeight,
-        0.01,
-        100
-    );
-
-
-camera.position.set(
-    0,
-    0,
-    5.5
-);
-
-
-
-/* =========================================================
-   RENDERER
-========================================================= */
-
-const renderer =
-    new THREE.WebGLRenderer({
-
-        antialias: true,
-
-        alpha: true
-
-    });
-
-
-renderer.setPixelRatio(
-    Math.min(
-        window.devicePixelRatio,
-        2
-    )
-);
-
-
-renderer.setSize(
-    innerWidth,
-    innerHeight
-);
-
-
-renderer.outputColorSpace =
-    THREE.SRGBColorSpace;
-
-
-document
-    .getElementById("scene")
-    .appendChild(
-        renderer.domElement
-    );
-
-
-
-/* =========================================================
-   LIGHT
-========================================================= */
-
-scene.add(
-    new THREE.AmbientLight(
-        0x35464a,
-        1.4
-    )
-);
-
-
-const light =
-    new THREE.PointLight(
-        0x00f5ff,
-        8,
-        10
-    );
-
-
-light.position.set(
-    0,
-    1,
-    2
-);
-
-
-scene.add(light);
-
-
-
-/* =========================================================
-   ARTIFACT
-========================================================= */
-
+/* =====================================================
+   CUBE-01
+===================================================== */
 const artifact =
     new THREE.Group();
-
-
 scene.add(artifact);
-
-
-artifact.position.y =
-    0;
-
-
-
-/* =========================================================
-   MATERIALS
-========================================================= */
-
-const black =
-    new THREE.MeshStandardMaterial({
-
-        color: 0x050708,
-
-        metalness: .95,
-
-        roughness: .18
-
-    });
-
-
+/* =====================================================
+   MATERIALIEN
+===================================================== */
 const dark =
     new THREE.MeshStandardMaterial({
-
         color: 0x11181b,
-
-        metalness: 1,
-
-        roughness: .12
-
+        metalness: .9,
+        roughness: .18
     });
-
-
 const cyan =
-    new THREE.MeshBasicMaterial({
-
-        color: 0x00f5ff
-
+    new THREE.MeshStandardMaterial({
+        color: 0x00f5ff,
+        emissive: 0x00f5ff,
+        emissiveIntensity: 3,
+        metalness: .2,
+        roughness: .25
     });
-
-
-const green =
-    new THREE.MeshBasicMaterial({
-
-        color: 0x4ade80
-
-    });
-
-
-
-/* =========================================================
+/* =====================================================
    CORE
-========================================================= */
-
+===================================================== */
 const core =
     new THREE.Mesh(
-
         new THREE.IcosahedronGeometry(
-            .48,
+            .45,
             1
         ),
-
         dark
-
     );
-
-
 artifact.add(core);
-
-
-
-/* INNER ENERGY CORE */
-
+/* =====================================================
+   ENERGY CORE
+===================================================== */
 const energyCore =
     new THREE.Mesh(
-
         new THREE.IcosahedronGeometry(
-            .20,
+            .18,
             1
         ),
-
         cyan
-
     );
-
-
 artifact.add(
     energyCore
 );
-
-
-
-/* =========================================================
-   CUBE STRUCTURE
-========================================================= */
-
-const structures = [];
-
-
-function createBar(
-    position,
-    rotation
+/* =====================================================
+   CUBE-RAHMEN
+===================================================== */
+function bar(
+    x,
+    y,
+    z,
+    rx,
+    ry,
+    rz
 ) {
-
     const mesh =
         new THREE.Mesh(
-
             new THREE.BoxGeometry(
                 1.7,
-                .075,
-                .075
+                .07,
+                .07
             ),
-
-            black
-
-        );
-
-
-    mesh.position.copy(
-        position
-    );
-
-
-    mesh.rotation.copy(
-        rotation
-    );
-
-
-    artifact.add(mesh);
-
-    structures.push(mesh);
-
-    return mesh;
-}
-
-
-
-/* TOP */
-
-createBar(
-    new THREE.Vector3(
-        0,
-        .85,
-        0
-    ),
-    new THREE.Euler(
-        0,
-        0,
-        0
-    )
-);
-
-
-/* BOTTOM */
-
-createBar(
-    new THREE.Vector3(
-        0,
-        -.85,
-        0
-    ),
-    new THREE.Euler(
-        0,
-        0,
-        0
-    )
-);
-
-
-/* LEFT */
-
-createBar(
-    new THREE.Vector3(
-        -.85,
-        0,
-        0
-    ),
-    new THREE.Euler(
-        0,
-        0,
-        Math.PI / 2
-    )
-);
-
-
-/* RIGHT */
-
-createBar(
-    new THREE.Vector3(
-        .85,
-        0,
-        0
-    ),
-    new THREE.Euler(
-        0,
-        0,
-        Math.PI / 2
-    )
-);
-
-
-/* FRONT */
-
-createBar(
-    new THREE.Vector3(
-        0,
-        0,
-        .85
-    ),
-    new THREE.Euler(
-        0,
-        Math.PI / 2,
-        0
-    )
-);
-
-
-/* BACK */
-
-createBar(
-    new THREE.Vector3(
-        0,
-        0,
-        -.85
-    ),
-    new THREE.Euler(
-        0,
-        Math.PI / 2,
-        0
-    )
-);
-
-
-
-/* =========================================================
-   ENERGY AXES
-========================================================= */
-
-const energyLines = [];
-
-
-function createEnergyLine(
-    rotation
-) {
-
-    const mesh =
-        new THREE.Mesh(
-
-            new THREE.BoxGeometry(
-                1.35,
-                .018,
-                .018
-            ),
-
-            cyan
-
-        );
-
-
-    mesh.rotation.copy(
-        rotation
-    );
-
-
-    artifact.add(mesh);
-
-    energyLines.push(mesh);
-
-}
-
-
-createEnergyLine(
-    new THREE.Euler(
-        0,
-        0,
-        0
-    )
-);
-
-
-createEnergyLine(
-    new THREE.Euler(
-        0,
-        Math.PI / 2,
-        0
-    )
-);
-
-
-createEnergyLine(
-    new THREE.Euler(
-        0,
-        0,
-        Math.PI / 2
-    )
-);
-
-
-
-/* =========================================================
-   FLOATING FRAGMENTS
-========================================================= */
-
-const fragments = [];
-
-
-for (
-    let i = 0;
-    i < 8;
-    i++
-) {
-
-    const mesh =
-        new THREE.Mesh(
-
-            new THREE.OctahedronGeometry(
-                .10,
-                0
-            ),
-
             dark
-
         );
-
-
-    const angle =
-        i /
-        8 *
-        Math.PI *
-        2;
-
-
     mesh.position.set(
-
-        Math.cos(angle)
-        * 1.25,
-
-        Math.sin(
-            angle * 1.7
-        ) * .55,
-
-        Math.sin(angle)
-        * 1.25
-
+        x,
+        y,
+        z
     );
-
-
-    mesh.userData.angle =
-        angle;
-
-
-    mesh.userData.base =
-        mesh.position.clone();
-
-
+    mesh.rotation.set(
+        rx,
+        ry,
+        rz
+    );
     artifact.add(mesh);
-
-    fragments.push(mesh);
-
 }
-
-
-
-/* =========================================================
-   UI
-========================================================= */
-
-const stateText =
+/* oben */
+bar(
+    0,
+    .85,
+    0,
+    0,
+    0,
+    0
+);
+/* unten */
+bar(
+    0,
+    -.85,
+    0,
+    0,
+    0,
+    0
+);
+/* links */
+bar(
+    -.85,
+    0,
+    0,
+    0,
+    0,
+    Math.PI / 2
+);
+/* rechts */
+bar(
+    .85,
+    0,
+    0,
+    0,
+    0,
+    Math.PI / 2
+);
+/* vorne */
+bar(
+    0,
+    0,
+    .85,
+    0,
+    Math.PI / 2,
+    0
+);
+/* hinten */
+bar(
+    0,
+    0,
+    -.85,
+    0,
+    Math.PI / 2,
+    0
+);
+/* =====================================================
+   LIGHT
+===================================================== */
+scene.add(
+    new THREE.HemisphereLight(
+        0xffffff,
+        0x222222,
+        2
+    )
+);
+/* =====================================================
+   EXPORT
+===================================================== */
+const exporter =
+    new GLTFExporter();
+const status =
     document.getElementById(
-        "state"
+        "status"
     );
-
-
-const gestureText =
-    document.getElementById(
-        "gesture"
-    );
-
-
-const message =
-    document.getElementById(
-        "message"
-    );
-
-
-
-function setState(
-    newState
-) {
-
-    state =
-        newState;
-
-
-    stateText.textContent =
-        newState;
-
-
-    switch (newState) {
-
-        case STATES.DORMANT:
-
-            message.textContent =
-                "Touch the artifact.";
-
-            break;
-
-
-        case STATES.AWAKE:
-
-            message.textContent =
-                "The artifact has detected you.";
-
-            break;
-
-
-        case STATES.EXPLORE:
-
-            message.textContent =
-                "Its geometry responds to your movement.";
-
-            break;
-
-
-        case STATES.UNFOLD:
-
-            message.textContent =
-                "Internal structure exposed.";
-
-            break;
-
-
-        case STATES.RESONANCE:
-
-            message.textContent =
-                "RESONANCE // UNKNOWN SIGNAL";
-
-            break;
-
-    }
-
-}
-
-
-
-/* =========================================================
-   TAP LOGIC
-========================================================= */
-
-function handleTap() {
-
-    if (
-        state === STATES.DORMANT
-    ) {
-
-        setState(
-            STATES.AWAKE
-        );
-
-        return;
-
-    }
-
-
-    if (
-        state === STATES.AWAKE
-    ) {
-
-        setState(
-            STATES.EXPLORE
-        );
-
-        return;
-
-    }
-
-
-    if (
-        state === STATES.EXPLORE
-    ) {
-
-        setState(
-            STATES.UNFOLD
-        );
-
-        return;
-
-    }
-
-
-    if (
-        state === STATES.UNFOLD
-    ) {
-
-        setState(
-            STATES.RESONANCE
-        );
-
-        return;
-
-    }
-
-
-    if (
-        state === STATES.RESONANCE
-    ) {
-
-        setState(
-            STATES.DORMANT
-        );
-
-    }
-
-}
-
-
-
-/* =========================================================
-   TOUCH VARIABLES
-========================================================= */
-
-let startX = 0;
-let startY = 0;
-
-let lastX = 0;
-let lastY = 0;
-
-let longPressTimer = null;
-
-let pinchDistanceStart =
-    null;
-
-
-
-/* =========================================================
-   TOUCH START
-========================================================= */
-
-renderer.domElement
-.addEventListener(
-    "touchstart",
-    event => {
-
-        event.preventDefault();
-
-
+status.textContent =
+    "CUBE-01 // BUILDING AR MODEL";
+exporter.parse(
+    artifact,
+    result => {
+        let blob;
         if (
-            event.touches.length === 1
+            result instanceof ArrayBuffer
         ) {
-
-            const touch =
-                event.touches[0];
-
-
-            startX =
-                touch.clientX;
-
-            startY =
-                touch.clientY;
-
-
-            lastX =
-                touch.clientX;
-
-            lastY =
-                touch.clientY;
-
-
-            clearTimeout(
-                longPressTimer
-            );
-
-
-            longPressTimer =
-                setTimeout(
-                    () => {
-
-                        setState(
-                            STATES.RESONANCE
-                        );
-
-
-                        gestureText.textContent =
-                            "LONG PRESS";
-
-                    },
-                    650
+            blob =
+                new Blob(
+                    [result],
+                    {
+                        type:
+                        "model/gltf-binary"
+                    }
                 );
-
         }
-
-
-        if (
-            event.touches.length === 2
-        ) {
-
-            clearTimeout(
-                longPressTimer
-            );
-
-
-            pinchDistanceStart =
-                getTouchDistance(
-                    event.touches[0],
-                    event.touches[1]
+        else {
+            blob =
+                new Blob(
+                    [
+                        JSON.stringify(
+                            result
+                        )
+                    ],
+                    {
+                        type:
+                        "model/gltf+json"
+                    }
                 );
-
-
-            gestureText.textContent =
-                "PINCH";
-
         }
-
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+        const viewer =
+            document.getElementById(
+                "ar"
+            );
+        viewer.src =
+            url;
+        viewer.addEventListener(
+            "load",
+            () => {
+                status.textContent =
+                    "CUBE-01 // AR READY";
+            },
+            {
+                once: true
+            }
+        );
+    },
+    error => {
+        console.error(error);
+        status.textContent =
+            "CUBE-01 // EXPORT ERROR";
     },
     {
-        passive: false
+        binary: true
     }
 );
-
-
-
-/* =========================================================
-   TOUCH MOVE
-========================================================= */
-
-renderer.domElement
-.addEventListener(
-    "touchmove",
-    event => {
-
-        event.preventDefault();
-
-
-        if (
-            event.touches.length === 1
-        ) {
-
-            clearTimeout(
-                longPressTimer
-            );
-
-
-            const touch =
-                event.touches[0];
-
-
-            const dx =
-                touch.clientX -
-                lastX;
-
-
-            const dy =
-                touch.clientY -
-                lastY;
-
-
-            artifact.rotation.y +=
-                dx * .008;
-
-
-            artifact.rotation.x +=
-                dy * .008;
-
-
-            lastX =
-                touch.clientX;
-
-            lastY =
-                touch.clientY;
-
-
-            if (
-                state === STATES.AWAKE
-            ) {
-
-                setState(
-                    STATES.EXPLORE
-                );
-
-            }
-
-
-            gestureText.textContent =
-                "DRAG";
-
-        }
-
-
-        if (
-            event.touches.length === 2
-        ) {
-
-            clearTimeout(
-                longPressTimer
-            );
-
-
-            const distance =
-                getTouchDistance(
-                    event.touches[0],
-                    event.touches[1]
-                );
-
-
-            const delta =
-                (
-                    distance -
-                    pinchDistanceStart
-                ) / 250;
-
-
-            const amount =
-                THREE.MathUtils.clamp(
-                    delta,
-                    0,
-                    1
-                );
-
-
-            if (
-                amount > .15
-            ) {
-
-                setState(
-                    STATES.UNFOLD
-                );
-
-            }
-
-
-            artifact.userData.unfold =
-                amount;
-
-
-            gestureText.textContent =
-                "PINCH";
-
-        }
-
-    },
-    {
-        passive: false
-    }
-);
-
-
-
-/* =========================================================
-   TOUCH END
-========================================================= */
-
-renderer.domElement
-.addEventListener(
-    "touchend",
-    event => {
-
-        event.preventDefault();
-
-
-        clearTimeout(
-            longPressTimer
-        );
-
-
-        if (
-            event.changedTouches.length === 1
-        ) {
-
-            const touch =
-                event.changedTouches[0];
-
-
-            const dx =
-                touch.clientX -
-                startX;
-
-
-            const dy =
-                touch.clientY -
-                startY;
-
-
-            const moved =
-                Math.sqrt(
-                    dx * dx +
-                    dy * dy
-                );
-
-
-            if (
-                moved < 15
-            ) {
-
-                handleTap();
-
-            }
-
-        }
-
-
-        gestureText.textContent =
-            "WAITING";
-
-    },
-    {
-        passive: false
-    }
-);
-
-
-
-/* =========================================================
-   PINCH DISTANCE
-========================================================= */
-
-function getTouchDistance(
-    a,
-    b
-) {
-
-    const dx =
-        a.clientX -
-        b.clientX;
-
-
-    const dy =
-        a.clientY -
-        b.clientY;
-
-
-    return Math.sqrt(
-        dx * dx +
-        dy * dy
-    );
-
-}
-
-
-
-/* =========================================================
-   RESET
-========================================================= */
-
-document
-.getElementById("reset")
-.addEventListener(
-    "click",
-    () => {
-
-        setState(
-            STATES.DORMANT
-        );
-
-
-        artifact.rotation.set(
-            0,
-            0,
-            0
-        );
-
-
-        artifact.userData.unfold =
-            0;
-
-
-        gestureText.textContent =
-            "RESET";
-
-    }
-);
-
-
-
-/* =========================================================
-   ANIMATION
-========================================================= */
-
-const clock =
-    new THREE.Clock();
-
-
-function animate() {
-
-    requestAnimationFrame(
-        animate
-    );
-
-
-    const time =
-        clock.getElapsedTime();
-
-
-    /* FLOATING */
-
-    artifact.position.y =
-        Math.sin(
-            time * 1.15
-        ) * .10;
-
-
-    /* CORE */
-
-    core.rotation.x =
-        time * .25;
-
-    core.rotation.y =
-        time * .35;
-
-
-    energyCore.rotation.x =
-        -time * .5;
-
-    energyCore.rotation.y =
-        time * .7;
-
-
-
-    /* RESONANCE */
-
-    if (
-        state === STATES.RESONANCE
-    ) {
-
-        const pulse =
-            1 +
-            Math.sin(
-                time * 9
-            ) * .12;
-
-
-        energyCore.scale.setScalar(
-            pulse
-        );
-
-
-        light.intensity =
-            8 +
-            Math.sin(
-                time * 9
-            ) * 5;
-
-    }
-
-    else {
-
-        energyCore.scale.setScalar(
-            1
-        );
-
-
-        light.intensity =
-            8;
-
-    }
-
-
-
-    /* UNFOLD */
-
-    const unfolding =
-        artifact.userData.unfold ||
-        0;
-
-
-    fragments.forEach(
-        (fragment, index) => {
-
-            const angle =
-                fragment.userData.angle;
-
-
-            const radius =
-                1.25 +
-                unfolding * .9;
-
-
-            const target =
-                new THREE.Vector3(
-
-                    Math.cos(angle)
-                    * radius,
-
-                    Math.sin(
-                        angle * 1.7 +
-                        time * .5
-                    ) *
-                    (
-                        .55 +
-                        unfolding * .5
-                    ),
-
-                    Math.sin(angle)
-                    * radius
-
-                );
-
-
-            fragment.position.lerp(
-                target,
-                .08
-            );
-
-
-            fragment.rotation.x =
-                time *
-                (.4 + index * .03);
-
-
-            fragment.rotation.y =
-                time *
-                (.6 + index * .04);
-
-        }
-    );
-
-
-
-    /* ENERGY LINES */
-
-    energyLines.forEach(
-        (line, index) => {
-
-            const pulse =
-                .8 +
-                Math.sin(
-                    time * 2 +
-                    index
-                ) * .2;
-
-
-            line.scale.z =
-                pulse;
-
-        }
-    );
-
-
-
-    renderer.render(
-        scene,
-        camera
-    );
-
-}
-
-
-animate();
-
-
-
-/* =========================================================
-   RESIZE
-========================================================= */
-
-window.addEventListener(
-    "resize",
-    () => {
-
-        camera.aspect =
-            innerWidth /
-            innerHeight;
-
-
-        camera.updateProjectionMatrix();
-
-
-        renderer.setSize(
-            innerWidth,
-            innerHeight
-        );
-
-    }
-);
-
 </script>
-
 </body>
 </html>
