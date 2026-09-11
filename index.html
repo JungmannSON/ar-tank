@@ -3,208 +3,1406 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport"
-      content="width=device-width,initial-scale=1,
-               maximum-scale=1,user-scalable=no">
-<title>CUBE-01</title>
+      content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#090414">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>EOTS — Eye Of The Sky</title>
+
 <style>
+:root{
+  --bg:#090414;
+  --panel:#120820;
+  --panel2:#1b0d2b;
+  --pink:#ff2fa8;
+  --cyan:#20e7ff;
+  --purple:#8c52ff;
+  --yellow:#ffe66d;
+  --text:#fff7ff;
+  --muted:#bdaec9;
+  --line:rgba(255,255,255,.12);
+  --good:#61f5a0;
+  --danger:#ff5f7a;
+}
+
+*{box-sizing:border-box}
+
 html,body{
   margin:0;
-  width:100%;
-  height:100%;
+  min-height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+body{
+  overflow-x:hidden;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+
+/* ---------- BACKGROUND ---------- */
+
+.sky{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
   overflow:hidden;
-  background:#000;
+  z-index:0;
+  background:
+    radial-gradient(circle at 50% 16%,
+      rgba(255,47,168,.25),
+      transparent 34%),
+    radial-gradient(circle at 15% 70%,
+      rgba(32,231,255,.12),
+      transparent 35%),
+    linear-gradient(180deg,#10051d 0%,#090414 72%);
 }
-#camera{
-  position:fixed;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-#scene{
-  position:fixed;
-  inset:0;
-}
-#start{
-  position:fixed;
-  z-index:10;
+
+.sun{
+  position:absolute;
+  width:180px;
+  height:180px;
   left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  padding:18px 25px;
-  background:#000;
-  border:2px solid #00f5ff;
-  color:#00f5ff;
-  font-size:16px;
+  top:55px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      #ffcf5c 0 10px,
+      #ff6a9f 10px 18px
+    );
+  box-shadow:
+    0 0 60px rgba(255,47,168,.45);
+  opacity:.8;
+}
+
+.grid{
+  position:absolute;
+  left:-30%;
+  right:-30%;
+  bottom:-8%;
+  height:43%;
+  transform:perspective(260px) rotateX(58deg);
+  background-image:
+    linear-gradient(rgba(32,231,255,.22) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,47,168,.22) 1px,transparent 1px);
+  background-size:38px 38px;
+}
+
+/* ---------- APP ---------- */
+
+.app{
+  position:relative;
+  z-index:1;
+  width:100%;
+  max-width:900px;
+  margin:auto;
+  padding:
+    calc(env(safe-area-inset-top) + 18px)
+    16px
+    30px;
+}
+
+/* ---------- HEADER ---------- */
+
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.orb{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  position:relative;
+  flex:none;
+  background:
+    radial-gradient(circle at 35% 30%,
+      white 0 5%,
+      #9df8ff 8%,
+      var(--cyan) 25%,
+      var(--purple) 58%,
+      var(--pink) 78%,
+      transparent 80%);
+  box-shadow:
+    0 0 14px var(--cyan),
+    0 0 32px rgba(255,47,168,.6);
+  animation:float 3s ease-in-out infinite;
+}
+
+.orb:after{
+  content:"";
+  position:absolute;
+  width:10px;
+  height:10px;
+  left:13px;
+  top:16px;
+  border-radius:50%;
+  background:white;
+  box-shadow:18px 0 0 white;
+}
+
+@keyframes float{
+  50%{transform:translateY(-4px)}
+}
+
+.title{
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+
+.subtitle{
+  color:var(--muted);
+  font-size:11px;
+  letter-spacing:.14em;
+  margin-top:3px;
+}
+
+.status{
+  border:1px solid rgba(97,245,160,.4);
+  color:var(--good);
+  border-radius:999px;
+  padding:7px 10px;
+  font-size:10px;
+  letter-spacing:.1em;
+  white-space:nowrap;
+}
+
+/* ---------- HERO ---------- */
+
+.hero{
+  border:1px solid var(--line);
+  border-radius:26px;
+  padding:22px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,47,168,.13),
+      rgba(32,231,255,.05)
+    ),
+    rgba(10,4,18,.8);
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.35),
+    inset 0 0 30px rgba(255,255,255,.025);
+  backdrop-filter:blur(16px);
+}
+
+.hero h1{
+  margin:0 0 8px;
+  font-size:30px;
+  line-height:1.05;
+}
+
+.hero h1 span{
+  color:var(--cyan);
+}
+
+.hero p{
+  margin:0;
+  color:var(--muted);
+  line-height:1.5;
+  font-size:14px;
+}
+
+.pillrow{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:18px;
+}
+
+.pill{
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  color:#eee;
+  font-size:10px;
+  letter-spacing:.08em;
+  background:rgba(255,255,255,.035);
+}
+
+/* ---------- MAIN ACTION ---------- */
+
+.capture{
+  margin-top:16px;
+  width:100%;
+  min-height:76px;
+  border:0;
+  border-radius:22px;
+  color:white;
+  font-size:17px;
+  font-weight:900;
+  letter-spacing:.08em;
+  background:
+    linear-gradient(
+      100deg,
+      var(--pink),
+      #b33cff 48%,
+      var(--cyan)
+    );
+  box-shadow:
+    0 12px 35px rgba(255,47,168,.24);
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.capture:active{
+  transform:scale(.98);
+}
+
+/* ---------- PANELS ---------- */
+
+.panel{
+  margin-top:16px;
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:16px;
+  background:rgba(15,7,25,.82);
+  backdrop-filter:blur(12px);
+}
+
+.panelhead{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.paneltitle{
+  font-weight:900;
+  letter-spacing:.08em;
+  font-size:12px;
+}
+
+.counter{
+  color:var(--cyan);
+  font-size:10px;
+  font-family:monospace;
+}
+
+pre{
+  margin:0;
+  max-height:300px;
+  overflow:auto;
+  padding:14px;
+  border-radius:14px;
+  background:#050207;
+  border:1px solid rgba(255,255,255,.08);
+  color:#d8faff;
+  font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+
+/* ---------- QUESTION ---------- */
+
+textarea{
+  width:100%;
+  min-height:100px;
+  resize:vertical;
+  border-radius:16px;
+  border:1px solid rgba(32,231,255,.25);
+  background:#08040e;
+  color:white;
+  padding:14px;
+  font:14px/1.5 inherit;
+  outline:none;
+}
+
+textarea:focus{
+  border-color:var(--cyan);
+  box-shadow:0 0 0 3px rgba(32,231,255,.08);
+}
+
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:10px;
+}
+
+button.secondary,
+button.pink,
+button.cyan,
+button.green,
+button.red{
+  min-height:48px;
+  border-radius:15px;
+  border:1px solid var(--line);
+  color:white;
+  font-weight:800;
+  background:#171020;
+}
+
+button.pink{
+  background:rgba(255,47,168,.16);
+  border-color:rgba(255,47,168,.45);
+}
+
+button.cyan{
+  background:rgba(32,231,255,.12);
+  border-color:rgba(32,231,255,.4);
+}
+
+button.green{
+  background:rgba(97,245,160,.12);
+  border-color:rgba(97,245,160,.4);
+}
+
+button.red{
+  background:rgba(255,95,122,.12);
+  border-color:rgba(255,95,122,.4);
+}
+
+/* ---------- ACTION REQUEST ---------- */
+
+.action-card{
+  border-radius:18px;
+  padding:15px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,47,168,.10),
+      rgba(140,82,255,.08)
+    );
+  border:1px solid rgba(255,255,255,.1);
+}
+
+.action-type{
+  color:var(--yellow);
+  font:11px monospace;
+  letter-spacing:.1em;
+}
+
+.action-description{
+  margin:9px 0 14px;
+  line-height:1.4;
+}
+
+.approval{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+/* ---------- EVENT LOG ---------- */
+
+.event{
+  padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+
+.event:last-child{
+  border-bottom:0;
+}
+
+.event .time{
+  color:#8d7d98;
+}
+
+.event .type{
+  color:var(--cyan);
+}
+
+/* ---------- HIDDEN ---------- */
+
+.hidden{
+  display:none !important;
+}
+
+/* ---------- CAPTURE MODE ---------- */
+
+#captureOverlay{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:none;
+  pointer-events:none;
+}
+
+.captureShade{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.35);
+}
+
+.selection{
+  position:absolute;
+  border:2px solid var(--cyan);
+  background:rgba(32,231,255,.08);
+  box-shadow:
+    0 0 0 1px rgba(255,47,168,.4),
+    0 0 30px rgba(32,231,255,.25);
+}
+
+.selectionLabel{
+  position:absolute;
+  left:0;
+  top:-30px;
+  padding:6px 9px;
+  border-radius:8px;
+  background:#090414;
+  color:var(--cyan);
+  border:1px solid var(--cyan);
+  font:10px monospace;
+  white-space:nowrap;
+}
+
+/* ---------- FOOTER ---------- */
+
+.footer{
+  text-align:center;
+  color:#796b83;
+  font-size:10px;
+  letter-spacing:.1em;
+  margin-top:20px;
+}
+
+/* ---------- MOBILE ---------- */
+
+@media(min-width:700px){
+  .app{
+    padding-left:28px;
+    padding-right:28px;
+  }
 }
 </style>
 </head>
+
 <body>
-<video id="camera"
-       autoplay
-       playsinline
-       muted></video>
-<div id="scene"></div>
-<button id="start">
-  KAMERA STARTEN
-</button>
-<script type="module">
-import * as THREE from
-"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
-/* =========================
-   KAMERA
-========================= */
-const video =
-  document.getElementById("camera");
-const start =
-  document.getElementById("start");
-start.onclick = async () => {
-  try {
-    const stream =
-      await navigator.mediaDevices.getUserMedia({
-        video:{
-          facingMode:"environment"
-        },
-        audio:false
-      });
-    video.srcObject = stream;
-    start.style.display = "none";
-  } catch(error) {
-    alert(
-      "Kamera konnte nicht gestartet werden.\n\n" +
-      error.message
-    );
+
+<div class="sky">
+  <div class="sun"></div>
+  <div class="grid"></div>
+</div>
+
+<div id="captureOverlay">
+  <div class="captureShade"></div>
+  <div id="selectionBox" class="selection">
+    <div class="selectionLabel">EOTS SEES THIS</div>
+  </div>
+</div>
+
+<main class="app">
+
+  <header class="header">
+
+    <div class="brand">
+      <div class="orb"></div>
+
+      <div>
+        <div class="title">EOTS</div>
+        <div class="subtitle">EYE OF THE SKY</div>
+      </div>
+    </div>
+
+    <div id="status" class="status">
+      READY
+    </div>
+
+  </header>
+
+  <section class="hero">
+
+    <h1>
+      Deine Software.<br>
+      <span>Unsere Augen.</span>
+    </h1>
+
+    <p>
+      EOTS ist eine externe Entwickler- und
+      Kontextschicht. Du markierst, was relevant ist.
+      EOTS beschreibt es. GPT hilft uns, daraus Software
+      zu bauen.
+    </p>
+
+    <div class="pillrow">
+      <div class="pill">VISUAL CONTEXT</div>
+      <div class="pill">DOM</div>
+      <div class="pill">SEMANTIC</div>
+      <div class="pill">ACTION CONTROL</div>
+      <div class="pill">USER APPROVAL</div>
+    </div>
+
+  </section>
+
+  <button id="captureBtn" class="capture">
+    ⦿ BEREICH MIT EOTS ERFASSEN
+  </button>
+
+  <section id="contextPanel" class="panel hidden">
+
+    <div class="panelhead">
+      <div class="paneltitle">
+        EOTS CONTEXT
+      </div>
+
+      <div id="captureCounter" class="counter">
+        CAP-000000
+      </div>
+    </div>
+
+    <pre id="contextOutput"></pre>
+
+  </section>
+
+  <section id="questionPanel" class="panel hidden">
+
+    <div class="panelhead">
+      <div class="paneltitle">
+        EOTS → GPT
+      </div>
+    </div>
+
+    <textarea
+      id="question"
+      placeholder="Was sollen wir mit diesem Bereich herausfinden oder verändern?"
+    ></textarea>
+
+    <div class="actions">
+
+      <button id="askBtn" class="pink">
+        → EOTS FRAGEN
+      </button>
+
+      <button id="copyBtn" class="cyan">
+        COPY REQUEST
+      </button>
+
+    </div>
+
+  </section>
+
+  <section id="requestPanel" class="panel hidden">
+
+    <div class="panelhead">
+      <div class="paneltitle">
+        LLM REQUEST
+      </div>
+    </div>
+
+    <pre id="llmOutput"></pre>
+
+    <div class="actions">
+      <button id="copyLlmBtn" class="cyan">
+        LLM REQUEST KOPIEREN
+      </button>
+
+      <button id="newCaptureBtn" class="secondary">
+        NEU ERFASSEN
+      </button>
+    </div>
+
+  </section>
+
+  <section id="actionPanel" class="panel hidden">
+
+    <div class="panelhead">
+      <div class="paneltitle">
+        ACTION REQUEST
+      </div>
+    </div>
+
+    <div class="action-card">
+
+      <div class="action-type">
+        PROPOSED ACTION
+      </div>
+
+      <div id="actionDescription" class="action-description">
+        Keine Aktion vorgeschlagen.
+      </div>
+
+      <div class="approval">
+
+        <button id="approveBtn" class="green">
+          ✓ ERLAUBEN
+        </button>
+
+        <button id="denyBtn" class="red">
+          × ABLEHNEN
+        </button>
+
+      </div>
+
+    </div>
+
+    <pre id="actionOutput" style="margin-top:12px;"></pre>
+
+  </section>
+
+  <section id="eventPanel" class="panel">
+
+    <div class="panelhead">
+      <div class="paneltitle">
+        EOTS EVENT LOG
+      </div>
+
+      <div class="counter">
+        LOCAL
+      </div>
+    </div>
+
+    <div id="eventLog">
+      <div class="event">
+        <span class="time">--:--:--</span>
+        <span class="type">EOTS_READY</span>
+        EOTS wurde gestartet.
+      </div>
+    </div>
+
+  </section>
+
+  <div class="footer">
+    EOTS / EYE OF THE SKY · DEVELOPMENT TOOL
+  </div>
+
+</main>
+
+<script>
+/*
+=========================================================
+EOTS — EYE OF THE SKY
+Version 0.2
+
+EOTS ist bewusst unabhängig von LV-FMBH.
+
+Dieses Dokument kennt keine LV-FMBH-Funktionen.
+Es erzeugt nur Kontext, Requests und kontrollierte
+Browser-Aktionen.
+
+=========================================================
+*/
+
+const EOTS = {
+
+  version: "0.2",
+
+  state: {
+    capture: null,
+    llmRequest: null,
+    actionRequest: null,
+    events: []
+  },
+
+  ids: {
+    capture: 0,
+    action: 0,
+    event: 0
+  },
+
+  nextId(prefix, counter){
+    this.ids[counter]++;
+    return prefix + "-" +
+      String(this.ids[counter]).padStart(6,"0");
+  },
+
+  now(){
+    return new Date().toISOString();
+  },
+
+  log(type, data = {}){
+
+    const event = {
+      event_id:this.nextId("EVT","event"),
+      timestamp:this.now(),
+      type,
+      ...data
+    };
+
+    this.state.events.unshift(event);
+
+    const node = document.createElement("div");
+    node.className = "event";
+
+    node.innerHTML =
+      `<span class="time">${new Date().toLocaleTimeString()}</span> ` +
+      `<span class="type">${type}</span> ` +
+      `${data.message || ""}`;
+
+    document
+      .getElementById("eventLog")
+      .prepend(node);
+
+    return event;
+  },
+
+  status(text){
+    document.getElementById("status").textContent = text;
   }
+
 };
-/* =========================
-   THREE.JS
-========================= */
-const scene =
-  new THREE.Scene();
-const camera =
-  new THREE.PerspectiveCamera(
-    60,
-    innerWidth / innerHeight,
-    0.1,
-    100
+
+
+/* =====================================================
+   SELECTION
+===================================================== */
+
+const captureBtn =
+  document.getElementById("captureBtn");
+
+const overlay =
+  document.getElementById("captureOverlay");
+
+const box =
+  document.getElementById("selectionBox");
+
+let selecting = false;
+let startX = 0;
+let startY = 0;
+
+
+captureBtn.addEventListener("click", startCapture);
+
+function startCapture(){
+
+  EOTS.status("SELECT");
+
+  overlay.style.display = "block";
+
+  EOTS.log(
+    "CAPTURE_STARTED",
+    {message:"Bereich auswählen."}
   );
-camera.position.z = 4;
-const renderer =
-  new THREE.WebGLRenderer({
-    alpha:true,
-    antialias:true
+
+  selecting = false;
+}
+
+
+overlay.addEventListener("pointerdown", e => {
+
+  selecting = true;
+
+  startX = e.clientX;
+  startY = e.clientY;
+
+  box.style.left = startX + "px";
+  box.style.top = startY + "px";
+  box.style.width = "0px";
+  box.style.height = "0px";
+
+  overlay.setPointerCapture(e.pointerId);
+});
+
+
+overlay.addEventListener("pointermove", e => {
+
+  if(!selecting) return;
+
+  const x = Math.min(startX,e.clientX);
+  const y = Math.min(startY,e.clientY);
+
+  const w = Math.abs(e.clientX-startX);
+  const h = Math.abs(e.clientY-startY);
+
+  box.style.left = x + "px";
+  box.style.top = y + "px";
+  box.style.width = w + "px";
+  box.style.height = h + "px";
+});
+
+
+overlay.addEventListener("pointerup", e => {
+
+  if(!selecting) return;
+
+  selecting = false;
+
+  const x = Math.min(startX,e.clientX);
+  const y = Math.min(startY,e.clientY);
+
+  const width =
+    Math.abs(e.clientX-startX);
+
+  const height =
+    Math.abs(e.clientY-startY);
+
+  overlay.style.display = "none";
+
+  captureSelection({
+    x,
+    y,
+    width,
+    height
   });
-renderer.setPixelRatio(
-  Math.min(devicePixelRatio,2)
-);
-renderer.setSize(
-  innerWidth,
-  innerHeight
-);
-document
-  .getElementById("scene")
-  .appendChild(renderer.domElement);
-/* =========================
-   LICHT
-========================= */
-scene.add(
-  new THREE.AmbientLight(
-    0xffffff,
-    2
-  )
-);
-/* =========================
-   WÜRFEL
-========================= */
-const geometry =
-  new THREE.BoxGeometry(
-    1,
-    1,
-    1
-  );
-const material =
-  new THREE.MeshStandardMaterial({
-    color:0x00f5ff,
-    emissive:0x00f5ff,
-    emissiveIntensity:2,
-    metalness:.7,
-    roughness:.2
-  });
-const cube =
-  new THREE.Mesh(
-    geometry,
-    material
-  );
-scene.add(cube);
-/* =========================
-   TOUCH
-========================= */
-let rotationX = 0;
-let rotationY = 0;
-let lastX = null;
-let lastY = null;
-renderer.domElement.addEventListener(
-  "pointerdown",
-  e => {
-    lastX = e.clientX;
-    lastY = e.clientY;
-  }
-);
-renderer.domElement.addEventListener(
-  "pointermove",
-  e => {
-    if(lastX === null) return;
-    rotationY +=
-      (e.clientX-lastX) * .01;
-    rotationX +=
-      (e.clientY-lastY) * .01;
-    lastX = e.clientX;
-    lastY = e.clientY;
-  }
-);
-renderer.domElement.addEventListener(
-  "pointerup",
-  () => {
-    lastX = null;
-    lastY = null;
-  }
-);
-/* =========================
-   ANIMATION
-========================= */
-function animate(){
-  requestAnimationFrame(
-    animate
-  );
-  const t =
-    performance.now()/1000;
-  cube.position.y =
-    Math.sin(t*1.5)*.25;
-  cube.rotation.x =
-    rotationX + t*.25;
-  cube.rotation.y =
-    rotationY + t*.45;
-  material.emissiveIntensity =
-    1.5 +
-    Math.sin(t*4)*.5;
-  renderer.render(
-    scene,
-    camera
+});
+
+
+/* =====================================================
+   CONTEXT CAPTURE
+===================================================== */
+
+function intersects(a,b){
+
+  return !(
+    a.right < b.left ||
+    a.left > b.right ||
+    a.bottom < b.top ||
+    a.top > b.bottom
   );
 }
-animate();
-/* =========================
-   RESIZE
-========================= */
-window.onresize = () => {
-  camera.aspect =
-    innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(
-    innerWidth,
-    innerHeight
+
+
+function visible(el){
+
+  const style =
+    getComputedStyle(el);
+
+  if(style.display === "none") return false;
+  if(style.visibility === "hidden") return false;
+  if(parseFloat(style.opacity) === 0) return false;
+
+  return true;
+}
+
+
+function elementInfo(el, selection){
+
+  const rect =
+    el.getBoundingClientRect();
+
+  const text =
+    (el.innerText || el.value || "")
+      .replace(/\s+/g," ")
+      .trim()
+      .slice(0,500);
+
+  return {
+
+    tag:el.tagName.toLowerCase(),
+
+    id:el.id || null,
+
+    classes:
+      [...el.classList],
+
+    text,
+
+    rect:{
+      x:Math.round(rect.x),
+      y:Math.round(rect.y),
+      width:Math.round(rect.width),
+      height:Math.round(rect.height)
+    },
+
+    relative_to_selection:{
+      x:Math.round(rect.x-selection.x),
+      y:Math.round(rect.y-selection.y)
+    },
+
+    attributes:
+      Object.fromEntries(
+        [...el.attributes]
+          .filter(a =>
+            a.name !== "style"
+          )
+          .slice(0,30)
+          .map(a => [a.name,a.value])
+      )
+
+  };
+}
+
+
+function getActionableElements(selection){
+
+  const selector = [
+    "button",
+    "a",
+    "input",
+    "textarea",
+    "select",
+    "[role='button']",
+    "[onclick]",
+    "[tabindex]"
+  ].join(",");
+
+  return [...document.querySelectorAll(selector)]
+    .filter(el => {
+
+      if(!visible(el)) return false;
+
+      if(
+        el.closest("#captureOverlay") ||
+        el.closest(".eots-ui")
+      ){
+        return false;
+      }
+
+      const rect =
+        el.getBoundingClientRect();
+
+      return intersects(
+        rect,
+        {
+          left:selection.x,
+          top:selection.y,
+          right:selection.x+selection.width,
+          bottom:selection.y+selection.height
+        }
+      );
+
+    })
+    .map(el => elementInfo(el,selection));
+
+}
+
+
+function captureSelection(selection){
+
+  EOTS.status("CAPTURE");
+
+  const viewport = {
+    width:window.innerWidth,
+    height:window.innerHeight,
+    devicePixelRatio:window.devicePixelRatio
+  };
+
+  const selectionRect = {
+    left:selection.x,
+    top:selection.y,
+    right:selection.x+selection.width,
+    bottom:selection.y+selection.height
+  };
+
+  const allElements =
+    [...document.querySelectorAll("body *")]
+      .filter(el => {
+
+        if(!visible(el)) return false;
+
+        if(
+          el.closest("#captureOverlay") ||
+          el.closest(".eots-ui")
+        ){
+          return false;
+        }
+
+        const rect =
+          el.getBoundingClientRect();
+
+        return intersects(
+          rect,
+          selectionRect
+        );
+
+      });
+
+  const actionable =
+    getActionableElements(selection);
+
+  const text =
+    allElements
+      .map(el =>
+        (el.innerText || "")
+          .replace(/\s+/g," ")
+          .trim()
+      )
+      .filter(Boolean)
+      .slice(0,40);
+
+  const capture = {
+
+    schema_version:"1.1",
+
+    capture_id:
+      EOTS.nextId("CAP","capture"),
+
+    timestamp:EOTS.now(),
+
+    source:{
+      type:"web",
+      url:location.href,
+      title:document.title
+    },
+
+    viewport,
+
+    selection,
+
+    page:{
+      scrollX:window.scrollX,
+      scrollY:window.scrollY
+    },
+
+    semantic:{
+      text:[...new Set(text)].slice(0,40)
+    },
+
+    targets:actionable,
+
+    elements:
+      allElements
+        .slice(0,80)
+        .map(el =>
+          elementInfo(el,selection)
+        )
+
+  };
+
+  EOTS.state.capture = capture;
+
+  document.getElementById("captureCounter")
+    .textContent =
+      capture.capture_id;
+
+  document.getElementById("contextOutput")
+    .textContent =
+      JSON.stringify(capture,null,2);
+
+  document.getElementById("contextPanel")
+    .classList.remove("hidden");
+
+  document.getElementById("questionPanel")
+    .classList.remove("hidden");
+
+  EOTS.status("CAPTURED");
+
+  EOTS.log(
+    "CONTEXT_CAPTURED",
+    {
+      message:
+        `${capture.capture_id} · ` +
+        `${actionable.length} actionable elements`
+    }
   );
-};
+
+}
+
+
+/* =====================================================
+   LLM REQUEST
+===================================================== */
+
+document
+  .getElementById("askBtn")
+  .addEventListener("click", createLLMRequest);
+
+
+function createLLMRequest(){
+
+  if(!EOTS.state.capture){
+    return;
+  }
+
+  const question =
+    document.getElementById("question")
+      .value
+      .trim();
+
+  if(!question){
+
+    alert(
+      "Bitte zuerst sagen, was wir mit diesem Bereich herausfinden oder verändern wollen."
+    );
+
+    return;
+  }
+
+  const request = {
+
+    schema:"EOTS_LLM_REQUEST",
+
+    version:"1.0",
+
+    request_id:
+      EOTS.nextId("REQ","event"),
+
+    timestamp:EOTS.now(),
+
+    role:
+      "software-development-context",
+
+    user_request:
+      question,
+
+    capture:
+      EOTS.state.capture,
+
+    instructions:[
+      "Analysiere den bereitgestellten Kontext.",
+      "Erfinde keine Elemente oder Funktionen.",
+      "Unterscheide Beobachtung und Schlussfolgerung.",
+      "Wenn eine Softwareänderung sinnvoll ist, formuliere eine CHANGE_REQUEST.",
+      "Führe keine Aktion ohne explizite Benutzerfreigabe aus."
+    ]
+
+  };
+
+  EOTS.state.llmRequest = request;
+
+  document.getElementById("llmOutput")
+    .textContent =
+      JSON.stringify(request,null,2);
+
+  document.getElementById("requestPanel")
+    .classList.remove("hidden");
+
+  EOTS.log(
+    "LLM_REQUEST_CREATED",
+    {
+      message:
+        `${request.request_id} erstellt`
+    }
+  );
+
+}
+
+
+/* =====================================================
+   CLIPBOARD
+===================================================== */
+
+async function copyText(text){
+
+  try{
+
+    await navigator.clipboard.writeText(text);
+
+    EOTS.log(
+      "COPIED",
+      {message:"In Zwischenablage kopiert."}
+    );
+
+  }catch(err){
+
+    alert(
+      "Kopieren wurde vom Browser blockiert."
+    );
+
+  }
+
+}
+
+
+document
+  .getElementById("copyBtn")
+  .addEventListener("click",()=>{
+
+    if(!EOTS.state.llmRequest) return;
+
+    copyText(
+      JSON.stringify(
+        EOTS.state.llmRequest,
+        null,
+        2
+      )
+    );
+
+  });
+
+
+document
+  .getElementById("copyLlmBtn")
+  .addEventListener("click",()=>{
+
+    if(!EOTS.state.llmRequest) return;
+
+    copyText(
+      JSON.stringify(
+        EOTS.state.llmRequest,
+        null,
+        2
+      )
+    );
+
+  });
+
+
+/* =====================================================
+   DEMO ACTION REQUEST
+===================================================== */
+
+/*
+  Diese Funktion simuliert NICHT die Antwort eines LLM.
+
+  Sie zeigt nur, wie ein echter ACTION_REQUEST
+  strukturell aussehen wird.
+
+  Später kann GPT genau dieses JSON erzeugen.
+*/
+
+function createActionRequestFromTarget(target){
+
+  if(!target) return;
+
+  const action = {
+
+    schema:"EOTS_ACTION_REQUEST",
+
+    version:"1.0",
+
+    action_id:
+      EOTS.nextId("ACT","action"),
+
+    timestamp:EOTS.now(),
+
+    target:{
+
+      tag:target.tag,
+
+      id:target.id,
+
+      text:target.text
+
+    },
+
+    action:{
+      type:
+        target.tag === "input"
+          ? "FOCUS"
+          : "CLICK"
+    },
+
+    requiresApproval:true
+
+  };
+
+  EOTS.state.actionRequest = action;
+
+  document.getElementById("actionDescription")
+    .textContent =
+      `${action.action.type} → ` +
+      `${target.tag}` +
+      `${target.id ? "#" + target.id : ""}` +
+      `${target.text ? " · " + target.text : ""}`;
+
+  document.getElementById("actionOutput")
+    .textContent =
+      JSON.stringify(action,null,2);
+
+  document.getElementById("actionPanel")
+    .classList.remove("hidden");
+
+}
+
+
+/* =====================================================
+   APPROVAL
+===================================================== */
+
+document
+  .getElementById("approveBtn")
+  .addEventListener("click",approveAction);
+
+
+function approveAction(){
+
+  const action =
+    EOTS.state.actionRequest;
+
+  if(!action) return;
+
+  EOTS.log(
+    "ACTION_APPROVED",
+    {
+      message:
+        `${action.action_id} freigegeben`
+    }
+  );
+
+  /*
+    Hier wird bewusst noch keine beliebige
+    Aktion ausgeführt.
+
+    Der nächste Schritt ist die echte
+    Target-Auflösung innerhalb des
+    Web-Adapters.
+  */
+
+  action.status = "APPROVED";
+
+  document.getElementById("actionOutput")
+    .textContent =
+      JSON.stringify(action,null,2);
+
+  EOTS.status("APPROVED");
+
+}
+
+
+document
+  .getElementById("denyBtn")
+  .addEventListener("click",()=>{
+
+    const action =
+      EOTS.state.actionRequest;
+
+    if(!action) return;
+
+    action.status = "DENIED";
+
+    EOTS.log(
+      "ACTION_DENIED",
+      {
+        message:
+          `${action.action_id} abgelehnt`
+      }
+    );
+
+    document.getElementById("actionOutput")
+      .textContent =
+        JSON.stringify(action,null,2);
+
+    EOTS.status("READY");
+
+  });
+
+
+/* =====================================================
+   NEW CAPTURE
+===================================================== */
+
+document
+  .getElementById("newCaptureBtn")
+  .addEventListener("click",()=>{
+
+    document
+      .getElementById("requestPanel")
+      .classList.add("hidden");
+
+    document
+      .getElementById("actionPanel")
+      .classList.add("hidden");
+
+    document
+      .getElementById("question")
+      .value = "";
+
+    startCapture();
+
+  });
+
+
+/* =====================================================
+   INIT
+===================================================== */
+
+EOTS.log(
+  "EOTS_READY",
+  {
+    message:
+      "Eye Of The Sky initialisiert."
+  }
+);
+
 </script>
+
 </body>
 </html>
