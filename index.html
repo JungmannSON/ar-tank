@@ -2,618 +2,314 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#05010a">
-<title>EOTS — Eye of the Sky</title>
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>EOTS — Visual UI Translator</title>
 
 <style>
 :root{
-  --bg:#05010a;
-  --panel:rgba(10,3,20,.95);
-  --panel2:#090414;
-  --line:rgba(255,47,168,.28);
-  --cyan:#20e7ff;
-  --pink:#ff2fa8;
-  --violet:#8c52ff;
-  --yellow:#ffe66d;
-  --green:#61f5a0;
-  --danger:#ff5f7a;
-  --text:#f6f0ff;
-  --muted:#9a88a8;
-  --glow-c:0 0 14px rgba(32,231,255,.55);
-  --glow-p:0 0 16px rgba(255,47,168,.5);
-  --safe-t:env(safe-area-inset-top,0px);
-  --safe-b:env(safe-area-inset-bottom,0px);
+  --eots-bg:rgba(5,1,10,.96);
+  --eots-panel:rgba(18,12,25,.96);
+  --eots-line:#3b2948;
+  --eots-cyan:#00f5ff;
+  --eots-green:#4ade80;
+  --eots-pink:#ff2aa8;
+  --eots-text:#f4f4f5;
+  --eots-muted:#9ca3af;
 }
 
-*{
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-}
-
-html,body{
-  margin:0;
-  padding:0;
-  min-height:100%;
-  background:var(--bg);
-  color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
-  overflow-x:hidden;
-}
+*{box-sizing:border-box}
 
 body{
-  padding-top:var(--safe-t);
-  padding-bottom:calc(var(--safe-b) + 10px);
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
 }
 
-button,
-input,
-select{
-  font-family:inherit;
+/* =========================================================
+   DEMO UI
+   EOTS kann später auf eine beliebige bestehende UI gelegt
+   werden. Dieser Bereich dient nur zum Testen.
+   ========================================================= */
+
+.demo{
+  min-height:100vh;
+  background:#08080a;
+  color:white;
+  padding:24px;
 }
 
-.sky{
+.demo h1{
+  margin:0 0 8px;
+}
+
+.demo p{
+  color:#999;
+}
+
+.demo-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:16px;
+  margin-top:30px;
+}
+
+.demo-card{
+  border:1px solid #29292d;
+  border-radius:14px;
+  padding:20px;
+  background:#111115;
+}
+
+.demo-button{
+  width:100%;
+  padding:14px;
+  border:0;
+  border-radius:10px;
+  cursor:pointer;
+  background:#00f5ff;
+  color:#001014;
+  font-weight:bold;
+}
+
+/* =========================================================
+   EOTS
+   ========================================================= */
+
+#eots{
   position:fixed;
   inset:0;
-  pointer-events:none;
-  z-index:0;
-  background:
-    radial-gradient(ellipse at 50% -10%,rgba(255,47,168,.2),transparent 55%),
-    radial-gradient(ellipse at 90% 70%,rgba(32,231,255,.07),transparent 45%),
-    linear-gradient(180deg,#0b0216 0%,#05010a 65%);
-}
-
-.sky::after{
-  content:"";
-  position:absolute;
-  left:-25%;
-  right:-25%;
-  bottom:-8%;
-  height:42%;
-  transform:perspective(420px) rotateX(56deg);
-  background-image:
-    linear-gradient(rgba(32,231,255,.11) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,47,168,.09) 1px,transparent 1px);
-  background-size:30px 30px;
-  opacity:.55;
-}
-
-.app{
-  position:relative;
-  z-index:1;
-  max-width:760px;
-  margin:0 auto;
-  padding:10px 12px 20px;
-}
-
-.header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  margin-bottom:12px;
-  flex-wrap:wrap;
-}
-
-.brand{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.orb{
-  width:40px;
-  height:40px;
-  border-radius:50%;
-  flex-shrink:0;
-  background:
-    radial-gradient(
-      circle at 32% 28%,
-      #fff 0 5%,
-      #9df8ff 9%,
-      var(--cyan) 26%,
-      var(--violet) 55%,
-      var(--pink) 78%,
-      transparent 82%
-    );
-  box-shadow:var(--glow-c),0 0 26px rgba(255,47,168,.4);
-  animation:float 3s ease-in-out infinite;
-}
-
-@keyframes float{
-  50%{transform:translateY(-3px)}
-}
-
-.title{
-  font-size:21px;
-  font-weight:900;
-  letter-spacing:.14em;
-  line-height:1;
-}
-
-.subtitle{
-  font-size:9px;
-  letter-spacing:.2em;
-  color:var(--muted);
-  margin-top:2px;
-}
-
-.chain,
-.status{
-  font-size:9px;
-  letter-spacing:.1em;
-  border-radius:999px;
-  padding:5px 10px;
-  white-space:nowrap;
-}
-
-.chain{
-  color:var(--cyan);
-  border:1px solid rgba(32,231,255,.35);
-  background:rgba(32,231,255,.06);
-}
-
-.status{
-  font-weight:800;
-  color:var(--green);
-  border:1px solid rgba(97,245,160,.45);
-  background:rgba(97,245,160,.07);
-}
-
-.status.busy{
-  color:var(--cyan);
-  border-color:rgba(32,231,255,.5);
-  background:rgba(32,231,255,.08);
-}
-
-.status.warn{
-  color:var(--yellow);
-  border-color:rgba(255,230,109,.5);
-  background:rgba(255,230,109,.08);
-}
-
-.panel{
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:12px;
-  margin-bottom:10px;
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
-  box-shadow:0 8px 28px rgba(0,0,0,.4);
-}
-
-.ptitle{
-  font-size:10px;
-  font-weight:800;
-  letter-spacing:.16em;
-  color:var(--cyan);
-  margin-bottom:8px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.ptitle span{
-  color:var(--muted);
-  font-weight:500;
-  letter-spacing:.06em;
-  font-size:9px;
-}
-
-.vwrap{
-  position:relative;
-  width:100%;
-  background:#020008;
-  border-radius:12px;
-  overflow:hidden;
-  border:1px solid rgba(32,231,255,.22);
-  min-height:160px;
-  touch-action:none;
-}
-
-#vcanvas{
-  display:block;
-  width:100%;
-  height:auto;
-  max-height:48vh;
-  background:#08030f;
-}
-
-.selbox{
-  position:absolute;
-  border:2px solid var(--cyan);
-  background:rgba(32,231,255,.1);
-  box-shadow:
-    0 0 0 1px rgba(255,47,168,.45),
-    var(--glow-c);
+  z-index:999999;
   pointer-events:none;
   display:none;
 }
 
-.sellabel{
+#eots.active{
+  display:block;
+}
+
+/* Abdunklung */
+
+#eotsShade{
   position:absolute;
-  top:-24px;
-  left:0;
-  font-size:8px;
-  font-family:ui-monospace,monospace;
-  background:#090414;
-  color:var(--cyan);
-  border:1px solid var(--cyan);
-  padding:2px 6px;
-  border-radius:5px;
+  inset:0;
+  background:rgba(0,0,0,.18);
+  pointer-events:none;
+}
+
+/* Auswahlrahmen */
+
+#eotsBox{
+  position:fixed;
+  display:none;
+  border:2px solid var(--eots-cyan);
+  box-shadow:
+    0 0 0 1px rgba(0,245,255,.25),
+    0 0 20px rgba(0,245,255,.35);
+  pointer-events:none;
+}
+
+#eotsBoxLabel{
+  position:absolute;
+  left:-2px;
+  top:-27px;
+  background:var(--eots-cyan);
+  color:#001014;
+  padding:5px 8px;
+  font-size:11px;
+  font-weight:bold;
   white-space:nowrap;
 }
 
-.ph{
-  position:absolute;
-  inset:0;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  color:var(--muted);
-  font-size:12px;
-  text-align:center;
+/* Bedienpanel */
+
+#eotsPanel{
+  position:fixed;
+  right:16px;
+  bottom:16px;
+  width:min(390px,calc(100vw - 32px));
+  max-height:calc(100vh - 32px);
+  overflow:auto;
+
+  background:var(--eots-bg);
+  border:1px solid var(--eots-line);
+  border-radius:18px;
+
+  box-shadow:
+    0 20px 80px rgba(0,0,0,.65),
+    0 0 30px rgba(0,245,255,.08);
+
+  color:var(--eots-text);
+  pointer-events:auto;
+
   padding:16px;
-  pointer-events:none;
 }
 
-.ph strong{
-  color:var(--cyan);
-  display:block;
-  margin-bottom:4px;
-  letter-spacing:.12em;
-  font-size:11px;
-}
-
-.row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:7px;
-  margin-top:8px;
-}
-
-.row.full{
-  grid-template-columns:1fr;
-}
-
-button,
-.fbtn{
-  min-height:46px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.1);
-  background:#120a1c;
-  color:#fff;
-  font-weight:800;
-  font-size:11px;
-  letter-spacing:.07em;
-  cursor:pointer;
+.eots-header{
   display:flex;
   align-items:center;
-  justify-content:center;
-  gap:5px;
-  padding:0 10px;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
 }
 
-button:active,
-.fbtn:active{
-  transform:scale(.97);
-}
-
-button:disabled{
-  opacity:.38;
-  pointer-events:none;
-}
-
-.bc{
-  background:rgba(32,231,255,.1);
-  border-color:rgba(32,231,255,.42);
-  color:var(--cyan);
-}
-
-.bp{
-  background:rgba(255,47,168,.12);
-  border-color:rgba(255,47,168,.48);
-  color:#ff8fd0;
-}
-
-.bv{
-  background:rgba(140,82,255,.12);
-  border-color:rgba(140,82,255,.42);
-  color:#c4a0ff;
-}
-
-.bg{
-  background:rgba(97,245,160,.1);
-  border-color:rgba(97,245,160,.38);
-  color:var(--green);
-}
-
-.bd{
-  background:rgba(255,95,122,.1);
-  border-color:rgba(255,95,122,.38);
-  color:var(--danger);
-}
-
-.bm{
-  background:linear-gradient(
-    100deg,
-    var(--pink),
-    #b33cff 48%,
-    var(--cyan)
-  );
-  border:none;
-  color:#fff;
-  box-shadow:0 6px 20px rgba(255,47,168,.28);
-  font-size:12px;
-  letter-spacing:.1em;
-  min-height:50px;
-}
-
-.fbtn{
-  position:relative;
-  overflow:hidden;
-}
-
-.fbtn input{
-  position:absolute;
-  inset:0;
-  opacity:0;
-  cursor:pointer;
-  font-size:80px;
-}
-
-.tabs{
+.eots-logo{
   display:flex;
-  gap:4px;
+  align-items:center;
+  gap:9px;
+  font-weight:bold;
+}
+
+.eots-eye{
+  width:12px;
+  height:12px;
+  border:2px solid var(--eots-cyan);
+  border-radius:50%;
+  box-shadow:0 0 10px var(--eots-cyan);
+}
+
+.eots-close{
+  border:1px solid #3b2948;
+  background:#151019;
+  color:#aaa;
+  border-radius:8px;
+  padding:6px 9px;
+  cursor:pointer;
+}
+
+.eots-status{
+  font-size:12px;
+  color:var(--eots-muted);
+  margin-bottom:12px;
+}
+
+.eots-status strong{
+  color:var(--eots-green);
+}
+
+.eots-section{
+  border-top:1px solid #29202f;
+  padding-top:12px;
+  margin-top:12px;
+}
+
+.eots-title{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:#888;
   margin-bottom:8px;
 }
 
-.tab{
-  flex:1;
-  min-height:36px;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,.1);
-  background:#100818;
-  color:var(--muted);
-  font-size:10px;
-  font-weight:800;
-  letter-spacing:.08em;
-}
-
-.tab.on{
-  border-color:var(--cyan);
-  color:var(--cyan);
-  background:rgba(32,231,255,.1);
-}
-
-.elist,
-.rlist{
-  max-height:220px;
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-}
-
-.eitem{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:9px;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,.07);
-  background:rgba(255,255,255,.025);
-  margin-bottom:5px;
-  font-size:11px;
-  cursor:pointer;
-}
-
-.eitem.on{
-  border-color:var(--cyan);
-  background:rgba(32,231,255,.12);
-  box-shadow:var(--glow-c);
-}
-
-.eitem .id{
-  color:var(--cyan);
-  font-family:ui-monospace,monospace;
-  font-size:9px;
-}
-
-.eitem .ty{
-  color:var(--pink);
-  font-weight:800;
-  letter-spacing:.05em;
-  font-size:9px;
-}
-
-.eitem .tx{
-  flex:1;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-
-.typeBadge{
-  border:1px solid rgba(255,47,168,.35);
-  color:#ff8fd0;
-  background:rgba(255,47,168,.08);
-  padding:4px 6px;
-  border-radius:7px;
-  font-size:8px;
-  font-weight:800;
-  white-space:nowrap;
-}
-
-.empty{
-  font-size:11px;
-  color:var(--muted);
-  text-align:center;
-  padding:14px 6px;
-}
-
-.igrid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:6px 8px;
-  font-size:11px;
-}
-
-.igrid .full{
-  grid-column:1 / -1;
-}
-
-.fl{
-  font-size:8px;
-  letter-spacing:.12em;
-  color:var(--muted);
-  margin-bottom:2px;
-}
-
-.fv,
-select,
-input[type="text"],
-input[type="number"]{
-  width:100%;
-  background:#07030d;
-  border:1px solid rgba(32,231,255,.2);
+.eots-value{
+  background:#0b0b0e;
+  border:1px solid #29292f;
   border-radius:9px;
-  color:var(--text);
-  padding:8px 9px;
+  padding:10px;
   font-size:12px;
-  font-family:inherit;
-  outline:none;
-}
-
-.fv{
-  min-height:36px;
-  display:flex;
-  align-items:center;
-  word-break:break-all;
-}
-
-select:focus,
-input:focus{
-  border-color:var(--cyan);
-  box-shadow:0 0 0 2px rgba(32,231,255,.1);
-}
-
-.annotationSource{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:6px;
-  margin-top:8px;
-}
-
-.sourceCard{
-  border:1px solid rgba(255,255,255,.08);
-  background:rgba(255,255,255,.025);
-  border-radius:9px;
-  padding:7px;
-}
-
-.sourceCard .small{
-  font-size:8px;
-  color:var(--muted);
-  letter-spacing:.1em;
-}
-
-.sourceCard .value{
-  margin-top:3px;
-  color:var(--cyan);
-  font-size:10px;
-  font-weight:700;
-}
-
-.ctxbox{
-  background:#030108;
-  border:1px solid rgba(32,231,255,.25);
-  border-radius:12px;
-  padding:12px;
-  min-height:160px;
-  max-height:360px;
-  overflow-y:auto;
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-  font-size:10px;
-  line-height:1.55;
-  color:#c8f4ff;
-  white-space:pre-wrap;
+  line-height:1.5;
   word-break:break-word;
 }
 
-.ctxbox:empty::before{
-  content:"Noch kein Kontext. Markiere Elemente und erzeuge den LLM-Kontext.";
-  color:var(--muted);
+.eots-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
 }
 
-.schemaHint{
-  margin-top:8px;
-  padding:8px;
+.eots-btn{
+  border:1px solid #3b2948;
+  background:#151019;
+  color:white;
+  padding:11px;
   border-radius:9px;
-  border:1px solid rgba(140,82,255,.25);
-  background:rgba(140,82,255,.05);
-  color:#bda6e8;
-  font-size:9px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.eots-btn:hover{
+  border-color:var(--eots-cyan);
+}
+
+.eots-btn.primary{
+  background:var(--eots-cyan);
+  border-color:var(--eots-cyan);
+  color:#001014;
+}
+
+.eots-btn.green{
+  background:var(--eots-green);
+  border-color:var(--eots-green);
+  color:#031008;
+}
+
+.eots-btn.pink{
+  border-color:var(--eots-pink);
+  color:#ff8bca;
+}
+
+#eotsOutput{
+  width:100%;
+  min-height:180px;
+  resize:vertical;
+
+  background:#050507;
+  color:#c9faff;
+
+  border:1px solid #29292f;
+  border-radius:9px;
+
+  padding:10px;
+
+  font-family:monospace;
+  font-size:11px;
   line-height:1.45;
 }
 
-.footer{
-  text-align:center;
-  font-size:9px;
-  letter-spacing:.14em;
-  color:#564860;
-  margin-top:14px;
-}
+/* kleines Start-Element */
 
-.toast{
+#eotsLauncher{
   position:fixed;
-  bottom:calc(var(--safe-b) + 18px);
-  left:50%;
-  transform:translateX(-50%);
-  background:#10081a;
-  border:1px solid var(--cyan);
-  color:var(--cyan);
-  padding:9px 16px;
-  border-radius:11px;
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:.06em;
-  z-index:9999;
-  box-shadow:var(--glow-c);
-  opacity:0;
-  pointer-events:none;
-  transition:opacity .22s;
+  right:18px;
+  top:18px;
+  z-index:999998;
+
+  width:46px;
+  height:46px;
+
+  border-radius:50%;
+  border:1px solid var(--eots-cyan);
+
+  background:#080b0d;
+  color:var(--eots-cyan);
+
+  cursor:pointer;
+
+  box-shadow:
+    0 0 18px rgba(0,245,255,.25);
+
+  font-size:18px;
 }
 
-.toast.show{
-  opacity:1;
+#eotsLauncher.active{
+  background:var(--eots-cyan);
+  color:#001014;
 }
 
-.hidden{
-  display:none!important;
-}
+/* Mobile */
 
-::-webkit-scrollbar{
-  width:3px;
-}
+@media(max-width:600px){
 
-::-webkit-scrollbar-thumb{
-  background:rgba(32,231,255,.28);
-  border-radius:3px;
-}
-
-@media(max-width:520px){
-  .header{
-    align-items:flex-start;
+  #eotsPanel{
+    right:8px;
+    bottom:8px;
+    width:calc(100vw - 16px);
+    max-height:70vh;
   }
 
-  .igrid{
-    grid-template-columns:1fr 1fr;
-  }
-
-  .title{
-    font-size:19px;
+  #eotsLauncher{
+    right:12px;
+    top:12px;
   }
 }
 </style>
@@ -621,2442 +317,950 @@ input:focus{
 
 <body>
 
-<div class="sky"></div>
+<!-- =======================================================
+     BEISPIEL-UI
+     ======================================================= -->
 
-<div class="app">
+<main class="demo">
 
-<header class="header">
+  <h1>Meine Anwendung</h1>
 
-  <div class="brand">
-    <div class="orb"></div>
+  <p>
+    Diese Oberfläche ist nur Testmaterial für EOTS.
+    EOTS kann darübergelegt werden.
+  </p>
 
-    <div>
-      <div class="title">EOTS</div>
-      <div class="subtitle">EYE OF THE SKY</div>
-    </div>
-  </div>
+  <div class="demo-grid">
 
-  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-    <div class="chain">USER → EOTS → LLM</div>
-    <div id="status" class="status">● READY</div>
-  </div>
-
-</header>
-
-
-<!-- VISUAL FIELD -->
-
-<section class="panel">
-
-  <div class="ptitle">
-    VISUAL FIELD
-    <span id="imgMeta">kein Bild</span>
-  </div>
-
-  <div class="vwrap" id="vwrap">
-
-    <canvas id="vcanvas"></canvas>
-
-    <div id="selbox" class="selbox">
-      <div class="sellabel">EOTS SEES THIS</div>
-    </div>
-
-    <div id="ph" class="ph">
-      <strong>LOAD SCREENSHOT</strong>
-      Tippe LOAD und wähle ein UI-Bild
-    </div>
-
-  </div>
-
-  <div class="row">
-
-    <label class="fbtn bc">
-      LOAD IMAGE
-      <input type="file" id="file" accept="image/*">
-    </label>
-
-    <button id="btnClearBox" class="bv" disabled>
-      CLEAR BOX
-    </button>
-
-  </div>
-
-  <div class="row full" style="margin-top:7px;">
-
-    <button id="btnMake" class="bm" disabled>
-      ＋ ELEMENT AUS AUSWAHL
-    </button>
-
-  </div>
-
-</section>
-
-
-<!-- STRUCTURE -->
-
-<section class="panel">
-
-  <div class="ptitle">
-    VISUAL STRUCTURE
-    <span id="cnt">0 elements</span>
-  </div>
-
-  <div class="tabs">
-
-    <button class="tab on" data-tab="els">
-      ELEMENTS
-    </button>
-
-    <button class="tab" data-tab="rels">
-      RELATIONS
-    </button>
-
-    <button class="tab" data-tab="insp">
-      INSPECT
-    </button>
-
-  </div>
-
-
-  <!-- ELEMENTS -->
-
-  <div id="tab-els">
-
-    <div id="elist" class="elist">
-      <div class="empty">
-        Noch keine Elemente.
-      </div>
-    </div>
-
-  </div>
-
-
-  <!-- RELATIONS -->
-
-  <div id="tab-rels" class="hidden">
-
-    <div class="igrid" style="margin-bottom:8px;">
-
-      <div class="full">
-
-        <div class="fl">SOURCE</div>
-
-        <select id="relSrc">
-          <option value="">—</option>
-        </select>
-
-      </div>
-
-
-      <div>
-
-        <div class="fl">RELATION</div>
-
-        <select id="relType">
-
-          <option value="inside">inside</option>
-          <option value="contains">contains</option>
-          <option value="above">above</option>
-          <option value="below">below</option>
-          <option value="left_of">left_of</option>
-          <option value="right_of">right_of</option>
-          <option value="adjacent_to">adjacent_to</option>
-          <option value="aligned_with">aligned_with</option>
-          <option value="label_for">label_for</option>
-          <option value="controls">controls</option>
-          <option value="associated_with">associated_with</option>
-
-        </select>
-
-      </div>
-
-
-      <div>
-
-        <div class="fl">TARGET</div>
-
-        <select id="relTgt">
-          <option value="">—</option>
-        </select>
-
-      </div>
-
-    </div>
-
-
-    <button id="btnAddRel" class="bp" style="width:100%;">
-      ＋ RELATION
-    </button>
-
-
-    <div
-      id="rlist"
-      class="rlist"
-      style="margin-top:8px;"
-    >
-      <div class="empty">
-        Keine Beziehungen.
-      </div>
-    </div>
-
-  </div>
-
-
-  <!-- INSPECTOR -->
-
-  <div id="tab-insp" class="hidden">
-
-    <div class="igrid">
-
-      <div class="full">
-
-        <div class="fl">ID</div>
-
-        <div class="fv" id="iId">
-          —
-        </div>
-
-      </div>
-
-
-      <div>
-
-        <div class="fl">
-          TYPE / SEMANTISCHE MARKIERUNG
-        </div>
-
-        <select id="iType">
-
-          <option value="unknown">unknown</option>
-          <option value="button">button</option>
-          <option value="text">text</option>
-          <option value="heading">heading</option>
-          <option value="image">image</option>
-          <option value="icon">icon</option>
-          <option value="input">input</option>
-          <option value="textarea">textarea</option>
-          <option value="checkbox">checkbox</option>
-          <option value="switch">switch</option>
-          <option value="menu">menu</option>
-          <option value="navigation">navigation</option>
-          <option value="panel">panel</option>
-          <option value="card">card</option>
-          <option value="table">table</option>
-          <option value="list">list</option>
-          <option value="link">link</option>
-          <option value="status">status</option>
-          <option value="container">container</option>
-
-        </select>
-
-      </div>
-
-
-      <div>
-
-        <div class="fl">
-          FUNCTION
-        </div>
-
-        <input
-          type="text"
-          id="iFn"
-          placeholder="null"
-        >
-
-      </div>
-
-
-      <div class="full">
-
-        <div class="fl">
-          TEXT / LABEL
-        </div>
-
-        <input
-          type="text"
-          id="iText"
-          placeholder="null"
-        >
-
-      </div>
-
-
-      <div>
-        <div class="fl">X</div>
-        <input type="number" id="iX" readonly>
-      </div>
-
-      <div>
-        <div class="fl">Y</div>
-        <input type="number" id="iY" readonly>
-      </div>
-
-      <div>
-        <div class="fl">W</div>
-        <input type="number" id="iW" readonly>
-      </div>
-
-      <div>
-        <div class="fl">H</div>
-        <input type="number" id="iH" readonly>
-      </div>
-
-    </div>
-
-
-    <div class="annotationSource">
-
-      <div class="sourceCard">
-
-        <div class="small">
-          GEOMETRY SOURCE
-        </div>
-
-        <div class="value">
-          VISUAL SELECTION
-        </div>
-
-      </div>
-
-      <div class="sourceCard">
-
-        <div class="small">
-          SEMANTICS SOURCE
-        </div>
-
-        <div
-          class="value"
-          id="iSemanticSource"
-        >
-          USER
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <div class="row" style="margin-top:8px;">
-
-      <button id="btnUpd" class="bc" disabled>
-        UPDATE
+    <section class="demo-card">
+      <h3>Projekt</h3>
+      <p>Aktuelles Projekt öffnen.</p>
+      <button class="demo-button">
+        Projekt öffnen
       </button>
+    </section>
 
-      <button id="btnDel" class="bd" disabled>
-        DELETE
+    <section class="demo-card">
+      <h3>Datenbank</h3>
+      <p>Datensätze verwalten.</p>
+      <button class="demo-button">
+        Datenbank öffnen
+      </button>
+    </section>
+
+    <section class="demo-card">
+      <h3>Analyse</h3>
+      <p>Systemanalyse starten.</p>
+      <button class="demo-button">
+        Analyse starten
+      </button>
+    </section>
+
+  </div>
+
+</main>
+
+
+<!-- =======================================================
+     EOTS LAUNCHER
+     ======================================================= -->
+
+<button id="eotsLauncher"
+        aria-label="EOTS öffnen"
+        title="EOTS">
+  ◉
+</button>
+
+
+<!-- =======================================================
+     EOTS OVERLAY
+     ======================================================= -->
+
+<div id="eots">
+
+  <div id="eotsShade"></div>
+
+  <div id="eotsBox">
+    <div id="eotsBoxLabel">
+      EOTS
+    </div>
+  </div>
+
+  <aside id="eotsPanel">
+
+    <div class="eots-header">
+
+      <div class="eots-logo">
+        <span class="eots-eye"></span>
+        <span>EOTS</span>
+      </div>
+
+      <button class="eots-close"
+              id="eotsClose">
+        ×
       </button>
 
     </div>
 
-  </div>
-
-</section>
-
-
-<!-- LLM CONTEXT -->
-
-<section class="panel">
-
-  <div class="ptitle">
-
-    EOTS → LLM CONTEXT
-
-    <span>
-      structured visual text
-    </span>
-
-  </div>
+    <div class="eots-status">
+      Modus:
+      <strong id="eotsMode">
+        AUS
+      </strong>
+    </div>
 
 
-  <div id="ctx" class="ctxbox"></div>
+    <div class="eots-section">
+
+      <div class="eots-title">
+        Erkanntes Element
+      </div>
+
+      <div class="eots-value"
+           id="eotsElement">
+        Noch kein Element ausgewählt.
+      </div>
+
+    </div>
 
 
-  <div class="schemaHint">
+    <div class="eots-section">
 
-    <b>LLM CONTRACT:</b>
-    EOTS beschreibt nur explizit vorhandene Informationen.
-    Geometrie kommt aus der visuellen Auswahl.
-    Semantik kommt aus der manuellen Markierung.
-    Beziehungen werden als eigene Struktur ausgegeben.
-    Unbekannte Werte bleiben <b>null</b> oder <b>unknown</b>.
+      <div class="eots-title">
+        Aktionen
+      </div>
 
-  </div>
+      <div class="eots-actions">
 
+        <button class="eots-btn primary"
+                id="eotsSelect">
+          Element markieren
+        </button>
 
-  <div class="row" style="margin-top:8px;">
+        <button class="eots-btn"
+                id="eotsAll">
+          Alle Buttons
+        </button>
 
-    <button id="btnGen" class="bm">
-      GENERATE CONTEXT
-    </button>
+        <button class="eots-btn green"
+                id="eotsAdd">
+          Hinzufügen
+        </button>
 
-    <button id="btnCopy" class="bc">
-      COPY CONTEXT
-    </button>
+        <button class="eots-btn pink"
+                id="eotsClear">
+          Auswahl löschen
+        </button>
 
-  </div>
+      </div>
 
-
-  <div class="row" style="margin-top:7px;">
-
-    <button id="btnExport" class="bv">
-      EXPORT JSON
-    </button>
-
-    <button id="btnClear" class="bd">
-      CLEAR ALL
-    </button>
-
-  </div>
-
-</section>
+    </div>
 
 
-<div class="footer">
-  EOTS · VISUAL LINK · USER → EOTS → LLM · v1.1
+    <div class="eots-section">
+
+      <div class="eots-title">
+        LLM-Kontext / JSON
+      </div>
+
+      <textarea id="eotsOutput"
+                spellcheck="false"></textarea>
+
+    </div>
+
+
+    <div class="eots-section">
+
+      <div class="eots-actions">
+
+        <button class="eots-btn"
+                id="eotsCopy">
+          JSON kopieren
+        </button>
+
+        <button class="eots-btn"
+                id="eotsDownload">
+          JSON speichern
+        </button>
+
+      </div>
+
+    </div>
+
+  </aside>
+
 </div>
-
-</div>
-
-
-<div id="toast" class="toast"></div>
 
 
 <script>
+/* =========================================================
+   EOTS CORE
+   ========================================================= */
 
-const EOTS = {
+(() => {
 
-  version:"1.1",
-  schema:"1.1",
-
-  state:{
-    image:null,
-
-    nw:0,
-    nh:0,
-    scale:1,
-
-    selection:null,
-
-    elements:[],
-    relationships:[],
-
-    selected:new Set(),
-    focusId:null,
-
-    nextE:1,
-    nextR:1,
-
-    contextText:""
-  },
-
-  canvas:null,
-  ctx:null,
+  "use strict";
 
 
-  /* ------------------------------------------------ */
-  /* BASIC UI */
-  /* ------------------------------------------------ */
+  const launcher =
+    document.getElementById("eotsLauncher");
 
-  status(text,cls){
+  const overlay =
+    document.getElementById("eots");
 
-    const el=document.getElementById("status");
+  const panel =
+    document.getElementById("eotsPanel");
 
-    el.textContent="● "+text;
+  const box =
+    document.getElementById("eotsBox");
 
-    el.className="status"+(
-      cls ? " "+cls : ""
-    );
-  },
+  const boxLabel =
+    document.getElementById("eotsBoxLabel");
+
+  const mode =
+    document.getElementById("eotsMode");
+
+  const elementView =
+    document.getElementById("eotsElement");
+
+  const output =
+    document.getElementById("eotsOutput");
+
+  const selectButton =
+    document.getElementById("eotsSelect");
+
+  const allButton =
+    document.getElementById("eotsAll");
+
+  const addButton =
+    document.getElementById("eotsAdd");
+
+  const clearButton =
+    document.getElementById("eotsClear");
+
+  const copyButton =
+    document.getElementById("eotsCopy");
+
+  const downloadButton =
+    document.getElementById("eotsDownload");
+
+  const closeButton =
+    document.getElementById("eotsClose");
 
 
-  toast(message){
+  let active = false;
+  let selecting = false;
 
-    const el=document.getElementById("toast");
-
-    el.textContent=message;
-
-    el.classList.add("show");
-
-    setTimeout(()=>{
-      el.classList.remove("show");
-    },2000);
-  },
+  let selectedElements = [];
+  let hoveredElement = null;
 
 
-  id(prefix,key){
+  /* =======================================================
+     EOTS ÖFFNEN / SCHLIESSEN
+     ======================================================= */
 
-    const n=this.state[key]++;
+  function openEOTS(){
 
-    return prefix+"-"+String(n).padStart(4,"0");
-  },
+    active = true;
+
+    overlay.classList.add("active");
+    launcher.classList.add("active");
+
+    mode.textContent =
+      "BEREIT";
+
+    mode.style.color =
+      "var(--eots-green)";
+
+    document.body.style.cursor =
+      "default";
+  }
 
 
-  /* ------------------------------------------------ */
-  /* ANALYZER */
-  /* ------------------------------------------------ */
+  function closeEOTS(){
 
-  Analyzer:{
+    active = false;
+    selecting = false;
 
-    name:"ManualAnalyzer",
+    overlay.classList.remove("active");
+    launcher.classList.remove("active");
 
-    analyze(selection){
+    hideBox();
 
-      return {
+    document.body.style.cursor =
+      "default";
+  }
 
-        type:"unknown",
 
-        text:null,
+  launcher.addEventListener(
+    "click",
+    () => {
 
-        function:null,
+      if(active){
+        closeEOTS();
+      }else{
+        openEOTS();
+      }
 
-        appearance:{},
+    }
+  );
 
-        bounds:{
-          ...selection
-        },
 
-        sources:{
-          geometry:"visual_selection",
-          type:"unknown",
-          text:"unknown",
-          function:"unknown"
-        }
+  closeButton.addEventListener(
+    "click",
+    closeEOTS
+  );
 
-      };
+
+  /* =======================================================
+     AUSWAHLMODUS
+     ======================================================= */
+
+  selectButton.addEventListener(
+    "click",
+    () => {
+
+      selecting = !selecting;
+
+      if(selecting){
+
+        mode.textContent =
+          "ELEMENT WÄHLEN";
+
+        mode.style.color =
+          "var(--eots-cyan)";
+
+        document.body.style.cursor =
+          "crosshair";
+
+      }else{
+
+        mode.textContent =
+          "BEREIT";
+
+        document.body.style.cursor =
+          "default";
+
+        hideBox();
+
+      }
+
+    }
+  );
+
+
+  /* =======================================================
+     HOVER
+     ======================================================= */
+
+  document.addEventListener(
+    "mousemove",
+    event => {
+
+      if(!active || !selecting){
+        return;
+      }
+
+      const target =
+        document.elementFromPoint(
+          event.clientX,
+          event.clientY
+        );
+
+      if(!target){
+        return;
+      }
+
+      /*
+       * EOTS selbst darf niemals als UI-Element
+       * ausgewählt werden.
+       */
+
+      if(
+        target.closest("#eots") ||
+        target.closest("#eotsLauncher")
+      ){
+        return;
+      }
+
+      hoveredElement = target;
+
+      showBox(target);
+
+    },
+    true
+  );
+
+
+  /* =======================================================
+     KLICK AUF ELEMENT
+     ======================================================= */
+
+  document.addEventListener(
+    "click",
+    event => {
+
+      if(!active || !selecting){
+        return;
+      }
+
+      const target =
+        event.target;
+
+      if(
+        target.closest("#eots") ||
+        target.closest("#eotsLauncher")
+      ){
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      selectElement(target);
+
+    },
+    true
+  );
+
+
+  /* =======================================================
+     ELEMENT DARSTELLEN
+     ======================================================= */
+
+  function showBox(element){
+
+    const rect =
+      element.getBoundingClientRect();
+
+    box.style.display =
+      "block";
+
+    box.style.left =
+      rect.left + "px";
+
+    box.style.top =
+      rect.top + "px";
+
+    box.style.width =
+      rect.width + "px";
+
+    box.style.height =
+      rect.height + "px";
+
+    boxLabel.textContent =
+      describeTag(element);
+
+  }
+
+
+  function hideBox(){
+
+    box.style.display =
+      "none";
+
+  }
+
+
+  /* =======================================================
+     ELEMENT AUSWÄHLEN
+     ======================================================= */
+
+  function selectElement(element){
+
+    if(
+      element === document.body ||
+      element === document.documentElement
+    ){
+      return;
+    }
+
+    const data =
+      inspectElement(element);
+
+    const exists =
+      selectedElements.some(
+        item => item.id === data.id
+      );
+
+    if(!exists){
+
+      selectedElements.push(data);
 
     }
 
-  },
+    selecting = false;
+
+    mode.textContent =
+      "ELEMENT ERFASST";
+
+    mode.style.color =
+      "var(--eots-green)";
+
+    document.body.style.cursor =
+      "default";
+
+    showBox(element);
+
+    renderSelection();
+
+  }
 
 
-  /* ------------------------------------------------ */
-  /* CANVAS */
-  /* ------------------------------------------------ */
+  /* =======================================================
+     ELEMENT ANALYSIEREN
+     ======================================================= */
 
-  initCanvas(){
+  function inspectElement(element){
 
-    this.canvas=document.getElementById("vcanvas");
+    const rect =
+      element.getBoundingClientRect();
 
-    this.ctx=this.canvas.getContext("2d");
-  },
+    const computed =
+      window.getComputedStyle(element);
 
-
-  loadImage(file){
-
-    return new Promise((resolve,reject)=>{
-
-      const url=URL.createObjectURL(file);
-
-      const img=new Image();
-
-      img.onload=()=>{
-
-        URL.revokeObjectURL(url);
-
-        this.state.image=img;
-
-        this.state.nw=img.naturalWidth;
-        this.state.nh=img.naturalHeight;
-
-        this.draw();
-
-        document
-          .getElementById("ph")
-          .classList
-          .add("hidden");
-
-        document
-          .getElementById("imgMeta")
-          .textContent=
-          this.state.nw+
-          "×"+
-          this.state.nh;
-
-        this.status("IMAGE LOADED");
-
-        this.toast("Bild geladen");
-
-        document
-          .getElementById("btnMake")
-          .disabled=true;
-
-        document
-          .getElementById("btnClearBox")
-          .disabled=true;
-
-        resolve();
-
-      };
-
-      img.onerror=reject;
-
-      img.src=url;
-
-    });
-
-  },
-
-
-  draw(){
-
-    if(!this.state.image) return;
-
-    const wrap=document.getElementById("vwrap");
-
-    const maxW=wrap.clientWidth;
-
-    const maxH=window.innerHeight*.48;
-
-    const s=Math.min(
-      maxW/this.state.nw,
-      maxH/this.state.nh,
-      1
-    );
-
-    this.state.scale=s;
-
-    const w=Math.round(this.state.nw*s);
-    const h=Math.round(this.state.nh*s);
-
-    this.canvas.width=w;
-    this.canvas.height=h;
-
-    this.canvas.style.width=w+"px";
-    this.canvas.style.height=h+"px";
-
-    this.ctx.clearRect(
-      0,
-      0,
-      w,
-      h
-    );
-
-    this.ctx.drawImage(
-      this.state.image,
-      0,
-      0,
-      w,
-      h
-    );
-
-    this.drawOverlays();
-  },
-
-
-  drawOverlays(){
-
-    const s=this.state.scale;
-
-    /* ELEMENT BOXES */
-
-    this.state.elements.forEach(el=>{
-
-      const b=el.bounds;
-
-      const active=
-        this.state.selected.has(el.id) ||
-        el.id===this.state.focusId;
-
-      this.ctx.save();
-
-      this.ctx.strokeStyle=
-        active
-          ? "#20e7ff"
-          : "#ff2fa8";
-
-      this.ctx.lineWidth=
-        active
-          ? 2.4
-          : 1.4;
-
-      this.ctx.setLineDash(
-        active ? [] : [5,3]
+    const text =
+      cleanText(
+        element.innerText ||
+        element.textContent ||
+        ""
       );
 
-      this.ctx.strokeRect(
-        b.x*s,
-        b.y*s,
-        b.width*s,
-        b.height*s
-      );
+    const aria =
+      element.getAttribute("aria-label");
 
-      this.ctx.setLineDash([]);
+    const title =
+      element.getAttribute("title");
 
-      this.ctx.font=
-        "bold 10px ui-monospace,monospace";
+    const role =
+      element.getAttribute("role");
 
-      const label=
-        el.id+
-        " ["+
-        (el.type||"unknown")+
-        "]";
-
-      const tw=
-        this.ctx.measureText(label).width;
-
-      const lx=b.x*s;
-
-      const ly=Math.max(
-        14,
-        b.y*s-2
-      );
-
-      this.ctx.fillStyle="#090414";
-
-      this.ctx.fillRect(
-        lx,
-        ly-12,
-        tw+8,
-        14
-      );
-
-      this.ctx.fillStyle=
-        active
-          ? "#20e7ff"
-          : "#ff2fa8";
-
-      this.ctx.fillText(
-        label,
-        lx+3,
-        ly-2
-      );
-
-      this.ctx.restore();
-
-    });
-
-
-    /* RELATION LINES */
-
-    this.state.relationships.forEach(r=>{
-
-      const a=
-        this.state.elements.find(
-          e=>e.id===r.source
-        );
-
-      const b=
-        this.state.elements.find(
-          e=>e.id===r.target
-        );
-
-      if(!a || !b) return;
-
-      const ax=
-        (a.bounds.x+
-        a.bounds.width/2)*s;
-
-      const ay=
-        (a.bounds.y+
-        a.bounds.height/2)*s;
-
-      const bx=
-        (b.bounds.x+
-        b.bounds.width/2)*s;
-
-      const by=
-        (b.bounds.y+
-        b.bounds.height/2)*s;
-
-      this.ctx.save();
-
-      this.ctx.strokeStyle=
-        "rgba(140,82,255,.7)";
-
-      this.ctx.lineWidth=1.2;
-
-      this.ctx.setLineDash([3,3]);
-
-      this.ctx.beginPath();
-
-      this.ctx.moveTo(ax,ay);
-
-      this.ctx.lineTo(bx,by);
-
-      this.ctx.stroke();
-
-      this.ctx.restore();
-
-    });
-
-  },
-
-
-  clientToNatural(cx,cy){
-
-    const rect=
-      this.canvas.getBoundingClientRect();
-
-    const x=
-      (cx-rect.left)/
-      this.state.scale;
-
-    const y=
-      (cy-rect.top)/
-      this.state.scale;
+    const id =
+      element.id ||
+      createElementId(element);
 
     return {
 
-      x:Math.max(
-        0,
-        Math.min(
-          this.state.nw,
-          Math.round(x)
-        )
-      ),
+      id,
 
-      y:Math.max(
-        0,
-        Math.min(
-          this.state.nh,
-          Math.round(y)
-        )
-      )
+      tag:
+        element.tagName.toLowerCase(),
 
-    };
+      type:
+        element.getAttribute("type") || null,
 
-  },
+      text:
+        text.substring(0,500),
 
+      aria_label:
+        aria || null,
 
-  updateSelBox(nx,ny,nw,nh){
+      title:
+        title || null,
 
-    const box=
-      document.getElementById("selbox");
+      role:
+        role || inferRole(element),
 
-    const s=this.state.scale;
+      class:
+        typeof element.className === "string"
+          ? element.className
+          : null,
 
-    const rect=
-      this.canvas.getBoundingClientRect();
-
-    const wrapRect=
-      document
-      .getElementById("vwrap")
-      .getBoundingClientRect();
-
-    box.style.display="block";
-
-    box.style.left=
-      (rect.left-wrapRect.left+nx*s)+"px";
-
-    box.style.top=
-      (rect.top-wrapRect.top+ny*s)+"px";
-
-    box.style.width=
-      (nw*s)+"px";
-
-    box.style.height=
-      (nh*s)+"px";
-  },
-
-
-  hideSelBox(){
-
-    document
-      .getElementById("selbox")
-      .style.display="none";
-
-  },
-
-
-  /* ------------------------------------------------ */
-  /* VISUAL SELECTION */
-  /* ------------------------------------------------ */
-
-  selecting:false,
-  selStart:null,
-
-
-  onDown(e){
-
-    if(!this.state.image) return;
-
-    e.preventDefault();
-
-    this.selecting=true;
-
-    const p=
-      this.clientToNatural(
-        e.clientX,
-        e.clientY
-      );
-
-    this.selStart=p;
-
-    this.state.selection={
-      x:p.x,
-      y:p.y,
-      width:0,
-      height:0
-    };
-
-    this.updateSelBox(
-      p.x,
-      p.y,
-      0,
-      0
-    );
-
-    this.status(
-      "SELECTING",
-      "busy"
-    );
-
-  },
-
-
-  onMove(e){
-
-    if(
-      !this.selecting ||
-      !this.selStart
-    ) return;
-
-    e.preventDefault();
-
-    const p=
-      this.clientToNatural(
-        e.clientX,
-        e.clientY
-      );
-
-    const x=
-      Math.min(
-        this.selStart.x,
-        p.x
-      );
-
-    const y=
-      Math.min(
-        this.selStart.y,
-        p.y
-      );
-
-    const w=
-      Math.abs(
-        p.x-this.selStart.x
-      );
-
-    const h=
-      Math.abs(
-        p.y-this.selStart.y
-      );
-
-    this.state.selection={
-      x,
-      y,
-      width:w,
-      height:h
-    };
-
-    this.updateSelBox(
-      x,
-      y,
-      w,
-      h
-    );
-
-  },
-
-
-  onUp(){
-
-    if(!this.selecting) return;
-
-    this.selecting=false;
-
-    const sel=this.state.selection;
-
-    if(
-      !sel ||
-      sel.width<8 ||
-      sel.height<8
-    ){
-
-      this.state.selection=null;
-
-      this.hideSelBox();
-
-      this.status(
-        this.state.image
-          ? "IMAGE LOADED"
-          : "READY"
-      );
-
-      document
-        .getElementById("btnMake")
-        .disabled=true;
-
-      document
-        .getElementById("btnClearBox")
-        .disabled=true;
-
-      return;
-
-    }
-
-    this.status(
-      "BOX READY",
-      "warn"
-    );
-
-    document
-      .getElementById("btnMake")
-      .disabled=false;
-
-    document
-      .getElementById("btnClearBox")
-      .disabled=false;
-
-  },
-
-
-  clearBox(){
-
-    this.state.selection=null;
-
-    this.hideSelBox();
-
-    document
-      .getElementById("btnMake")
-      .disabled=true;
-
-    document
-      .getElementById("btnClearBox")
-      .disabled=true;
-
-    this.status(
-      this.state.image
-        ? "IMAGE LOADED"
-        : "READY"
-    );
-
-  },
-
-
-  /* ------------------------------------------------ */
-  /* CREATE ELEMENT */
-  /* ------------------------------------------------ */
-
-  makeElement(){
-
-    if(!this.state.selection) return;
-
-    const partial=
-      this.Analyzer.analyze(
-        this.state.selection
-      );
-
-    const el={
-
-      id:this.id(
-        "EOTS",
-        "nextE"
-      ),
-
-      type:partial.type,
-
-      text:partial.text,
-
-      function:partial.function,
-
-      appearance:
-        partial.appearance || {},
-
-      bounds:{
-        ...this.state.selection
+      position:{
+        x:round(rect.left),
+        y:round(rect.top)
       },
 
-      sources:{
-        geometry:"visual_selection",
-        type:"unknown",
-        text:"unknown",
-        function:"unknown"
+      size:{
+        width:round(rect.width),
+        height:round(rect.height)
+      },
+
+      visual:{
+        display:computed.display,
+        visibility:computed.visibility,
+        position:computed.position,
+        font_size:computed.fontSize,
+        border_radius:computed.borderRadius
+      },
+
+      interaction:{
+        clickable:
+          isClickable(element),
+
+        disabled:
+          !!element.disabled
       }
 
     };
 
-    this.state.elements.push(el);
+  }
 
-    this.state.focusId=el.id;
 
-    this.state.selected.clear();
+  /* =======================================================
+     ALLE BUTTONS
+     ======================================================= */
 
-    this.state.selected.add(el.id);
+  allButton.addEventListener(
+    "click",
+    () => {
 
-    this.clearBox();
+      selectedElements = [];
 
-    this.renderElements();
+      const buttons =
+        Array.from(
+          document.querySelectorAll(
+            "button, [role='button'], input[type='button'], input[type='submit']"
+          )
+        );
 
-    this.renderInspector();
+      buttons.forEach(
+        button => {
 
-    this.updateRelSelects();
-
-    this.draw();
-
-    this.toast(
-      el.id+" erzeugt"
-    );
-
-    this.status(
-      "ELEMENT ADDED"
-    );
-
-    this.switchTab("insp");
-
-  },
-
-
-  /* ------------------------------------------------ */
-  /* ELEMENT SELECTION */
-  /* ------------------------------------------------ */
-
-  selectElement(id,multi){
-
-    if(multi){
-
-      if(
-        this.state.selected.has(id)
-      ){
-        this.state.selected.delete(id);
-      }else{
-        this.state.selected.add(id);
-      }
-
-    }else{
-
-      this.state.selected.clear();
-
-      this.state.selected.add(id);
-
-    }
-
-    this.state.focusId=id;
-
-    this.renderElements();
-
-    this.renderInspector();
-
-    this.draw();
-
-  },
-
-
-  /* ------------------------------------------------ */
-  /* UPDATE ELEMENT */
-  /* ------------------------------------------------ */
-
-  updateElement(){
-
-    const id=this.state.focusId;
-
-    if(!id) return;
-
-    const el=
-      this.state.elements.find(
-        e=>e.id===id
-      );
-
-    if(!el) return;
-
-    const type=
-      document
-      .getElementById("iType")
-      .value;
-
-    const text=
-      document
-      .getElementById("iText")
-      .value
-      .trim();
-
-    const fn=
-      document
-      .getElementById("iFn")
-      .value
-      .trim();
-
-    el.type=type;
-
-    el.text=text || null;
-
-    el.function=fn || null;
-
-    el.sources.type="user";
-
-    el.sources.text=
-      text ? "user" : "unknown";
-
-    el.sources.function=
-      fn ? "user" : "unknown";
-
-    this.renderElements();
-
-    this.renderInspector();
-
-    this.draw();
-
-    this.toast(
-      el.id+" aktualisiert"
-    );
-
-  },
-
-
-  /* ------------------------------------------------ */
-  /* DELETE */
-  /* ------------------------------------------------ */
-
-  deleteElement(){
-
-    const id=this.state.focusId;
-
-    if(!id) return;
-
-    this.state.elements=
-      this.state.elements.filter(
-        e=>e.id!==id
-      );
-
-    this.state.relationships=
-      this.state.relationships.filter(
-        r=>
-          r.source!==id &&
-          r.target!==id
-      );
-
-    this.state.selected.delete(id);
-
-    this.state.focusId=null;
-
-    this.renderElements();
-
-    this.renderRelationships();
-
-    this.renderInspector();
-
-    this.updateRelSelects();
-
-    this.draw();
-
-    this.toast(
-      "Element gelöscht"
-    );
-
-  },
-
-
-  /* ------------------------------------------------ */
-  /* RENDER ELEMENTS */
-  /* ------------------------------------------------ */
-
-  renderElements(){
-
-    const list=
-      document.getElementById("elist");
-
-    document.getElementById("cnt")
-      .textContent=
-      this.state.elements.length+
-      " elements";
-
-    if(!this.state.elements.length){
-
-      list.innerHTML=
-        '<div class="empty">Noch keine Elemente.</div>';
-
-      return;
-
-    }
-
-    list.innerHTML=
-      this.state.elements
-      .map(el=>`
-
-        <div
-          class="eitem ${
-            this.state.selected.has(el.id) ||
-            el.id===this.state.focusId
-              ? "on"
-              : ""
-          }"
-          data-id="${el.id}"
-        >
-
-          <div>
-
-            <div class="id">
-              ${el.id}
-            </div>
-
-            <div class="ty">
-              ${(el.type||"unknown").toUpperCase()}
-            </div>
-
-          </div>
-
-          <div class="tx">
-            ${el.text || "—"}
-          </div>
-
-          <div class="typeBadge">
-            ${el.type || "unknown"}
-          </div>
-
-        </div>
-
-      `)
-      .join("");
-
-    list
-      .querySelectorAll(".eitem")
-      .forEach(node=>{
-
-        node.addEventListener(
-          "click",
-          e=>{
-
-            this.selectElement(
-              node.dataset.id,
-              e.shiftKey ||
-              e.metaKey ||
-              e.ctrlKey
-            );
-
+          if(
+            button.closest("#eots") ||
+            button.closest("#eotsLauncher")
+          ){
+            return;
           }
-        );
 
-      });
-
-  },
-
-
-  /* ------------------------------------------------ */
-  /* INSPECTOR */
-  /* ------------------------------------------------ */
-
-  renderInspector(){
-
-    const el=
-      this.state.elements.find(
-        e=>e.id===this.state.focusId
-      );
-
-    const has=!!el;
-
-    document.getElementById("btnUpd")
-      .disabled=!has;
-
-    document.getElementById("btnDel")
-      .disabled=!has;
-
-    if(!el){
-
-      document.getElementById("iId")
-        .textContent="—";
-
-      document.getElementById("iType")
-        .value="unknown";
-
-      document.getElementById("iText")
-        .value="";
-
-      document.getElementById("iFn")
-        .value="";
-
-      [
-        "iX",
-        "iY",
-        "iW",
-        "iH"
-      ].forEach(id=>{
-        document.getElementById(id)
-          .value="";
-      });
-
-      document.getElementById(
-        "iSemanticSource"
-      ).textContent="USER";
-
-      return;
-    }
-
-    document.getElementById("iId")
-      .textContent=el.id;
-
-    document.getElementById("iType")
-      .value=el.type||"unknown";
-
-    document.getElementById("iText")
-      .value=el.text||"";
-
-    document.getElementById("iFn")
-      .value=el.function||"";
-
-    document.getElementById("iX")
-      .value=el.bounds.x;
-
-    document.getElementById("iY")
-      .value=el.bounds.y;
-
-    document.getElementById("iW")
-      .value=el.bounds.width;
-
-    document.getElementById("iH")
-      .value=el.bounds.height;
-
-    document.getElementById(
-      "iSemanticSource"
-    ).textContent=
-      el.sources?.type==="user"
-        ? "USER"
-        : "UNKNOWN";
-
-  },
-
-
-  /* ------------------------------------------------ */
-  /* RELATION SELECTS */
-  /* ------------------------------------------------ */
-
-  updateRelSelects(){
-
-    const opts=
-      this.state.elements
-      .map(e=>`
-
-        <option value="${e.id}">
-          ${e.id} ·
-          ${e.type} ·
-          ${(e.text||"").slice(0,18)}
-        </option>
-
-      `)
-      .join("");
-
-    document.getElementById(
-      "relSrc"
-    ).innerHTML=
-      '<option value="">—</option>'+
-      opts;
-
-    document.getElementById(
-      "relTgt"
-    ).innerHTML=
-      '<option value="">—</option>'+
-      opts;
-
-  },
-
-
-  /* ------------------------------------------------ */
-  /* ADD RELATION */
-  /* ------------------------------------------------ */
-
-  addRelation(){
-
-    const source=
-      document.getElementById(
-        "relSrc"
-      ).value;
-
-    const target=
-      document.getElementById(
-        "relTgt"
-      ).value;
-
-    const relationship=
-      document.getElementById(
-        "relType"
-      ).value;
-
-    if(
-      !source ||
-      !target ||
-      source===target
-    ){
-
-      this.toast(
-        "Ungültige Relation"
-      );
-
-      return;
-
-    }
-
-    const exists=
-      this.state.relationships.some(
-        r=>
-          r.source===source &&
-          r.target===target &&
-          r.relationship===relationship
-      );
-
-    if(exists){
-
-      this.toast(
-        "Existiert bereits"
-      );
-
-      return;
-
-    }
-
-    this.state.relationships.push({
-
-      id:this.id(
-        "REL",
-        "nextR"
-      ),
-
-      source,
-
-      relationship,
-
-      target
-
-    });
-
-    this.renderRelationships();
-
-    this.draw();
-
-    this.toast(
-      "Relation hinzugefügt"
-    );
-
-  },
-
-
-  /* ------------------------------------------------ */
-  /* RELATION RENDER */
-  /* ------------------------------------------------ */
-
-  renderRelationships(){
-
-    const list=
-      document.getElementById("rlist");
-
-    if(!this.state.relationships.length){
-
-      list.innerHTML=
-        '<div class="empty">Keine Beziehungen.</div>';
-
-      return;
-
-    }
-
-    list.innerHTML=
-      this.state.relationships
-      .map(r=>`
-
-        <div class="eitem">
-
-          <span class="id">
-            ${r.source}
-          </span>
-
-          <span class="ty">
-            ${r.relationship}
-          </span>
-
-          <span class="id">
-            ${r.target}
-          </span>
-
-        </div>
-
-      `)
-      .join("");
-
-  },
-
-
-  /* ------------------------------------------------ */
-  /* GENERATE LLM CONTEXT */
-  /* ------------------------------------------------ */
-
-  generateContext(){
-
-    /*
-      WICHTIG:
-
-      Die ausgewählten Elemente bestimmen NICHT mehr,
-      welche Relations exportiert werden.
-
-      Der Context beschreibt die komplette aktuell
-      bekannte visuelle Struktur.
-
-      Dadurch gehen Beziehungen nicht mehr verloren.
-    */
-
-    const els=[
-      ...this.state.elements
-    ];
-
-    const rels=[
-      ...this.state.relationships
-    ];
-
-    const lines=[];
-
-
-    lines.push(
-      "EOTS VISUAL CONTEXT"
-    );
-
-    lines.push(
-      "schema_version: "+
-      this.schema
-    );
-
-    lines.push(
-      "eots_version: "+
-      this.version
-    );
-
-    lines.push("");
-
-    lines.push(
-      "PURPOSE:"
-    );
-
-    lines.push(
-      "Visual structure extracted from a UI."
-    );
-
-    lines.push(
-      "EOTS does not infer unknown semantics."
-    );
-
-    lines.push("");
-
-
-    /* SCENE */
-
-    lines.push(
-      "SCENE"
-    );
-
-    lines.push(
-      "  width: "+
-      (this.state.nw || "null")
-    );
-
-    lines.push(
-      "  height: "+
-      (this.state.nh || "null")
-    );
-
-    lines.push("");
-
-
-    /* LAST SELECTION */
-
-    if(this.state.selection){
-
-      const s=
-        this.state.selection;
-
-      lines.push(
-        "LAST_SELECTION"
-      );
-
-      lines.push(
-        "  x="+s.x+
-        " y="+s.y+
-        " width="+s.width+
-        " height="+s.height
-      );
-
-      lines.push("");
-
-    }
-
-
-    /* ELEMENTS */
-
-    lines.push(
-      "ELEMENTS ("+
-      els.length+
-      ")"
-    );
-
-    if(!els.length){
-
-      lines.push(
-        "  (none)"
-      );
-
-    }else{
-
-      els.forEach(el=>{
-
-        lines.push("");
-
-        lines.push(
-          "ELEMENT "+el.id
-        );
-
-        lines.push(
-          "  type: "+
-          (el.type || "unknown")
-        );
-
-        lines.push(
-          "  type_source: "+
-          (el.sources?.type || "unknown")
-        );
-
-        lines.push(
-          "  text: "+
-          (
-            el.text===null ||
-            el.text===undefined
-              ? "null"
-              : JSON.stringify(el.text)
-          )
-        );
-
-        lines.push(
-          "  text_source: "+
-          (el.sources?.text || "unknown")
-        );
-
-        lines.push(
-          "  function: "+
-          (
-            el.function===null ||
-            el.function===undefined
-              ? "null"
-              : JSON.stringify(el.function)
-          )
-        );
-
-        lines.push(
-          "  function_source: "+
-          (el.sources?.function || "unknown")
-        );
-
-        lines.push(
-          "  geometry_source: "+
-          (el.sources?.geometry ||
-           "visual_selection")
-        );
-
-        lines.push(
-          "  bounds: "+
-          "x="+el.bounds.x+
-          " y="+el.bounds.y+
-          " width="+el.bounds.width+
-          " height="+el.bounds.height
-        );
-
-        lines.push(
-          "  appearance: "+
-          JSON.stringify(
-            el.appearance || {}
-          )
-        );
-
-      });
-
-    }
-
-    lines.push("");
-
-
-    /* RELATIONSHIPS */
-
-    lines.push(
-      "RELATIONSHIPS ("+
-      rels.length+
-      ")"
-    );
-
-    if(!rels.length){
-
-      lines.push(
-        "  (none)"
-      );
-
-    }else{
-
-      rels.forEach(r=>{
-
-        lines.push(
-          "  "+
-          r.source+
-          " "+
-          r.relationship+
-          " "+
-          r.target
-        );
-
-      });
-
-    }
-
-    lines.push("");
-
-
-    /* RELATION DETAILS */
-
-    if(rels.length){
-
-      lines.push(
-        "RELATION DETAILS"
-      );
-
-      rels.forEach(r=>{
-
-        const source=
-          els.find(
-            e=>e.id===r.source
+          selectedElements.push(
+            inspectElement(button)
           );
 
-        const target=
-          els.find(
-            e=>e.id===r.target
-          );
-
-        lines.push("");
-
-        lines.push(
-          "RELATION "+r.id
-        );
-
-        lines.push(
-          "  source: "+
-          r.source
-        );
-
-        lines.push(
-          "  source_type: "+
-          (source?.type || "unknown")
-        );
-
-        lines.push(
-          "  relationship: "+
-          r.relationship
-        );
-
-        lines.push(
-          "  target: "+
-          r.target
-        );
-
-        lines.push(
-          "  target_type: "+
-          (target?.type || "unknown")
-        );
-
-      });
-
-      lines.push("");
-
-    }
-
-
-    /* RULES */
-
-    lines.push(
-      "EOTS RULES"
-    );
-
-    lines.push(
-      "  - Only explicitly defined data is included."
-    );
-
-    lines.push(
-      "  - Geometry originates from visual selection."
-    );
-
-    lines.push(
-      "  - Semantic type originates from user annotation."
-    );
-
-    lines.push(
-      "  - Relationships are explicit graph edges."
-    );
-
-    lines.push(
-      "  - Unknown values remain null or unknown."
-    );
-
-    lines.push(
-      "  - EOTS makes no semantic assumptions."
-    );
-
-    lines.push("");
-
-
-    /* LLM MAPPING HINT */
-
-    lines.push(
-      "LLM MAPPING"
-    );
-
-    lines.push(
-      "  Use EOTS element IDs as stable visual references."
-    );
-
-    lines.push(
-      "  If source code is available, map visual elements"
-    );
-
-    lines.push(
-      "  to DOM/CSS/JS/source-code references explicitly."
-    );
-
-    lines.push(
-      "  Do not invent mappings when source evidence is absent."
-    );
-
-
-    this.state.contextText=
-      lines.join("\n");
-
-    document.getElementById("ctx")
-      .textContent=
-      this.state.contextText;
-
-    this.toast(
-      "LLM Context generiert"
-    );
-
-    this.status(
-      "CONTEXT READY"
-    );
-
-  },
-
-
-  /* ------------------------------------------------ */
-  /* COPY */
-  /* ------------------------------------------------ */
-
-  copyContext(){
-
-    const text=
-      this.state.contextText ||
-      document.getElementById("ctx")
-        .textContent;
-
-    if(
-      !text ||
-      text.startsWith("Noch kein")
-    ){
-
-      this.toast(
-        "Kein Context vorhanden"
+        }
       );
 
-      return;
+      mode.textContent =
+        `${selectedElements.length} ELEMENTE ERFASST`;
+
+      mode.style.color =
+        "var(--eots-green)";
+
+      renderSelection();
 
     }
-
-    if(
-      navigator.clipboard &&
-      navigator.clipboard.writeText
-    ){
-
-      navigator.clipboard
-        .writeText(text)
-        .then(()=>{
-          this.toast(
-            "In Zwischenablage kopiert"
-          );
-        })
-        .catch(()=>{
-          this.fallbackCopy(text);
-        });
-
-    }else{
-
-      this.fallbackCopy(text);
-
-    }
-
-  },
+  );
 
 
-  fallbackCopy(text){
+  /* =======================================================
+     HINZUFÜGEN
+     ======================================================= */
 
-    const ta=
-      document.createElement(
-        "textarea"
-      );
+  addButton.addEventListener(
+    "click",
+    () => {
 
-    ta.value=text;
+      selecting = true;
 
-    document.body.appendChild(ta);
+      mode.textContent =
+        "WEITERES ELEMENT WÄHLEN";
 
-    ta.select();
+      mode.style.color =
+        "var(--eots-cyan)";
 
-    try{
-
-      document.execCommand("copy");
-
-      this.toast("Kopiert");
-
-    }catch(e){
-
-      this.toast(
-        "Kopieren fehlgeschlagen"
-      );
+      document.body.style.cursor =
+        "crosshair";
 
     }
-
-    document.body.removeChild(ta);
-
-  },
+  );
 
 
-  /* ------------------------------------------------ */
-  /* JSON EXPORT */
-  /* ------------------------------------------------ */
+  /* =======================================================
+     AUSWAHL LÖSCHEN
+     ======================================================= */
 
-  exportJSON(){
+  clearButton.addEventListener(
+    "click",
+    () => {
 
-    const model={
+      selectedElements = [];
 
-      schema_version:this.schema,
+      hideBox();
 
-      eots_version:this.version,
+      mode.textContent =
+        "AUSWAHL GELÖSCHT";
 
-      scene:{
-        width:this.state.nw || null,
-        height:this.state.nh || null
-      },
+      mode.style.color =
+        "var(--eots-muted)";
 
-      selection:
-        this.state.selection,
+      renderSelection();
+
+    }
+  );
+
+
+  /* =======================================================
+     JSON ERZEUGEN
+     ======================================================= */
+
+  function buildContext(){
+
+    return {
+
+      eots_version:
+        "1.0",
+
+      purpose:
+        "Visual translation of an existing user interface for LLM understanding",
+
+      source:
+        "live_ui",
+
+      captured_at:
+        new Date().toISOString(),
+
+      instruction:
+        "Describe and reason about the supplied UI elements. Do not invent elements or functions that are not represented by the captured data.",
 
       elements:
-        this.state.elements.map(e=>({
-
-          id:e.id,
-
-          type:e.type,
-
-          text:e.text,
-
-          function:e.function,
-
-          appearance:
-            e.appearance || {},
-
-          bounds:{
-            ...e.bounds
-          },
-
-          sources:{
-            ...(e.sources || {})
-          }
-
-        })),
-
-      relationships:
-        this.state.relationships.map(r=>({
-
-          id:r.id,
-
-          source:r.source,
-
-          relationship:r.relationship,
-
-          target:r.target
-
-        })),
-
-      context:
-        this.state.contextText || null
+        selectedElements
 
     };
 
+  }
 
-    const json=
+
+  function renderSelection(){
+
+    const context =
+      buildContext();
+
+    output.value =
       JSON.stringify(
-        model,
+        context,
         null,
         2
       );
 
+    if(selectedElements.length){
 
-    if(
-      navigator.clipboard &&
-      navigator.clipboard.writeText
-    ){
+      const last =
+        selectedElements[
+          selectedElements.length - 1
+        ];
 
-      navigator.clipboard
-        .writeText(json)
-        .catch(()=>{});
+      elementView.textContent =
+        `${last.tag} — ${last.text || last.role || last.id}`;
 
-    }
+    }else{
 
-
-    const blob=
-      new Blob(
-        [json],
-        {
-          type:"application/json"
-        }
-      );
-
-    const url=
-      URL.createObjectURL(blob);
-
-    const a=
-      document.createElement("a");
-
-    a.href=url;
-
-    a.download=
-      "eots-"+Date.now()+".json";
-
-    document.body.appendChild(a);
-
-    a.click();
-
-    document.body.removeChild(a);
-
-    URL.revokeObjectURL(url);
-
-    this.toast(
-      "JSON exportiert"
-    );
-
-  },
-
-
-  /* ------------------------------------------------ */
-  /* CLEAR */
-  /* ------------------------------------------------ */
-
-  clearAll(){
-
-    if(
-      !confirm("Alles löschen?")
-    ) return;
-
-    this.state.elements=[];
-
-    this.state.relationships=[];
-
-    this.state.selected.clear();
-
-    this.state.focusId=null;
-
-    this.state.selection=null;
-
-    this.state.contextText="";
-
-    this.state.image=null;
-
-    this.state.nw=0;
-
-    this.state.nh=0;
-
-    this.hideSelBox();
-
-    if(this.ctx){
-
-      this.ctx.clearRect(
-        0,
-        0,
-        this.canvas.width,
-        this.canvas.height
-      );
+      elementView.textContent =
+        "Noch kein Element ausgewählt.";
 
     }
 
-    this.canvas.width=0;
-
-    this.canvas.height=0;
-
-    document
-      .getElementById("ph")
-      .classList
-      .remove("hidden");
-
-    document
-      .getElementById("imgMeta")
-      .textContent="kein Bild";
-
-    document
-      .getElementById("ctx")
-      .textContent="";
-
-    document
-      .getElementById("btnMake")
-      .disabled=true;
-
-    document
-      .getElementById("btnClearBox")
-      .disabled=true;
-
-    this.renderElements();
-
-    this.renderRelationships();
-
-    this.renderInspector();
-
-    this.updateRelSelects();
-
-    this.status("READY");
-
-    this.toast(
-      "Alles gelöscht"
-    );
-
-  },
+  }
 
 
-  /* ------------------------------------------------ */
-  /* TABS */
-  /* ------------------------------------------------ */
+  /* =======================================================
+     KOPIEREN
+     ======================================================= */
 
-  switchTab(name){
+  copyButton.addEventListener(
+    "click",
+    async () => {
 
-    document
-      .querySelectorAll(".tab")
-      .forEach(t=>{
+      try{
 
-        t.classList.toggle(
-          "on",
-          t.dataset.tab===name
+        await navigator.clipboard.writeText(
+          output.value
         );
 
-      });
+        copyButton.textContent =
+          "Kopiert ✓";
 
-    document
-      .getElementById("tab-els")
-      .classList.toggle(
-        "hidden",
-        name!=="els"
-      );
-
-    document
-      .getElementById("tab-rels")
-      .classList.toggle(
-        "hidden",
-        name!=="rels"
-      );
-
-    document
-      .getElementById("tab-insp")
-      .classList.toggle(
-        "hidden",
-        name!=="insp"
-      );
-
-  },
-
-
-  /* ------------------------------------------------ */
-  /* INIT */
-  /* ------------------------------------------------ */
-
-  init(){
-
-    this.initCanvas();
-
-
-    document
-      .getElementById("file")
-      .addEventListener(
-        "change",
-        async e=>{
-
-          const f=
-            e.target.files[0];
-
-          if(f){
-
-            try{
-
-              await this.loadImage(f);
-
-            }catch(err){
-
-              this.toast(
-                "Bild konnte nicht geladen werden"
-              );
-
-            }
-
-          }
-
-          e.target.value="";
-
-        }
-      );
-
-
-    const wrap=
-      document.getElementById("vwrap");
-
-
-    wrap.addEventListener(
-      "pointerdown",
-      e=>this.onDown(e)
-    );
-
-    wrap.addEventListener(
-      "pointermove",
-      e=>this.onMove(e)
-    );
-
-    wrap.addEventListener(
-      "pointerup",
-      e=>this.onUp(e)
-    );
-
-    wrap.addEventListener(
-      "pointercancel",
-      e=>this.onUp(e)
-    );
-
-    wrap.addEventListener(
-      "pointerleave",
-      e=>{
-        if(this.selecting){
-          this.onUp(e);
-        }
-      }
-    );
-
-
-    document
-      .getElementById("btnClearBox")
-      .addEventListener(
-        "click",
-        ()=>this.clearBox()
-      );
-
-
-    document
-      .getElementById("btnMake")
-      .addEventListener(
-        "click",
-        ()=>this.makeElement()
-      );
-
-
-    document
-      .getElementById("btnUpd")
-      .addEventListener(
-        "click",
-        ()=>this.updateElement()
-      );
-
-
-    document
-      .getElementById("btnDel")
-      .addEventListener(
-        "click",
-        ()=>this.deleteElement()
-      );
-
-
-    document
-      .getElementById("btnAddRel")
-      .addEventListener(
-        "click",
-        ()=>this.addRelation()
-      );
-
-
-    document
-      .getElementById("btnGen")
-      .addEventListener(
-        "click",
-        ()=>this.generateContext()
-      );
-
-
-    document
-      .getElementById("btnCopy")
-      .addEventListener(
-        "click",
-        ()=>this.copyContext()
-      );
-
-
-    document
-      .getElementById("btnExport")
-      .addEventListener(
-        "click",
-        ()=>this.exportJSON()
-      );
-
-
-    document
-      .getElementById("btnClear")
-      .addEventListener(
-        "click",
-        ()=>this.clearAll()
-      );
-
-
-    document
-      .querySelectorAll(".tab")
-      .forEach(t=>{
-
-        t.addEventListener(
-          "click",
-          ()=>this.switchTab(
-            t.dataset.tab
-          )
-        );
-
-      });
-
-
-    let rt;
-
-    window.addEventListener(
-      "resize",
-      ()=>{
-
-        clearTimeout(rt);
-
-        rt=setTimeout(
-          ()=>{
-            if(this.state.image){
-              this.draw();
-            }
+        setTimeout(
+          () => {
+            copyButton.textContent =
+              "JSON kopieren";
           },
-          120
+          1200
+        );
+
+      }catch(error){
+
+        output.select();
+
+        document.execCommand(
+          "copy"
         );
 
       }
-    );
+
+    }
+  );
 
 
-    this.status("READY");
+  /* =======================================================
+     JSON SPEICHERN
+     ======================================================= */
 
-    this.renderElements();
+  downloadButton.addEventListener(
+    "click",
+    () => {
 
-    this.renderRelationships();
+      const blob =
+        new Blob(
+          [output.value],
+          {
+            type:"application/json"
+          }
+        );
 
-    this.renderInspector();
+      const url =
+        URL.createObjectURL(blob);
 
-    this.updateRelSelects();
+      const a =
+        document.createElement("a");
+
+      a.href =
+        url;
+
+      a.download =
+        "eots-ui-context.json";
+
+      document.body.appendChild(a);
+
+      a.click();
+
+      a.remove();
+
+      URL.revokeObjectURL(url);
+
+    }
+  );
+
+
+  /* =======================================================
+     HILFSFUNKTIONEN
+     ======================================================= */
+
+  function cleanText(text){
+
+    return String(text)
+      .replace(/\s+/g," ")
+      .trim();
 
   }
 
-};
 
+  function round(value){
 
-document.addEventListener(
-  "DOMContentLoaded",
-  ()=>{
-    EOTS.init();
+    return Math.round(value * 10) / 10;
+
   }
-);
 
+
+  function isClickable(element){
+
+    const tag =
+      element.tagName.toLowerCase();
+
+    if(
+      ["button","a","input","select","textarea"]
+      .includes(tag)
+    ){
+      return true;
+    }
+
+    if(
+      element.getAttribute("role") === "button"
+    ){
+      return true;
+    }
+
+    const style =
+      window.getComputedStyle(element);
+
+    return style.cursor === "pointer";
+
+  }
+
+
+  function inferRole(element){
+
+    const tag =
+      element.tagName.toLowerCase();
+
+    if(tag === "button"){
+      return "button";
+    }
+
+    if(tag === "a"){
+      return "link";
+    }
+
+    if(tag === "input"){
+      return "input";
+    }
+
+    if(tag === "nav"){
+      return "navigation";
+    }
+
+    if(
+      ["h1","h2","h3","h4","h5","h6"]
+      .includes(tag)
+    ){
+      return "heading";
+    }
+
+    return "container";
+
+  }
+
+
+  function describeTag(element){
+
+    const tag =
+      element.tagName.toLowerCase();
+
+    const text =
+      cleanText(
+        element.innerText ||
+        element.textContent ||
+        ""
+      );
+
+    if(text){
+      return `${tag}: ${text.substring(0,40)}`;
+    }
+
+    return tag;
+
+  }
+
+
+  function createElementId(element){
+
+    /*
+     * Kein zufälliger LLM-Name.
+     * EOTS erzeugt lediglich eine technische lokale ID.
+     */
+
+    if(!element.dataset.eotsId){
+
+      element.dataset.eotsId =
+        "eots-" +
+        Math.random()
+          .toString(36)
+          .substring(2,10);
+
+    }
+
+    return element.dataset.eotsId;
+
+  }
+
+
+  /* =======================================================
+     INITIALER ZUSTAND
+     ======================================================= */
+
+  renderSelection();
+
+})();
 </script>
 
 </body>
