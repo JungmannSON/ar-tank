@@ -5,356 +5,811 @@
 <meta name="viewport"
       content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
-<title>EOTS — Visual UI Translator</title>
+<title>EOTS — Eye of the Sky</title>
 
 <style>
+
 :root{
-  --eots-bg:rgba(5,1,10,.96);
-  --eots-panel:rgba(18,12,25,.96);
-  --eots-line:#3b2948;
-  --eots-cyan:#00f5ff;
-  --eots-green:#4ade80;
-  --eots-pink:#ff2aa8;
-  --eots-text:#f4f4f5;
-  --eots-muted:#9ca3af;
+  --black:#030308;
+  --deep:#080510;
+  --panel:#0d0915;
+  --panel2:#120d1c;
+
+  --cyan:#00f5ff;
+  --pink:#ff2aa8;
+  --green:#4dff91;
+  --yellow:#ffe66d;
+
+  --text:#e9faff;
+  --muted:#66727d;
+  --line:#26333d;
 }
 
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+}
 
+html,
 body{
   margin:0;
-  font-family:Arial,Helvetica,sans-serif;
+  min-height:100%;
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  background:var(--black);
 }
+
 
 /* =========================================================
    DEMO UI
-   EOTS kann später auf eine beliebige bestehende UI gelegt
-   werden. Dieser Bereich dient nur zum Testen.
    ========================================================= */
 
 .demo{
   min-height:100vh;
-  background:#08080a;
-  color:white;
-  padding:24px;
+
+  padding:30px;
+
+  color:var(--text);
+
+  background:
+    linear-gradient(
+      rgba(0,245,255,.035) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(0,245,255,.035) 1px,
+      transparent 1px
+    ),
+    radial-gradient(
+      circle at 70% 10%,
+      rgba(255,42,168,.14),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 20% 80%,
+      rgba(0,245,255,.10),
+      transparent 35%
+    ),
+    #030308;
+
+  background-size:
+    32px 32px,
+    32px 32px,
+    auto,
+    auto,
+    auto;
 }
 
-.demo h1{
-  margin:0 0 8px;
+.demo-top{
+  max-width:1100px;
+  margin:auto;
 }
 
-.demo p{
-  color:#999;
+.demo-title{
+  border-left:3px solid var(--cyan);
+
+  padding-left:15px;
+  margin-bottom:30px;
+}
+
+.demo-title h1{
+  margin:0;
+
+  color:var(--cyan);
+
+  letter-spacing:.15em;
+
+  text-shadow:
+    0 0 12px rgba(0,245,255,.6);
+}
+
+.demo-title p{
+  color:var(--muted);
 }
 
 .demo-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:16px;
-  margin-top:30px;
+
+  grid-template-columns:
+    repeat(auto-fit,minmax(210px,1fr));
+
+  gap:18px;
 }
 
-.demo-card{
-  border:1px solid #29292d;
-  border-radius:14px;
-  padding:20px;
-  background:#111115;
+.card{
+  position:relative;
+
+  min-height:180px;
+
+  padding:22px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.035),
+      transparent
+    ),
+    var(--panel);
+
+  border:1px solid var(--line);
+
+  box-shadow:
+    inset 0 0 30px rgba(0,245,255,.025),
+    0 20px 60px rgba(0,0,0,.4);
+}
+
+.card::before{
+  content:"UI_NODE";
+
+  position:absolute;
+
+  top:8px;
+  right:10px;
+
+  color:#35404a;
+
+  font-size:8px;
+}
+
+.card h3{
+  color:var(--pink);
+
+  letter-spacing:.12em;
+}
+
+.card p{
+  color:#89949e;
+
+  line-height:1.5;
 }
 
 .demo-button{
   width:100%;
+
   padding:14px;
-  border:0;
-  border-radius:10px;
-  cursor:pointer;
-  background:#00f5ff;
-  color:#001014;
+
+  background:#07151a;
+
+  border:1px solid var(--cyan);
+
+  color:var(--cyan);
+
+  font-family:inherit;
   font-weight:bold;
+
+  cursor:pointer;
+
+  transition:.15s;
 }
+
+.demo-button:hover{
+  background:var(--cyan);
+
+  color:#020507;
+
+  box-shadow:
+    0 0 25px rgba(0,245,255,.45);
+}
+
 
 /* =========================================================
-   EOTS
+   EOTS LAUNCHER
    ========================================================= */
-
-#eots{
-  position:fixed;
-  inset:0;
-  z-index:999999;
-  pointer-events:none;
-  display:none;
-}
-
-#eots.active{
-  display:block;
-}
-
-/* Abdunklung */
-
-#eotsShade{
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,.18);
-  pointer-events:none;
-}
-
-/* Auswahlrahmen */
-
-#eotsBox{
-  position:fixed;
-  display:none;
-  border:2px solid var(--eots-cyan);
-  box-shadow:
-    0 0 0 1px rgba(0,245,255,.25),
-    0 0 20px rgba(0,245,255,.35);
-  pointer-events:none;
-}
-
-#eotsBoxLabel{
-  position:absolute;
-  left:-2px;
-  top:-27px;
-  background:var(--eots-cyan);
-  color:#001014;
-  padding:5px 8px;
-  font-size:11px;
-  font-weight:bold;
-  white-space:nowrap;
-}
-
-/* Bedienpanel */
-
-#eotsPanel{
-  position:fixed;
-  right:16px;
-  bottom:16px;
-  width:min(390px,calc(100vw - 32px));
-  max-height:calc(100vh - 32px);
-  overflow:auto;
-
-  background:var(--eots-bg);
-  border:1px solid var(--eots-line);
-  border-radius:18px;
-
-  box-shadow:
-    0 20px 80px rgba(0,0,0,.65),
-    0 0 30px rgba(0,245,255,.08);
-
-  color:var(--eots-text);
-  pointer-events:auto;
-
-  padding:16px;
-}
-
-.eots-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:14px;
-}
-
-.eots-logo{
-  display:flex;
-  align-items:center;
-  gap:9px;
-  font-weight:bold;
-}
-
-.eots-eye{
-  width:12px;
-  height:12px;
-  border:2px solid var(--eots-cyan);
-  border-radius:50%;
-  box-shadow:0 0 10px var(--eots-cyan);
-}
-
-.eots-close{
-  border:1px solid #3b2948;
-  background:#151019;
-  color:#aaa;
-  border-radius:8px;
-  padding:6px 9px;
-  cursor:pointer;
-}
-
-.eots-status{
-  font-size:12px;
-  color:var(--eots-muted);
-  margin-bottom:12px;
-}
-
-.eots-status strong{
-  color:var(--eots-green);
-}
-
-.eots-section{
-  border-top:1px solid #29202f;
-  padding-top:12px;
-  margin-top:12px;
-}
-
-.eots-title{
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  color:#888;
-  margin-bottom:8px;
-}
-
-.eots-value{
-  background:#0b0b0e;
-  border:1px solid #29292f;
-  border-radius:9px;
-  padding:10px;
-  font-size:12px;
-  line-height:1.5;
-  word-break:break-word;
-}
-
-.eots-actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-}
-
-.eots-btn{
-  border:1px solid #3b2948;
-  background:#151019;
-  color:white;
-  padding:11px;
-  border-radius:9px;
-  cursor:pointer;
-  font-weight:bold;
-}
-
-.eots-btn:hover{
-  border-color:var(--eots-cyan);
-}
-
-.eots-btn.primary{
-  background:var(--eots-cyan);
-  border-color:var(--eots-cyan);
-  color:#001014;
-}
-
-.eots-btn.green{
-  background:var(--eots-green);
-  border-color:var(--eots-green);
-  color:#031008;
-}
-
-.eots-btn.pink{
-  border-color:var(--eots-pink);
-  color:#ff8bca;
-}
-
-#eotsOutput{
-  width:100%;
-  min-height:180px;
-  resize:vertical;
-
-  background:#050507;
-  color:#c9faff;
-
-  border:1px solid #29292f;
-  border-radius:9px;
-
-  padding:10px;
-
-  font-family:monospace;
-  font-size:11px;
-  line-height:1.45;
-}
-
-/* kleines Start-Element */
 
 #eotsLauncher{
   position:fixed;
-  right:18px;
-  top:18px;
+
   z-index:999998;
 
-  width:46px;
-  height:46px;
+  top:18px;
+  right:18px;
 
-  border-radius:50%;
-  border:1px solid var(--eots-cyan);
+  width:54px;
+  height:54px;
 
-  background:#080b0d;
-  color:var(--eots-cyan);
+  border:1px solid var(--cyan);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,245,255,.12),
+      rgba(255,42,168,.12)
+    ),
+    #08060d;
+
+  color:var(--cyan);
+
+  font-family:inherit;
+
+  font-size:20px;
 
   cursor:pointer;
 
   box-shadow:
     0 0 18px rgba(0,245,255,.25);
 
-  font-size:18px;
+  transition:.15s;
 }
 
+#eotsLauncher:hover,
 #eotsLauncher.active{
-  background:var(--eots-cyan);
-  color:#001014;
+  background:var(--cyan);
+
+  color:#020507;
+
+  box-shadow:
+    0 0 35px rgba(0,245,255,.65);
 }
 
-/* Mobile */
+
+/* =========================================================
+   EOTS OVERLAY
+   ========================================================= */
+
+#eots{
+  position:fixed;
+
+  inset:0;
+
+  z-index:999999;
+
+  display:none;
+
+  pointer-events:none;
+}
+
+#eots.active{
+  display:block;
+}
+
+
+/* =========================================================
+   SCANLINES
+   ========================================================= */
+
+#eots::after{
+  content:"";
+
+  position:absolute;
+
+  inset:0;
+
+  pointer-events:none;
+
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,.025) 0,
+      rgba(255,255,255,.025) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+
+  opacity:.35;
+}
+
+
+/* =========================================================
+   HOVER MARKER
+   ========================================================= */
+
+#hoverBox{
+  position:fixed;
+
+  display:none;
+
+  pointer-events:none;
+
+  border:1px dashed var(--yellow);
+
+  background:
+    rgba(255,230,109,.035);
+
+  box-shadow:
+    0 0 15px rgba(255,230,109,.25);
+
+  z-index:999997;
+}
+
+#hoverLabel{
+  position:absolute;
+
+  left:-1px;
+  top:-24px;
+
+  padding:4px 7px;
+
+  background:#09070d;
+
+  border:1px solid var(--yellow);
+
+  color:var(--yellow);
+
+  font-size:9px;
+
+  white-space:nowrap;
+}
+
+
+/* =========================================================
+   SELECTED MARKER
+   ========================================================= */
+
+.eots-selected{
+  position:fixed;
+
+  pointer-events:none;
+
+  z-index:999996;
+
+  border:2px solid var(--cyan);
+
+  background:
+    rgba(0,245,255,.045);
+
+  box-shadow:
+    0 0 0 1px rgba(0,245,255,.25),
+    0 0 20px rgba(0,245,255,.45),
+    inset 0 0 15px rgba(0,245,255,.08);
+}
+
+.eots-selected-label{
+  position:absolute;
+
+  left:-2px;
+  top:-25px;
+
+  padding:4px 7px;
+
+  background:var(--cyan);
+
+  color:#020507;
+
+  font-size:9px;
+
+  font-weight:bold;
+
+  white-space:nowrap;
+}
+
+
+/* =========================================================
+   CONTROL PANEL
+   ========================================================= */
+
+#eotsPanel{
+  position:fixed;
+
+  right:15px;
+  bottom:15px;
+
+  z-index:1000000;
+
+  width:min(430px,calc(100vw - 20px));
+
+  max-height:
+    calc(100vh - 30px);
+
+  overflow:auto;
+
+  pointer-events:auto;
+
+  padding:16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,245,255,.035),
+      transparent 50%
+    ),
+    var(--panel);
+
+  border:
+    1px solid #35434e;
+
+  border-top:
+    2px solid var(--cyan);
+
+  box-shadow:
+    0 30px 100px rgba(0,0,0,.8),
+    0 0 40px rgba(0,245,255,.08);
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.eots-header{
+  display:flex;
+
+  align-items:center;
+  justify-content:space-between;
+
+  padding-bottom:12px;
+
+  border-bottom:1px solid var(--line);
+}
+
+.logo{
+  display:flex;
+
+  align-items:center;
+
+  gap:10px;
+
+  color:var(--cyan);
+
+  font-weight:bold;
+
+  letter-spacing:.12em;
+
+  font-size:12px;
+}
+
+.eye{
+  width:13px;
+  height:13px;
+
+  border:
+    2px solid var(--cyan);
+
+  border-radius:50%;
+
+  box-shadow:
+    0 0 10px var(--cyan);
+}
+
+.close{
+  background:#08060d;
+
+  border:1px solid #34414b;
+
+  color:#77838d;
+
+  padding:5px 9px;
+
+  font-family:inherit;
+
+  cursor:pointer;
+}
+
+.close:hover{
+  color:var(--pink);
+
+  border-color:var(--pink);
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.status{
+  margin-top:12px;
+
+  padding:8px 10px;
+
+  background:#050408;
+
+  border-left:2px solid var(--green);
+
+  color:var(--muted);
+
+  font-size:9px;
+
+  letter-spacing:.08em;
+}
+
+#mode{
+  color:var(--green);
+}
+
+
+/* =========================================================
+   INSTRUCTIONS
+   ========================================================= */
+
+.instructions{
+  margin-top:12px;
+
+  padding:10px;
+
+  background:
+    rgba(255,42,168,.025);
+
+  border:1px solid #241d2b;
+
+  color:#84909a;
+
+  font-size:10px;
+
+  line-height:1.5;
+}
+
+.instructions b{
+  color:var(--pink);
+}
+
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.section{
+  margin-top:14px;
+}
+
+.section-title{
+  margin-bottom:7px;
+
+  color:#687580;
+
+  font-size:9px;
+
+  letter-spacing:.12em;
+}
+
+.actions{
+  display:grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap:7px;
+}
+
+.btn{
+  padding:11px 8px;
+
+  background:#0a0710;
+
+  border:1px solid #35424d;
+
+  color:#dce6ea;
+
+  font-family:inherit;
+
+  font-size:9px;
+
+  font-weight:bold;
+
+  cursor:pointer;
+
+  letter-spacing:.04em;
+
+  transition:.12s;
+}
+
+.btn:hover{
+  color:var(--cyan);
+
+  border-color:var(--cyan);
+
+  box-shadow:
+    inset 0 0 15px rgba(0,245,255,.06);
+}
+
+.btn.primary{
+  color:var(--cyan);
+
+  border-color:var(--cyan);
+}
+
+.btn.green{
+  color:var(--green);
+
+  border-color:var(--green);
+}
+
+.btn.pink{
+  color:var(--pink);
+
+  border-color:var(--pink);
+}
+
+
+/* =========================================================
+   SELECTED COUNT
+   ========================================================= */
+
+.count{
+  display:flex;
+
+  justify-content:space-between;
+
+  padding:9px 10px;
+
+  margin-top:10px;
+
+  background:#050408;
+
+  border:1px solid #202a33;
+
+  color:#75818c;
+
+  font-size:9px;
+}
+
+#count{
+  color:var(--cyan);
+
+  font-weight:bold;
+}
+
+
+/* =========================================================
+   ELEMENT INFO
+   ========================================================= */
+
+#elementInfo{
+  padding:10px;
+
+  min-height:40px;
+
+  background:#050408;
+
+  border:1px solid #202a33;
+
+  color:#bdeff4;
+
+  font-size:10px;
+
+  line-height:1.5;
+}
+
+
+/* =========================================================
+   JSON
+   ========================================================= */
+
+textarea{
+  width:100%;
+
+  min-height:210px;
+
+  resize:vertical;
+
+  padding:11px;
+
+  background:#020205;
+
+  border:1px solid #26333d;
+
+  color:#9ffaff;
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  font-size:9px;
+
+  line-height:1.5;
+
+  outline:none;
+}
+
+textarea:focus{
+  border-color:var(--cyan);
+
+  box-shadow:
+    0 0 15px rgba(0,245,255,.08);
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
 
 @media(max-width:600px){
 
+  .demo{
+    padding:20px 12px;
+  }
+
   #eotsPanel{
-    right:8px;
-    bottom:8px;
-    width:calc(100vw - 16px);
-    max-height:70vh;
+    right:5px;
+    bottom:5px;
+
+    width:
+      calc(100vw - 10px);
+
+    max-height:75vh;
   }
 
   #eotsLauncher{
-    right:12px;
-    top:12px;
+    top:10px;
+    right:10px;
   }
+
 }
+
 </style>
 </head>
 
+
 <body>
 
+
 <!-- =======================================================
-     BEISPIEL-UI
+     TEST UI
      ======================================================= -->
 
 <main class="demo">
 
-  <h1>Meine Anwendung</h1>
+  <div class="demo-top">
 
-  <p>
-    Diese Oberfläche ist nur Testmaterial für EOTS.
-    EOTS kann darübergelegt werden.
-  </p>
+    <header class="demo-title">
 
-  <div class="demo-grid">
+      <h1>
+        NEO / INTERFACE
+      </h1>
 
-    <section class="demo-card">
-      <h3>Projekt</h3>
-      <p>Aktuelles Projekt öffnen.</p>
-      <button class="demo-button">
-        Projekt öffnen
-      </button>
-    </section>
+      <p>
+        Existing UI // EOTS visual translation layer
+      </p>
 
-    <section class="demo-card">
-      <h3>Datenbank</h3>
-      <p>Datensätze verwalten.</p>
-      <button class="demo-button">
-        Datenbank öffnen
-      </button>
-    </section>
+    </header>
 
-    <section class="demo-card">
-      <h3>Analyse</h3>
-      <p>Systemanalyse starten.</p>
-      <button class="demo-button">
-        Analyse starten
-      </button>
-    </section>
+
+    <div class="demo-grid">
+
+
+      <section class="card">
+
+        <h3>
+          PROJECT
+        </h3>
+
+        <p>
+          Open the current project environment.
+        </p>
+
+        <button class="demo-button">
+          PROJECT OPEN
+        </button>
+
+      </section>
+
+
+      <section class="card">
+
+        <h3>
+          DATABASE
+        </h3>
+
+        <p>
+          Inspect system records.
+        </p>
+
+        <button class="demo-button">
+          DATABASE OPEN
+        </button>
+
+      </section>
+
+
+      <section class="card">
+
+        <h3>
+          ANALYSIS
+        </h3>
+
+        <p>
+          Start deterministic analysis.
+        </p>
+
+        <button class="demo-button">
+          ANALYSIS START
+        </button>
+
+      </section>
+
+
+    </div>
 
   </div>
 
@@ -362,130 +817,196 @@ body{
 
 
 <!-- =======================================================
-     EOTS LAUNCHER
+     LAUNCHER
      ======================================================= -->
 
-<button id="eotsLauncher"
-        aria-label="EOTS öffnen"
-        title="EOTS">
+<button
+  id="eotsLauncher"
+  title="EOTS">
+
   ◉
+
 </button>
 
 
 <!-- =======================================================
-     EOTS OVERLAY
+     EOTS
      ======================================================= -->
 
 <div id="eots">
 
-  <div id="eotsShade"></div>
 
-  <div id="eotsBox">
-    <div id="eotsBoxLabel">
-      EOTS
+  <div id="hoverBox">
+
+    <div id="hoverLabel">
+      SCAN
     </div>
+
   </div>
+
 
   <aside id="eotsPanel">
 
+
     <div class="eots-header">
 
-      <div class="eots-logo">
-        <span class="eots-eye"></span>
-        <span>EOTS</span>
+      <div class="logo">
+
+        <span class="eye"></span>
+
+        <span>
+          EOTS // EYE OF THE SKY
+        </span>
+
       </div>
 
-      <button class="eots-close"
-              id="eotsClose">
+
+      <button
+        class="close"
+        id="close">
+
         ×
+
       </button>
 
     </div>
 
-    <div class="eots-status">
-      Modus:
-      <strong id="eotsMode">
-        AUS
-      </strong>
-    </div>
 
+    <div class="status">
 
-    <div class="eots-section">
-
-      <div class="eots-title">
-        Erkanntes Element
-      </div>
-
-      <div class="eots-value"
-           id="eotsElement">
-        Noch kein Element ausgewählt.
-      </div>
+      SYSTEM ::
+      <span id="mode">
+        READY
+      </span>
 
     </div>
 
 
-    <div class="eots-section">
+    <div class="instructions">
 
-      <div class="eots-title">
-        Aktionen
+      <b>MARKIEREN:</b>
+      „Element markieren“ aktivieren,
+      anschließend über die bestehende Oberfläche fahren
+      und das gewünschte Element antippen.
+
+    </div>
+
+
+    <div class="section">
+
+      <div class="section-title">
+        VISUAL CAPTURE
       </div>
 
-      <div class="eots-actions">
 
-        <button class="eots-btn primary"
-                id="eotsSelect">
-          Element markieren
+      <div class="actions">
+
+        <button
+          class="btn primary"
+          id="select">
+
+          ◎ MARK ELEMENT
+
         </button>
 
-        <button class="eots-btn"
-                id="eotsAll">
-          Alle Buttons
+
+        <button
+          class="btn"
+          id="all">
+
+          ◈ ALL BUTTONS
+
         </button>
 
-        <button class="eots-btn green"
-                id="eotsAdd">
-          Hinzufügen
+
+        <button
+          class="btn green"
+          id="add">
+
+          + ADD ELEMENT
+
         </button>
 
-        <button class="eots-btn pink"
-                id="eotsClear">
-          Auswahl löschen
+
+        <button
+          class="btn pink"
+          id="clear">
+
+          × CLEAR
+
         </button>
+
+      </div>
+
+
+      <div class="count">
+
+        <span>
+          CAPTURED NODES
+        </span>
+
+        <span id="count">
+          0
+        </span>
 
       </div>
 
     </div>
 
 
-    <div class="eots-section">
+    <div class="section">
 
-      <div class="eots-title">
-        LLM-Kontext / JSON
+      <div class="section-title">
+        SELECTED ELEMENT
       </div>
 
-      <textarea id="eotsOutput"
-                spellcheck="false"></textarea>
+      <div id="elementInfo">
 
-    </div>
-
-
-    <div class="eots-section">
-
-      <div class="eots-actions">
-
-        <button class="eots-btn"
-                id="eotsCopy">
-          JSON kopieren
-        </button>
-
-        <button class="eots-btn"
-                id="eotsDownload">
-          JSON speichern
-        </button>
+        Noch kein Element markiert.
 
       </div>
 
     </div>
+
+
+    <div class="section">
+
+      <div class="section-title">
+        LLM CONTEXT // STRUCTURED OUTPUT
+      </div>
+
+      <textarea
+        id="json"
+        spellcheck="false"></textarea>
+
+    </div>
+
+
+    <div class="section">
+
+      <div class="actions">
+
+        <button
+          class="btn"
+          id="copy">
+
+          COPY JSON
+
+        </button>
+
+
+        <button
+          class="btn"
+          id="save">
+
+          SAVE JSON
+
+        </button>
+
+      </div>
+
+    </div>
+
 
   </aside>
 
@@ -493,772 +1014,908 @@ body{
 
 
 <script>
-/* =========================================================
-   EOTS CORE
-   ========================================================= */
 
 (() => {
 
-  "use strict";
+"use strict";
 
 
-  const launcher =
-    document.getElementById("eotsLauncher");
+/* =========================================================
+   STATE
+   ========================================================= */
 
-  const overlay =
-    document.getElementById("eots");
+let active = false;
+let selecting = false;
 
-  const panel =
-    document.getElementById("eotsPanel");
+let selected = [];
 
-  const box =
-    document.getElementById("eotsBox");
-
-  const boxLabel =
-    document.getElementById("eotsBoxLabel");
-
-  const mode =
-    document.getElementById("eotsMode");
-
-  const elementView =
-    document.getElementById("eotsElement");
-
-  const output =
-    document.getElementById("eotsOutput");
-
-  const selectButton =
-    document.getElementById("eotsSelect");
-
-  const allButton =
-    document.getElementById("eotsAll");
-
-  const addButton =
-    document.getElementById("eotsAdd");
-
-  const clearButton =
-    document.getElementById("eotsClear");
-
-  const copyButton =
-    document.getElementById("eotsCopy");
-
-  const downloadButton =
-    document.getElementById("eotsDownload");
-
-  const closeButton =
-    document.getElementById("eotsClose");
+let nodeCounter = 0;
 
 
-  let active = false;
-  let selecting = false;
+/* =========================================================
+   DOM
+   ========================================================= */
 
-  let selectedElements = [];
-  let hoveredElement = null;
+const launcher =
+  document.getElementById("eotsLauncher");
+
+const eots =
+  document.getElementById("eots");
+
+const panel =
+  document.getElementById("eotsPanel");
+
+const hoverBox =
+  document.getElementById("hoverBox");
+
+const hoverLabel =
+  document.getElementById("hoverLabel");
+
+const mode =
+  document.getElementById("mode");
+
+const selectBtn =
+  document.getElementById("select");
+
+const addBtn =
+  document.getElementById("add");
+
+const allBtn =
+  document.getElementById("all");
+
+const clearBtn =
+  document.getElementById("clear");
+
+const closeBtn =
+  document.getElementById("close");
+
+const count =
+  document.getElementById("count");
+
+const info =
+  document.getElementById("elementInfo");
+
+const json =
+  document.getElementById("json");
+
+const copyBtn =
+  document.getElementById("copy");
+
+const saveBtn =
+  document.getElementById("save");
 
 
-  /* =======================================================
-     EOTS ÖFFNEN / SCHLIESSEN
-     ======================================================= */
+/* =========================================================
+   OPEN / CLOSE
+   ========================================================= */
 
-  function openEOTS(){
+function open(){
 
-    active = true;
+  active = true;
 
-    overlay.classList.add("active");
-    launcher.classList.add("active");
+  eots.classList.add("active");
 
-    mode.textContent =
-      "BEREIT";
+  launcher.classList.add("active");
 
-    mode.style.color =
-      "var(--eots-green)";
+  setMode(
+    "READY",
+    "green"
+  );
 
-    document.body.style.cursor =
-      "default";
-  }
+}
 
 
-  function closeEOTS(){
+function close(){
 
-    active = false;
-    selecting = false;
+  active = false;
 
-    overlay.classList.remove("active");
-    launcher.classList.remove("active");
+  selecting = false;
 
-    hideBox();
+  eots.classList.remove("active");
 
-    document.body.style.cursor =
-      "default";
-  }
+  launcher.classList.remove("active");
+
+  hideHover();
+
+  document.body.style.cursor =
+    "default";
+
+}
 
 
-  launcher.addEventListener(
-    "click",
-    () => {
+launcher.addEventListener(
+  "click",
+  () => {
 
-      if(active){
-        closeEOTS();
-      }else{
-        openEOTS();
-      }
-
+    if(active){
+      close();
+    }else{
+      open();
     }
-  );
-
-
-  closeButton.addEventListener(
-    "click",
-    closeEOTS
-  );
-
-
-  /* =======================================================
-     AUSWAHLMODUS
-     ======================================================= */
-
-  selectButton.addEventListener(
-    "click",
-    () => {
-
-      selecting = !selecting;
-
-      if(selecting){
-
-        mode.textContent =
-          "ELEMENT WÄHLEN";
-
-        mode.style.color =
-          "var(--eots-cyan)";
-
-        document.body.style.cursor =
-          "crosshair";
-
-      }else{
-
-        mode.textContent =
-          "BEREIT";
-
-        document.body.style.cursor =
-          "default";
-
-        hideBox();
-
-      }
-
-    }
-  );
-
-
-  /* =======================================================
-     HOVER
-     ======================================================= */
-
-  document.addEventListener(
-    "mousemove",
-    event => {
-
-      if(!active || !selecting){
-        return;
-      }
-
-      const target =
-        document.elementFromPoint(
-          event.clientX,
-          event.clientY
-        );
-
-      if(!target){
-        return;
-      }
-
-      /*
-       * EOTS selbst darf niemals als UI-Element
-       * ausgewählt werden.
-       */
-
-      if(
-        target.closest("#eots") ||
-        target.closest("#eotsLauncher")
-      ){
-        return;
-      }
-
-      hoveredElement = target;
-
-      showBox(target);
-
-    },
-    true
-  );
-
-
-  /* =======================================================
-     KLICK AUF ELEMENT
-     ======================================================= */
-
-  document.addEventListener(
-    "click",
-    event => {
-
-      if(!active || !selecting){
-        return;
-      }
-
-      const target =
-        event.target;
-
-      if(
-        target.closest("#eots") ||
-        target.closest("#eotsLauncher")
-      ){
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      selectElement(target);
-
-    },
-    true
-  );
-
-
-  /* =======================================================
-     ELEMENT DARSTELLEN
-     ======================================================= */
-
-  function showBox(element){
-
-    const rect =
-      element.getBoundingClientRect();
-
-    box.style.display =
-      "block";
-
-    box.style.left =
-      rect.left + "px";
-
-    box.style.top =
-      rect.top + "px";
-
-    box.style.width =
-      rect.width + "px";
-
-    box.style.height =
-      rect.height + "px";
-
-    boxLabel.textContent =
-      describeTag(element);
 
   }
+);
 
 
-  function hideBox(){
-
-    box.style.display =
-      "none";
-
-  }
+closeBtn.addEventListener(
+  "click",
+  close
+);
 
 
-  /* =======================================================
-     ELEMENT AUSWÄHLEN
-     ======================================================= */
+/* =========================================================
+   MARK MODE
+   ========================================================= */
 
-  function selectElement(element){
+selectBtn.addEventListener(
+  "click",
+  startSelecting
+);
 
-    if(
-      element === document.body ||
-      element === document.documentElement
-    ){
+
+addBtn.addEventListener(
+  "click",
+  startSelecting
+);
+
+
+function startSelecting(){
+
+  selecting = true;
+
+  setMode(
+    "MARKIERMODUS",
+    "cyan"
+  );
+
+  document.body.style.cursor =
+    "crosshair";
+
+}
+
+
+/* =========================================================
+   MOUSE / TOUCH HOVER
+   ========================================================= */
+
+document.addEventListener(
+  "mousemove",
+  scan,
+  true
+);
+
+
+document.addEventListener(
+  "touchmove",
+  event => {
+
+    if(!active || !selecting){
       return;
     }
 
-    const data =
-      inspectElement(element);
+    const touch =
+      event.touches[0];
 
-    const exists =
-      selectedElements.some(
-        item => item.id === data.id
+    if(!touch){
+      return;
+    }
+
+    scan({
+      clientX:touch.clientX,
+      clientY:touch.clientY
+    });
+
+  },
+  {
+    passive:true,
+    capture:true
+  }
+);
+
+
+function scan(event){
+
+  if(!active || !selecting){
+    return;
+  }
+
+  const target =
+    document.elementFromPoint(
+      event.clientX,
+      event.clientY
+    );
+
+  if(!target){
+    return;
+  }
+
+
+  if(
+    target.closest("#eotsPanel") ||
+    target.closest("#eotsLauncher")
+  ){
+    hideHover();
+    return;
+  }
+
+
+  showHover(target);
+
+}
+
+
+/* =========================================================
+   CLICK / TOUCH SELECTION
+   ========================================================= */
+
+document.addEventListener(
+  "click",
+  selectFromEvent,
+  true
+);
+
+
+document.addEventListener(
+  "touchend",
+  event => {
+
+    if(!active || !selecting){
+      return;
+    }
+
+    const touch =
+      event.changedTouches[0];
+
+    if(!touch){
+      return;
+    }
+
+    const target =
+      document.elementFromPoint(
+        touch.clientX,
+        touch.clientY
       );
 
-    if(!exists){
+    if(target){
 
-      selectedElements.push(data);
+      selectTarget(
+        target,
+        event
+      );
 
     }
 
-    selecting = false;
+  },
+  true
+);
 
-    mode.textContent =
-      "ELEMENT ERFASST";
 
-    mode.style.color =
-      "var(--eots-green)";
+function selectFromEvent(event){
 
-    document.body.style.cursor =
-      "default";
+  if(!active || !selecting){
+    return;
+  }
 
-    showBox(element);
+  const target =
+    event.target;
 
-    renderSelection();
+
+  if(
+    target.closest("#eotsPanel") ||
+    target.closest("#eotsLauncher")
+  ){
+    return;
+  }
+
+
+  event.preventDefault();
+
+  event.stopPropagation();
+
+
+  selectTarget(
+    target,
+    event
+  );
+
+}
+
+
+function selectTarget(
+  target,
+  event
+){
+
+  if(
+    target === document.body ||
+    target === document.documentElement
+  ){
+    return;
+  }
+
+
+  const element =
+    inspect(target);
+
+
+  const already =
+    selected.find(
+      item =>
+        item.domKey === element.domKey
+    );
+
+
+  if(!already){
+
+    selected.push(element);
 
   }
 
 
-  /* =======================================================
-     ELEMENT ANALYSIEREN
-     ======================================================= */
+  selecting = false;
 
-  function inspectElement(element){
+  document.body.style.cursor =
+    "default";
 
-    const rect =
-      element.getBoundingClientRect();
 
-    const computed =
-      window.getComputedStyle(element);
+  setMode(
+    already
+      ? "BEREITS MARKIERT"
+      : "ELEMENT MARKIERT",
+    already
+      ? "yellow"
+      : "green"
+  );
 
-    const text =
-      cleanText(
-        element.innerText ||
-        element.textContent ||
-        ""
+
+  showHover(target);
+
+  render();
+
+}
+
+
+/* =========================================================
+   HOVER BOX
+   ========================================================= */
+
+function showHover(element){
+
+  const rect =
+    element.getBoundingClientRect();
+
+
+  hoverBox.style.display =
+    "block";
+
+
+  hoverBox.style.left =
+    rect.left + "px";
+
+
+  hoverBox.style.top =
+    rect.top + "px";
+
+
+  hoverBox.style.width =
+    rect.width + "px";
+
+
+  hoverBox.style.height =
+    rect.height + "px";
+
+
+  hoverLabel.textContent =
+    "SCAN // " +
+    describe(element);
+
+}
+
+
+function hideHover(){
+
+  hoverBox.style.display =
+    "none";
+
+}
+
+
+/* =========================================================
+   INSPECT ELEMENT
+   ========================================================= */
+
+function inspect(element){
+
+  nodeCounter++;
+
+
+  const rect =
+    element.getBoundingClientRect();
+
+
+  const style =
+    getComputedStyle(element);
+
+
+  const text =
+    clean(
+      element.innerText ||
+      element.textContent ||
+      ""
+    );
+
+
+  const domKey =
+    getDomKey(element);
+
+
+  return {
+
+    node:
+      "NODE-" +
+      String(nodeCounter)
+        .padStart(3,"0"),
+
+    domKey,
+
+    element:
+      element.tagName
+        .toLowerCase(),
+
+    role:
+      element.getAttribute("role") ||
+      inferRole(element),
+
+    type:
+      element.getAttribute("type") ||
+      null,
+
+    text:
+      text.substring(0,500),
+
+    aria_label:
+      element.getAttribute(
+        "aria-label"
+      ) || null,
+
+    title:
+      element.getAttribute(
+        "title"
+      ) || null,
+
+    id:
+      element.id || null,
+
+    classes:
+      typeof element.className === "string"
+        ? element.className
+        : null,
+
+    geometry:{
+      x:round(rect.left),
+      y:round(rect.top),
+      width:round(rect.width),
+      height:round(rect.height)
+    },
+
+    visual:{
+      display:style.display,
+      visibility:style.visibility,
+      fontSize:style.fontSize,
+      borderRadius:style.borderRadius,
+      cursor:style.cursor
+    },
+
+    interaction:{
+      clickable:
+        isClickable(element),
+
+      disabled:
+        !!element.disabled
+    }
+
+  };
+
+}
+
+
+/* =========================================================
+   ALL BUTTONS
+   ========================================================= */
+
+allBtn.addEventListener(
+  "click",
+  () => {
+
+    selected = [];
+
+    const elements =
+      document.querySelectorAll(
+        "button," +
+        "[role='button']," +
+        "input[type='button']," +
+        "input[type='submit']"
       );
 
-    const aria =
-      element.getAttribute("aria-label");
 
-    const title =
-      element.getAttribute("title");
+    elements.forEach(
+      element => {
 
-    const role =
-      element.getAttribute("role");
+        if(
+          element.closest("#eotsPanel") ||
+          element.closest("#eotsLauncher")
+        ){
+          return;
+        }
 
-    const id =
-      element.id ||
-      createElementId(element);
+        selected.push(
+          inspect(element)
+        );
 
-    return {
-
-      id,
-
-      tag:
-        element.tagName.toLowerCase(),
-
-      type:
-        element.getAttribute("type") || null,
-
-      text:
-        text.substring(0,500),
-
-      aria_label:
-        aria || null,
-
-      title:
-        title || null,
-
-      role:
-        role || inferRole(element),
-
-      class:
-        typeof element.className === "string"
-          ? element.className
-          : null,
-
-      position:{
-        x:round(rect.left),
-        y:round(rect.top)
-      },
-
-      size:{
-        width:round(rect.width),
-        height:round(rect.height)
-      },
-
-      visual:{
-        display:computed.display,
-        visibility:computed.visibility,
-        position:computed.position,
-        font_size:computed.fontSize,
-        border_radius:computed.borderRadius
-      },
-
-      interaction:{
-        clickable:
-          isClickable(element),
-
-        disabled:
-          !!element.disabled
       }
+    );
 
-    };
+
+    setMode(
+      `${selected.length} BUTTONS`,
+      "green"
+    );
+
+
+    render();
+
+  }
+);
+
+
+/* =========================================================
+   CLEAR
+   ========================================================= */
+
+clearBtn.addEventListener(
+  "click",
+  () => {
+
+    selected = [];
+
+    hideHover();
+
+    setMode(
+      "AUSWAHL GELÖSCHT",
+      "yellow"
+    );
+
+    render();
+
+  }
+);
+
+
+/* =========================================================
+   RENDER JSON
+   ========================================================= */
+
+function render(){
+
+  count.textContent =
+    selected.length;
+
+
+  if(selected.length){
+
+    const last =
+      selected[selected.length - 1];
+
+
+    info.innerHTML =
+      `<b>${escapeHTML(last.node)}</b><br>` +
+      `${escapeHTML(last.element)} · ` +
+      `${escapeHTML(last.role)}<br>` +
+      `${escapeHTML(last.text || "kein Text")}<br>` +
+      `${last.geometry.width} × ${last.geometry.height}px`;
+
+  }else{
+
+    info.textContent =
+      "Noch kein Element markiert.";
 
   }
 
 
-  /* =======================================================
-     ALLE BUTTONS
-     ======================================================= */
+  const context = {
 
-  allButton.addEventListener(
-    "click",
-    () => {
+    eots_version:
+      "1.0",
 
-      selectedElements = [];
+    source:
+      "live_ui",
 
-      const buttons =
-        Array.from(
-          document.querySelectorAll(
-            "button, [role='button'], input[type='button'], input[type='submit']"
-          )
-        );
+    purpose:
+      "Visual UI context for LLM interpretation",
 
-      buttons.forEach(
-        button => {
+    instruction:
+      "Nutze ausschließlich die erfassten Informationen. Erfinde keine UI-Elemente, Funktionen oder Beziehungen.",
 
-          if(
-            button.closest("#eots") ||
-            button.closest("#eotsLauncher")
-          ){
-            return;
-          }
+    captured_nodes:
+      selected
 
-          selectedElements.push(
-            inspectElement(button)
-          );
+  };
 
+
+  json.value =
+    JSON.stringify(
+      context,
+      null,
+      2
+    );
+
+}
+
+
+/* =========================================================
+   COPY
+   ========================================================= */
+
+copyBtn.addEventListener(
+  "click",
+  async () => {
+
+    try{
+
+      await navigator.clipboard.writeText(
+        json.value
+      );
+
+      copyBtn.textContent =
+        "COPIED ✓";
+
+
+      setTimeout(
+        () => {
+
+          copyBtn.textContent =
+            "COPY JSON";
+
+        },
+        1000
+      );
+
+    }catch(error){
+
+      json.select();
+
+      document.execCommand(
+        "copy"
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   SAVE
+   ========================================================= */
+
+saveBtn.addEventListener(
+  "click",
+  () => {
+
+    const blob =
+      new Blob(
+        [json.value],
+        {
+          type:
+            "application/json"
         }
       );
 
-      mode.textContent =
-        `${selectedElements.length} ELEMENTE ERFASST`;
 
-      mode.style.color =
-        "var(--eots-green)";
-
-      renderSelection();
-
-    }
-  );
+    const url =
+      URL.createObjectURL(blob);
 
 
-  /* =======================================================
-     HINZUFÜGEN
-     ======================================================= */
-
-  addButton.addEventListener(
-    "click",
-    () => {
-
-      selecting = true;
-
-      mode.textContent =
-        "WEITERES ELEMENT WÄHLEN";
-
-      mode.style.color =
-        "var(--eots-cyan)";
-
-      document.body.style.cursor =
-        "crosshair";
-
-    }
-  );
+    const a =
+      document.createElement("a");
 
 
-  /* =======================================================
-     AUSWAHL LÖSCHEN
-     ======================================================= */
+    a.href =
+      url;
 
-  clearButton.addEventListener(
-    "click",
-    () => {
-
-      selectedElements = [];
-
-      hideBox();
-
-      mode.textContent =
-        "AUSWAHL GELÖSCHT";
-
-      mode.style.color =
-        "var(--eots-muted)";
-
-      renderSelection();
-
-    }
-  );
+    a.download =
+      "eots-context.json";
 
 
-  /* =======================================================
-     JSON ERZEUGEN
-     ======================================================= */
+    document.body.appendChild(a);
 
-  function buildContext(){
+    a.click();
 
-    return {
+    a.remove();
 
-      eots_version:
-        "1.0",
 
-      purpose:
-        "Visual translation of an existing user interface for LLM understanding",
+    URL.revokeObjectURL(url);
 
-      source:
-        "live_ui",
+  }
+);
 
-      captured_at:
-        new Date().toISOString(),
 
-      instruction:
-        "Describe and reason about the supplied UI elements. Do not invent elements or functions that are not represented by the captured data.",
+/* =========================================================
+   HELPERS
+   ========================================================= */
 
-      elements:
-        selectedElements
+function setMode(
+  text,
+  color
+){
 
-    };
+  mode.textContent =
+    text;
+
+
+  const colors = {
+
+    cyan:"var(--cyan)",
+
+    green:"var(--green)",
+
+    yellow:"var(--yellow)"
+
+  };
+
+
+  mode.style.color =
+    colors[color] ||
+    "var(--green)";
+
+}
+
+
+function clean(text){
+
+  return String(text)
+    .replace(/\s+/g," ")
+    .trim();
+
+}
+
+
+function round(value){
+
+  return Math.round(
+    value * 10
+  ) / 10;
+
+}
+
+
+function isClickable(element){
+
+  const tag =
+    element.tagName
+      .toLowerCase();
+
+
+  if([
+    "button",
+    "a",
+    "input",
+    "select",
+    "textarea"
+  ].includes(tag)){
+
+    return true;
 
   }
 
 
-  function renderSelection(){
+  if(
+    element.getAttribute(
+      "role"
+    ) === "button"
+  ){
 
-    const context =
-      buildContext();
-
-    output.value =
-      JSON.stringify(
-        context,
-        null,
-        2
-      );
-
-    if(selectedElements.length){
-
-      const last =
-        selectedElements[
-          selectedElements.length - 1
-        ];
-
-      elementView.textContent =
-        `${last.tag} — ${last.text || last.role || last.id}`;
-
-    }else{
-
-      elementView.textContent =
-        "Noch kein Element ausgewählt.";
-
-    }
+    return true;
 
   }
 
 
-  /* =======================================================
-     KOPIEREN
-     ======================================================= */
+  return getComputedStyle(
+    element
+  ).cursor === "pointer";
 
-  copyButton.addEventListener(
-    "click",
-    async () => {
-
-      try{
-
-        await navigator.clipboard.writeText(
-          output.value
-        );
-
-        copyButton.textContent =
-          "Kopiert ✓";
-
-        setTimeout(
-          () => {
-            copyButton.textContent =
-              "JSON kopieren";
-          },
-          1200
-        );
-
-      }catch(error){
-
-        output.select();
-
-        document.execCommand(
-          "copy"
-        );
-
-      }
-
-    }
-  );
+}
 
 
-  /* =======================================================
-     JSON SPEICHERN
-     ======================================================= */
+function inferRole(element){
 
-  downloadButton.addEventListener(
-    "click",
-    () => {
-
-      const blob =
-        new Blob(
-          [output.value],
-          {
-            type:"application/json"
-          }
-        );
-
-      const url =
-        URL.createObjectURL(blob);
-
-      const a =
-        document.createElement("a");
-
-      a.href =
-        url;
-
-      a.download =
-        "eots-ui-context.json";
-
-      document.body.appendChild(a);
-
-      a.click();
-
-      a.remove();
-
-      URL.revokeObjectURL(url);
-
-    }
-  );
+  const tag =
+    element.tagName
+      .toLowerCase();
 
 
-  /* =======================================================
-     HILFSFUNKTIONEN
-     ======================================================= */
+  if(tag === "button")
+    return "button";
 
-  function cleanText(text){
 
-    return String(text)
-      .replace(/\s+/g," ")
-      .trim();
+  if(tag === "a")
+    return "link";
+
+
+  if(tag === "input")
+    return "input";
+
+
+  if(tag === "nav")
+    return "navigation";
+
+
+  if(/^h[1-6]$/.test(tag))
+    return "heading";
+
+
+  return "container";
+
+}
+
+
+function describe(element){
+
+  const text =
+    clean(
+      element.innerText ||
+      element.textContent ||
+      ""
+    );
+
+
+  return (
+    text ||
+    element.getAttribute(
+      "aria-label"
+    ) ||
+    element.tagName
+      .toLowerCase()
+  ).substring(0,35);
+
+}
+
+
+function getDomKey(element){
+
+  if(!element.dataset.eotsKey){
+
+    element.dataset.eotsKey =
+      "e" +
+      Math.random()
+        .toString(36)
+        .substring(2,10);
 
   }
 
 
-  function round(value){
+  return element.dataset.eotsKey;
 
-    return Math.round(value * 10) / 10;
-
-  }
+}
 
 
-  function isClickable(element){
+function escapeHTML(text){
 
-    const tag =
-      element.tagName.toLowerCase();
+  return String(text)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
 
-    if(
-      ["button","a","input","select","textarea"]
-      .includes(tag)
-    ){
-      return true;
-    }
-
-    if(
-      element.getAttribute("role") === "button"
-    ){
-      return true;
-    }
-
-    const style =
-      window.getComputedStyle(element);
-
-    return style.cursor === "pointer";
-
-  }
+}
 
 
-  function inferRole(element){
+/* =========================================================
+   INITIAL JSON
+   ========================================================= */
 
-    const tag =
-      element.tagName.toLowerCase();
-
-    if(tag === "button"){
-      return "button";
-    }
-
-    if(tag === "a"){
-      return "link";
-    }
-
-    if(tag === "input"){
-      return "input";
-    }
-
-    if(tag === "nav"){
-      return "navigation";
-    }
-
-    if(
-      ["h1","h2","h3","h4","h5","h6"]
-      .includes(tag)
-    ){
-      return "heading";
-    }
-
-    return "container";
-
-  }
-
-
-  function describeTag(element){
-
-    const tag =
-      element.tagName.toLowerCase();
-
-    const text =
-      cleanText(
-        element.innerText ||
-        element.textContent ||
-        ""
-      );
-
-    if(text){
-      return `${tag}: ${text.substring(0,40)}`;
-    }
-
-    return tag;
-
-  }
-
-
-  function createElementId(element){
-
-    /*
-     * Kein zufälliger LLM-Name.
-     * EOTS erzeugt lediglich eine technische lokale ID.
-     */
-
-    if(!element.dataset.eotsId){
-
-      element.dataset.eotsId =
-        "eots-" +
-        Math.random()
-          .toString(36)
-          .substring(2,10);
-
-    }
-
-    return element.dataset.eotsId;
-
-  }
-
-
-  /* =======================================================
-     INITIALER ZUSTAND
-     ======================================================= */
-
-  renderSelection();
+render();
 
 })();
 </script>
