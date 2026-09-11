@@ -2,1407 +2,875 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#090414">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>EOTS — Eye Of The Sky</title>
-
+<meta name="theme-color" content="#05010a">
+<title>EOTS — Eye of the Sky</title>
 <style>
-:root{
-  --bg:#090414;
-  --panel:#120820;
-  --panel2:#1b0d2b;
-  --pink:#ff2fa8;
-  --cyan:#20e7ff;
-  --purple:#8c52ff;
-  --yellow:#ffe66d;
-  --text:#fff7ff;
-  --muted:#bdaec9;
-  --line:rgba(255,255,255,.12);
-  --good:#61f5a0;
-  --danger:#ff5f7a;
+:root {
+  --bg: #05010a;
+  --panel: rgba(10, 3, 20, 0.94);
+  --line: rgba(255, 47, 168, 0.28);
+  --cyan: #20e7ff;
+  --pink: #ff2fa8;
+  --violet: #8c52ff;
+  --yellow: #ffe66d;
+  --green: #61f5a0;
+  --text: #f6f0ff;
+  --muted: #9a88a8;
+  --danger: #ff5f7a;
+  --glow-c: 0 0 14px rgba(32, 231, 255, 0.55);
+  --glow-p: 0 0 16px rgba(255, 47, 168, 0.5);
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
 }
-
-*{box-sizing:border-box}
-
-html,body{
-  margin:0;
-  min-height:100%;
-  background:var(--bg);
-  color:var(--text);
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-}
-
-body{
-  overflow-x:hidden;
-  padding-bottom:env(safe-area-inset-bottom);
-}
-
-/* ---------- BACKGROUND ---------- */
-
-.sky{
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  overflow:hidden;
-  z-index:0;
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; overflow-x: hidden; }
+body { padding-top: var(--safe-t); padding-bottom: calc(var(--safe-b) + 10px); }
+.sky {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
   background:
-    radial-gradient(circle at 50% 16%,
-      rgba(255,47,168,.25),
-      transparent 34%),
-    radial-gradient(circle at 15% 70%,
-      rgba(32,231,255,.12),
-      transparent 35%),
-    linear-gradient(180deg,#10051d 0%,#090414 72%);
+    radial-gradient(ellipse at 50% -10%, rgba(255, 47, 168, 0.2), transparent 55%),
+    radial-gradient(ellipse at 90% 70%, rgba(32, 231, 255, 0.07), transparent 45%),
+    linear-gradient(180deg, #0b0216 0%, #05010a 65%);
 }
-
-.sun{
-  position:absolute;
-  width:180px;
-  height:180px;
-  left:50%;
-  top:55px;
-  transform:translateX(-50%);
-  border-radius:50%;
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      #ffcf5c 0 10px,
-      #ff6a9f 10px 18px
-    );
-  box-shadow:
-    0 0 60px rgba(255,47,168,.45);
-  opacity:.8;
-}
-
-.grid{
-  position:absolute;
-  left:-30%;
-  right:-30%;
-  bottom:-8%;
-  height:43%;
-  transform:perspective(260px) rotateX(58deg);
+.sky::after {
+  content: ""; position: absolute; left: -25%; right: -25%; bottom: -8%; height: 42%;
+  transform: perspective(420px) rotateX(56deg);
   background-image:
-    linear-gradient(rgba(32,231,255,.22) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,47,168,.22) 1px,transparent 1px);
-  background-size:38px 38px;
+    linear-gradient(rgba(32, 231, 255, 0.11) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 47, 168, 0.09) 1px, transparent 1px);
+  background-size: 30px 30px; opacity: 0.55;
 }
-
-/* ---------- APP ---------- */
-
-.app{
-  position:relative;
-  z-index:1;
-  width:100%;
-  max-width:900px;
-  margin:auto;
-  padding:
-    calc(env(safe-area-inset-top) + 18px)
-    16px
-    30px;
+.app { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 10px 12px 20px; }
+.header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.orb {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  background: radial-gradient(circle at 32% 28%, #fff 0 5%, #9df8ff 9%, var(--cyan) 26%, var(--violet) 55%, var(--pink) 78%, transparent 82%);
+  box-shadow: var(--glow-c), 0 0 26px rgba(255, 47, 168, 0.4);
+  animation: float 3s ease-in-out infinite;
 }
-
-/* ---------- HEADER ---------- */
-
-.header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:18px;
+@keyframes float { 50% { transform: translateY(-3px); } }
+.title { font-size: 21px; font-weight: 900; letter-spacing: 0.14em; line-height: 1; }
+.subtitle { font-size: 9px; letter-spacing: 0.2em; color: var(--muted); margin-top: 2px; }
+.chain {
+  font-size: 9px; letter-spacing: 0.1em; color: var(--cyan);
+  border: 1px solid rgba(32, 231, 255, 0.35); border-radius: 999px;
+  padding: 5px 10px; background: rgba(32, 231, 255, 0.06); white-space: nowrap;
 }
-
-.brand{
-  display:flex;
-  align-items:center;
-  gap:12px;
+.status {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.12em;
+  padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(97, 245, 160, 0.45);
+  color: var(--green); background: rgba(97, 245, 160, 0.07); white-space: nowrap;
 }
-
-.orb{
-  width:48px;
-  height:48px;
-  border-radius:50%;
-  position:relative;
-  flex:none;
-  background:
-    radial-gradient(circle at 35% 30%,
-      white 0 5%,
-      #9df8ff 8%,
-      var(--cyan) 25%,
-      var(--purple) 58%,
-      var(--pink) 78%,
-      transparent 80%);
-  box-shadow:
-    0 0 14px var(--cyan),
-    0 0 32px rgba(255,47,168,.6);
-  animation:float 3s ease-in-out infinite;
+.status.busy { border-color: rgba(32, 231, 255, 0.5); color: var(--cyan); background: rgba(32, 231, 255, 0.08); }
+.status.warn { border-color: rgba(255, 230, 109, 0.5); color: var(--yellow); background: rgba(255, 230, 109, 0.08); }
+.panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+  padding: 12px; margin-bottom: 10px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
 }
-
-.orb:after{
-  content:"";
-  position:absolute;
-  width:10px;
-  height:10px;
-  left:13px;
-  top:16px;
-  border-radius:50%;
-  background:white;
-  box-shadow:18px 0 0 white;
+.ptitle {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.16em; color: var(--cyan);
+  margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
 }
-
-@keyframes float{
-  50%{transform:translateY(-4px)}
+.ptitle span { color: var(--muted); font-weight: 500; letter-spacing: 0.06em; font-size: 9px; }
+.vwrap {
+  position: relative; width: 100%; background: #020008; border-radius: 12px;
+  overflow: hidden; border: 1px solid rgba(32, 231, 255, 0.22); min-height: 160px; touch-action: none;
 }
-
-.title{
-  font-size:24px;
-  font-weight:900;
-  letter-spacing:.08em;
+#vcanvas { display: block; width: 100%; height: auto; max-height: 48vh; background: #08030f; }
+.selbox {
+  position: absolute; border: 2px solid var(--cyan); background: rgba(32, 231, 255, 0.1);
+  box-shadow: 0 0 0 1px rgba(255, 47, 168, 0.45), var(--glow-c); pointer-events: none; display: none;
 }
-
-.subtitle{
-  color:var(--muted);
-  font-size:11px;
-  letter-spacing:.14em;
-  margin-top:3px;
+.sellabel {
+  position: absolute; top: -24px; left: 0; font-size: 8px; font-family: ui-monospace, monospace;
+  background: #090414; color: var(--cyan); border: 1px solid var(--cyan); padding: 2px 6px; border-radius: 5px; white-space: nowrap;
 }
-
-.status{
-  border:1px solid rgba(97,245,160,.4);
-  color:var(--good);
-  border-radius:999px;
-  padding:7px 10px;
-  font-size:10px;
-  letter-spacing:.1em;
-  white-space:nowrap;
+.ph {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 12px; text-align: center; padding: 16px; pointer-events: none;
 }
-
-/* ---------- HERO ---------- */
-
-.hero{
-  border:1px solid var(--line);
-  border-radius:26px;
-  padding:22px;
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255,47,168,.13),
-      rgba(32,231,255,.05)
-    ),
-    rgba(10,4,18,.8);
-  box-shadow:
-    0 20px 60px rgba(0,0,0,.35),
-    inset 0 0 30px rgba(255,255,255,.025);
-  backdrop-filter:blur(16px);
+.ph strong { color: var(--cyan); display: block; margin-bottom: 4px; letter-spacing: 0.12em; font-size: 11px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 8px; }
+.row.full { grid-template-columns: 1fr; }
+button, .fbtn {
+  min-height: 46px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #120a1c; color: #fff; font-weight: 800; font-size: 11px; letter-spacing: 0.07em;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 0 10px;
 }
-
-.hero h1{
-  margin:0 0 8px;
-  font-size:30px;
-  line-height:1.05;
+button:active, .fbtn:active { transform: scale(0.97); }
+button:disabled { opacity: 0.38; pointer-events: none; }
+.bc { background: rgba(32, 231, 255, 0.1); border-color: rgba(32, 231, 255, 0.42); color: var(--cyan); }
+.bp { background: rgba(255, 47, 168, 0.12); border-color: rgba(255, 47, 168, 0.48); color: #ff8fd0; }
+.bv { background: rgba(140, 82, 255, 0.12); border-color: rgba(140, 82, 255, 0.42); color: #c4a0ff; }
+.bg { background: rgba(97, 245, 160, 0.1); border-color: rgba(97, 245, 160, 0.38); color: var(--green); }
+.bd { background: rgba(255, 95, 122, 0.1); border-color: rgba(255, 95, 122, 0.38); color: var(--danger); }
+.bm {
+  background: linear-gradient(100deg, var(--pink), #b33cff 48%, var(--cyan)); border: none; color: #fff;
+  box-shadow: 0 6px 20px rgba(255, 47, 168, 0.28); font-size: 12px; letter-spacing: 0.1em; min-height: 50px;
 }
-
-.hero h1 span{
-  color:var(--cyan);
+.fbtn { position: relative; overflow: hidden; }
+.fbtn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 80px; }
+.tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+.tab {
+  flex: 1; min-height: 36px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #100818; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: 0.08em;
 }
-
-.hero p{
-  margin:0;
-  color:var(--muted);
-  line-height:1.5;
-  font-size:14px;
+.tab.on { border-color: var(--cyan); color: var(--cyan); background: rgba(32, 231, 255, 0.1); }
+.elist, .rlist { max-height: 160px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.eitem {
+  display: flex; align-items: center; gap: 8px; padding: 9px; border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07); background: rgba(255, 255, 255, 0.025); margin-bottom: 5px;
+  font-size: 11px; cursor: pointer;
 }
-
-.pillrow{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-top:18px;
+.eitem.on { border-color: var(--cyan); background: rgba(32, 231, 255, 0.12); box-shadow: var(--glow-c); }
+.eitem .id { color: var(--cyan); font-family: ui-monospace, monospace; font-size: 9px; }
+.eitem .ty { color: var(--pink); font-weight: 800; letter-spacing: 0.05em; font-size: 9px; }
+.eitem .tx { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.empty { font-size: 11px; color: var(--muted); text-align: center; padding: 14px 6px; }
+.igrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; font-size: 11px; }
+.igrid .full { grid-column: 1 / -1; }
+.fl { font-size: 8px; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 2px; }
+.fv, select, input[type="text"], input[type="number"] {
+  width: 100%; background: #07030d; border: 1px solid rgba(32, 231, 255, 0.2); border-radius: 9px;
+  color: var(--text); padding: 8px 9px; font-size: 12px; font-family: inherit; outline: none;
 }
-
-.pill{
-  padding:7px 10px;
-  border-radius:999px;
-  border:1px solid var(--line);
-  color:#eee;
-  font-size:10px;
-  letter-spacing:.08em;
-  background:rgba(255,255,255,.035);
+.fv { min-height: 36px; display: flex; align-items: center; word-break: break-all; }
+select:focus, input:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px rgba(32, 231, 255, 0.1); }
+.ctxbox {
+  background: #030108; border: 1px solid rgba(32, 231, 255, 0.25); border-radius: 12px;
+  padding: 12px; min-height: 120px; max-height: 260px; overflow-y: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.55;
+  color: #c8f4ff; white-space: pre-wrap; word-break: break-word;
 }
-
-/* ---------- MAIN ACTION ---------- */
-
-.capture{
-  margin-top:16px;
-  width:100%;
-  min-height:76px;
-  border:0;
-  border-radius:22px;
-  color:white;
-  font-size:17px;
-  font-weight:900;
-  letter-spacing:.08em;
-  background:
-    linear-gradient(
-      100deg,
-      var(--pink),
-      #b33cff 48%,
-      var(--cyan)
-    );
-  box-shadow:
-    0 12px 35px rgba(255,47,168,.24);
-  cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
+.ctxbox:empty::before { content: "Noch kein Kontext. Markiere einen Bereich und erzeuge Elemente."; color: var(--muted); }
+.footer { text-align: center; font-size: 9px; letter-spacing: 0.14em; color: #564860; margin-top: 14px; }
+.toast {
+  position: fixed; bottom: calc(var(--safe-b) + 18px); left: 50%; transform: translateX(-50%);
+  background: #10081a; border: 1px solid var(--cyan); color: var(--cyan); padding: 9px 16px;
+  border-radius: 11px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; z-index: 9999;
+  box-shadow: var(--glow-c); opacity: 0; pointer-events: none; transition: opacity 0.22s;
 }
-
-.capture:active{
-  transform:scale(.98);
-}
-
-/* ---------- PANELS ---------- */
-
-.panel{
-  margin-top:16px;
-  border:1px solid var(--line);
-  border-radius:22px;
-  padding:16px;
-  background:rgba(15,7,25,.82);
-  backdrop-filter:blur(12px);
-}
-
-.panelhead{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  margin-bottom:12px;
-}
-
-.paneltitle{
-  font-weight:900;
-  letter-spacing:.08em;
-  font-size:12px;
-}
-
-.counter{
-  color:var(--cyan);
-  font-size:10px;
-  font-family:monospace;
-}
-
-pre{
-  margin:0;
-  max-height:300px;
-  overflow:auto;
-  padding:14px;
-  border-radius:14px;
-  background:#050207;
-  border:1px solid rgba(255,255,255,.08);
-  color:#d8faff;
-  font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
-  white-space:pre-wrap;
-  word-break:break-word;
-}
-
-/* ---------- QUESTION ---------- */
-
-textarea{
-  width:100%;
-  min-height:100px;
-  resize:vertical;
-  border-radius:16px;
-  border:1px solid rgba(32,231,255,.25);
-  background:#08040e;
-  color:white;
-  padding:14px;
-  font:14px/1.5 inherit;
-  outline:none;
-}
-
-textarea:focus{
-  border-color:var(--cyan);
-  box-shadow:0 0 0 3px rgba(32,231,255,.08);
-}
-
-.actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:10px;
-}
-
-button.secondary,
-button.pink,
-button.cyan,
-button.green,
-button.red{
-  min-height:48px;
-  border-radius:15px;
-  border:1px solid var(--line);
-  color:white;
-  font-weight:800;
-  background:#171020;
-}
-
-button.pink{
-  background:rgba(255,47,168,.16);
-  border-color:rgba(255,47,168,.45);
-}
-
-button.cyan{
-  background:rgba(32,231,255,.12);
-  border-color:rgba(32,231,255,.4);
-}
-
-button.green{
-  background:rgba(97,245,160,.12);
-  border-color:rgba(97,245,160,.4);
-}
-
-button.red{
-  background:rgba(255,95,122,.12);
-  border-color:rgba(255,95,122,.4);
-}
-
-/* ---------- ACTION REQUEST ---------- */
-
-.action-card{
-  border-radius:18px;
-  padding:15px;
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255,47,168,.10),
-      rgba(140,82,255,.08)
-    );
-  border:1px solid rgba(255,255,255,.1);
-}
-
-.action-type{
-  color:var(--yellow);
-  font:11px monospace;
-  letter-spacing:.1em;
-}
-
-.action-description{
-  margin:9px 0 14px;
-  line-height:1.4;
-}
-
-.approval{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
-/* ---------- EVENT LOG ---------- */
-
-.event{
-  padding:10px 0;
-  border-bottom:1px solid rgba(255,255,255,.07);
-  font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
-}
-
-.event:last-child{
-  border-bottom:0;
-}
-
-.event .time{
-  color:#8d7d98;
-}
-
-.event .type{
-  color:var(--cyan);
-}
-
-/* ---------- HIDDEN ---------- */
-
-.hidden{
-  display:none !important;
-}
-
-/* ---------- CAPTURE MODE ---------- */
-
-#captureOverlay{
-  position:fixed;
-  inset:0;
-  z-index:9999;
-  display:none;
-  pointer-events:none;
-}
-
-.captureShade{
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,.35);
-}
-
-.selection{
-  position:absolute;
-  border:2px solid var(--cyan);
-  background:rgba(32,231,255,.08);
-  box-shadow:
-    0 0 0 1px rgba(255,47,168,.4),
-    0 0 30px rgba(32,231,255,.25);
-}
-
-.selectionLabel{
-  position:absolute;
-  left:0;
-  top:-30px;
-  padding:6px 9px;
-  border-radius:8px;
-  background:#090414;
-  color:var(--cyan);
-  border:1px solid var(--cyan);
-  font:10px monospace;
-  white-space:nowrap;
-}
-
-/* ---------- FOOTER ---------- */
-
-.footer{
-  text-align:center;
-  color:#796b83;
-  font-size:10px;
-  letter-spacing:.1em;
-  margin-top:20px;
-}
-
-/* ---------- MOBILE ---------- */
-
-@media(min-width:700px){
-  .app{
-    padding-left:28px;
-    padding-right:28px;
-  }
-}
+.toast.show { opacity: 1; }
+.hidden { display: none !important; }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(32, 231, 255, 0.28); border-radius: 3px; }
 </style>
 </head>
-
 <body>
-
-<div class="sky">
-  <div class="sun"></div>
-  <div class="grid"></div>
-</div>
-
-<div id="captureOverlay">
-  <div class="captureShade"></div>
-  <div id="selectionBox" class="selection">
-    <div class="selectionLabel">EOTS SEES THIS</div>
-  </div>
-</div>
-
-<main class="app">
-
+<div class="sky"></div>
+<div class="app">
   <header class="header">
-
     <div class="brand">
       <div class="orb"></div>
-
       <div>
         <div class="title">EOTS</div>
         <div class="subtitle">EYE OF THE SKY</div>
       </div>
     </div>
-
-    <div id="status" class="status">
-      READY
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <div class="chain">USER → EOTS → LLM</div>
+      <div id="status" class="status">● READY</div>
     </div>
-
   </header>
 
-  <section class="hero">
-
-    <h1>
-      Deine Software.<br>
-      <span>Unsere Augen.</span>
-    </h1>
-
-    <p>
-      EOTS ist eine externe Entwickler- und
-      Kontextschicht. Du markierst, was relevant ist.
-      EOTS beschreibt es. GPT hilft uns, daraus Software
-      zu bauen.
-    </p>
-
-    <div class="pillrow">
-      <div class="pill">VISUAL CONTEXT</div>
-      <div class="pill">DOM</div>
-      <div class="pill">SEMANTIC</div>
-      <div class="pill">ACTION CONTROL</div>
-      <div class="pill">USER APPROVAL</div>
+  <section class="panel">
+    <div class="ptitle">VISUAL FIELD <span id="imgMeta">kein Bild</span></div>
+    <div class="vwrap" id="vwrap">
+      <canvas id="vcanvas"></canvas>
+      <div id="selbox" class="selbox"><div class="sellabel">EOTS SEES THIS</div></div>
+      <div id="ph" class="ph"><strong>LOAD SCREENSHOT</strong>Tippe LOAD und wähle ein UI-Bild</div>
     </div>
-
+    <div class="row">
+      <label class="fbtn bc">LOAD IMAGE<input type="file" id="file" accept="image/*"></label>
+      <button id="btnClearBox" class="bv" disabled>CLEAR BOX</button>
+    </div>
+    <div class="row full" style="margin-top:7px;">
+      <button id="btnMake" class="bm" disabled>＋ ELEMENT AUS AUSWAHL</button>
+    </div>
   </section>
 
-  <button id="captureBtn" class="capture">
-    ⦿ BEREICH MIT EOTS ERFASSEN
-  </button>
-
-  <section id="contextPanel" class="panel hidden">
-
-    <div class="panelhead">
-      <div class="paneltitle">
-        EOTS CONTEXT
+  <section class="panel">
+    <div class="ptitle">VISUAL STRUCTURE <span id="cnt">0 elements</span></div>
+    <div class="tabs">
+      <button class="tab on" data-tab="els">ELEMENTS</button>
+      <button class="tab" data-tab="rels">RELATIONS</button>
+      <button class="tab" data-tab="insp">INSPECT</button>
+    </div>
+    <div id="tab-els">
+      <div id="elist" class="elist"><div class="empty">Noch keine Elemente.</div></div>
+    </div>
+    <div id="tab-rels" class="hidden">
+      <div class="igrid" style="margin-bottom:8px;">
+        <div class="full">
+          <div class="fl">SOURCE</div>
+          <select id="relSrc"><option value="">—</option></select>
+        </div>
+        <div>
+          <div class="fl">RELATION</div>
+          <select id="relType">
+            <option value="inside">inside</option>
+            <option value="contains">contains</option>
+            <option value="above">above</option>
+            <option value="below">below</option>
+            <option value="left_of">left_of</option>
+            <option value="right_of">right_of</option>
+            <option value="adjacent_to">adjacent_to</option>
+            <option value="aligned_with">aligned_with</option>
+            <option value="label_for">label_for</option>
+            <option value="controls">controls</option>
+            <option value="associated_with">associated_with</option>
+          </select>
+        </div>
+        <div>
+          <div class="fl">TARGET</div>
+          <select id="relTgt"><option value="">—</option></select>
+        </div>
       </div>
-
-      <div id="captureCounter" class="counter">
-        CAP-000000
+      <button id="btnAddRel" class="bp" style="width:100%;">＋ RELATION</button>
+      <div id="rlist" class="rlist" style="margin-top:8px;"><div class="empty">Keine Beziehungen.</div></div>
+    </div>
+    <div id="tab-insp" class="hidden">
+      <div class="igrid">
+        <div class="full"><div class="fl">ID</div><div class="fv" id="iId">—</div></div>
+        <div>
+          <div class="fl">TYPE</div>
+          <select id="iType">
+            <option value="unknown">unknown</option>
+            <option value="button">button</option>
+            <option value="text">text</option>
+            <option value="heading">heading</option>
+            <option value="image">image</option>
+            <option value="icon">icon</option>
+            <option value="input">input</option>
+            <option value="textarea">textarea</option>
+            <option value="checkbox">checkbox</option>
+            <option value="switch">switch</option>
+            <option value="menu">menu</option>
+            <option value="navigation">navigation</option>
+            <option value="panel">panel</option>
+            <option value="card">card</option>
+            <option value="table">table</option>
+            <option value="list">list</option>
+            <option value="link">link</option>
+            <option value="status">status</option>
+            <option value="container">container</option>
+          </select>
+        </div>
+        <div>
+          <div class="fl">FUNCTION</div>
+          <input type="text" id="iFn" placeholder="null">
+        </div>
+        <div class="full">
+          <div class="fl">TEXT</div>
+          <input type="text" id="iText" placeholder="null">
+        </div>
+        <div><div class="fl">X</div><input type="number" id="iX" readonly></div>
+        <div><div class="fl">Y</div><input type="number" id="iY" readonly></div>
+        <div><div class="fl">W</div><input type="number" id="iW" readonly></div>
+        <div><div class="fl">H</div><input type="number" id="iH" readonly></div>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <button id="btnUpd" class="bc" disabled>UPDATE</button>
+        <button id="btnDel" class="bd" disabled>DELETE</button>
       </div>
     </div>
-
-    <pre id="contextOutput"></pre>
-
   </section>
 
-  <section id="questionPanel" class="panel hidden">
-
-    <div class="panelhead">
-      <div class="paneltitle">
-        EOTS → GPT
-      </div>
+  <section class="panel">
+    <div class="ptitle">EOTS → LLM CONTEXT <span>structured visual text</span></div>
+    <div id="ctx" class="ctxbox"></div>
+    <div class="row" style="margin-top:8px;">
+      <button id="btnGen" class="bm">GENERATE CONTEXT</button>
+      <button id="btnCopy" class="bc">COPY CONTEXT</button>
     </div>
-
-    <textarea
-      id="question"
-      placeholder="Was sollen wir mit diesem Bereich herausfinden oder verändern?"
-    ></textarea>
-
-    <div class="actions">
-
-      <button id="askBtn" class="pink">
-        → EOTS FRAGEN
-      </button>
-
-      <button id="copyBtn" class="cyan">
-        COPY REQUEST
-      </button>
-
+    <div class="row" style="margin-top:7px;">
+      <button id="btnExport" class="bv">EXPORT JSON</button>
+      <button id="btnClear" class="bd">CLEAR ALL</button>
     </div>
-
   </section>
-
-  <section id="requestPanel" class="panel hidden">
-
-    <div class="panelhead">
-      <div class="paneltitle">
-        LLM REQUEST
-      </div>
-    </div>
-
-    <pre id="llmOutput"></pre>
-
-    <div class="actions">
-      <button id="copyLlmBtn" class="cyan">
-        LLM REQUEST KOPIEREN
-      </button>
-
-      <button id="newCaptureBtn" class="secondary">
-        NEU ERFASSEN
-      </button>
-    </div>
-
-  </section>
-
-  <section id="actionPanel" class="panel hidden">
-
-    <div class="panelhead">
-      <div class="paneltitle">
-        ACTION REQUEST
-      </div>
-    </div>
-
-    <div class="action-card">
-
-      <div class="action-type">
-        PROPOSED ACTION
-      </div>
-
-      <div id="actionDescription" class="action-description">
-        Keine Aktion vorgeschlagen.
-      </div>
-
-      <div class="approval">
-
-        <button id="approveBtn" class="green">
-          ✓ ERLAUBEN
-        </button>
-
-        <button id="denyBtn" class="red">
-          × ABLEHNEN
-        </button>
-
-      </div>
-
-    </div>
-
-    <pre id="actionOutput" style="margin-top:12px;"></pre>
-
-  </section>
-
-  <section id="eventPanel" class="panel">
-
-    <div class="panelhead">
-      <div class="paneltitle">
-        EOTS EVENT LOG
-      </div>
-
-      <div class="counter">
-        LOCAL
-      </div>
-    </div>
-
-    <div id="eventLog">
-      <div class="event">
-        <span class="time">--:--:--</span>
-        <span class="type">EOTS_READY</span>
-        EOTS wurde gestartet.
-      </div>
-    </div>
-
-  </section>
-
-  <div class="footer">
-    EOTS / EYE OF THE SKY · DEVELOPMENT TOOL
-  </div>
-
-</main>
+  <div class="footer">EOTS · VISUAL LINK · USER → EOTS → LLM · v1.0</div>
+</div>
+<div id="toast" class="toast"></div>
 
 <script>
-/*
-=========================================================
-EOTS — EYE OF THE SKY
-Version 0.2
-
-EOTS ist bewusst unabhängig von LV-FMBH.
-
-Dieses Dokument kennt keine LV-FMBH-Funktionen.
-Es erzeugt nur Kontext, Requests und kontrollierte
-Browser-Aktionen.
-
-=========================================================
-*/
-
 const EOTS = {
-
-  version: "0.2",
-
+  version: "1.0",
+  schema: "1.0",
   state: {
-    capture: null,
-    llmRequest: null,
-    actionRequest: null,
-    events: []
+    image: null, nw: 0, nh: 0, scale: 1,
+    selection: null,
+    elements: [],
+    relationships: [],
+    selected: new Set(),
+    focusId: null,
+    nextE: 1, nextR: 1,
+    contextText: ""
+  },
+  canvas: null, ctx: null,
+
+  status(t, c) {
+    const el = document.getElementById("status");
+    el.textContent = "● " + t;
+    el.className = "status" + (c ? " " + c : "");
+  },
+  toast(m) {
+    const t = document.getElementById("toast");
+    t.textContent = m;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2000);
+  },
+  id(prefix, key) {
+    const n = this.state[key]++;
+    return prefix + "-" + String(n).padStart(4, "0");
   },
 
-  ids: {
-    capture: 0,
-    action: 0,
-    event: 0
+  Analyzer: {
+    name: "ManualAnalyzer",
+    analyze(selection) {
+      return {
+        type: "unknown",
+        text: null,
+        function: null,
+        appearance: {},
+        bounds: { ...selection }
+      };
+    }
   },
 
-  nextId(prefix, counter){
-    this.ids[counter]++;
-    return prefix + "-" +
-      String(this.ids[counter]).padStart(6,"0");
+  initCanvas() {
+    this.canvas = document.getElementById("vcanvas");
+    this.ctx = this.canvas.getContext("2d");
   },
 
-  now(){
-    return new Date().toISOString();
+  loadImage(file) {
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        this.state.image = img;
+        this.state.nw = img.naturalWidth;
+        this.state.nh = img.naturalHeight;
+        this.draw();
+        document.getElementById("ph").classList.add("hidden");
+        document.getElementById("imgMeta").textContent = this.state.nw + "×" + this.state.nh;
+        this.status("IMAGE LOADED");
+        this.toast("Bild geladen");
+        document.getElementById("btnMake").disabled = true;
+        document.getElementById("btnClearBox").disabled = true;
+        res();
+      };
+      img.onerror = rej;
+      img.src = url;
+    });
   },
 
-  log(type, data = {}){
+  draw() {
+    if (!this.state.image) return;
+    const wrap = document.getElementById("vwrap");
+    const maxW = wrap.clientWidth;
+    const maxH = window.innerHeight * 0.48;
+    const s = Math.min(maxW / this.state.nw, maxH / this.state.nh, 1);
+    this.state.scale = s;
+    const w = Math.round(this.state.nw * s);
+    const h = Math.round(this.state.nh * s);
+    this.canvas.width = w;
+    this.canvas.height = h;
+    this.canvas.style.width = w + "px";
+    this.canvas.style.height = h + "px";
+    this.ctx.clearRect(0, 0, w, h);
+    this.ctx.drawImage(this.state.image, 0, 0, w, h);
+    this.drawOverlays();
+  },
 
-    const event = {
-      event_id:this.nextId("EVT","event"),
-      timestamp:this.now(),
-      type,
-      ...data
+  drawOverlays() {
+    const s = this.state.scale;
+    this.state.elements.forEach(el => {
+      const b = el.bounds;
+      const active = this.state.selected.has(el.id) || el.id === this.state.focusId;
+      this.ctx.save();
+      this.ctx.strokeStyle = active ? "#20e7ff" : "#ff2fa8";
+      this.ctx.lineWidth = active ? 2.4 : 1.4;
+      this.ctx.setLineDash(active ? [] : [5, 3]);
+      this.ctx.strokeRect(b.x * s, b.y * s, b.width * s, b.height * s);
+      this.ctx.setLineDash([]);
+      this.ctx.font = "bold 10px ui-monospace, monospace";
+      const label = el.id;
+      const tw = this.ctx.measureText(label).width;
+      const lx = b.x * s;
+      const ly = Math.max(14, b.y * s - 2);
+      this.ctx.fillStyle = "#090414";
+      this.ctx.fillRect(lx, ly - 12, tw + 6, 14);
+      this.ctx.fillStyle = active ? "#20e7ff" : "#ff2fa8";
+      this.ctx.fillText(label, lx + 3, ly - 2);
+      this.ctx.restore();
+    });
+    this.state.relationships.forEach(r => {
+      const a = this.state.elements.find(e => e.id === r.source);
+      const b = this.state.elements.find(e => e.id === r.target);
+      if (!a || !b) return;
+      const ax = (a.bounds.x + a.bounds.width / 2) * s;
+      const ay = (a.bounds.y + a.bounds.height / 2) * s;
+      const bx = (b.bounds.x + b.bounds.width / 2) * s;
+      const by = (b.bounds.y + b.bounds.height / 2) * s;
+      this.ctx.save();
+      this.ctx.strokeStyle = "rgba(140,82,255,0.7)";
+      this.ctx.lineWidth = 1.2;
+      this.ctx.setLineDash([3, 3]);
+      this.ctx.beginPath();
+      this.ctx.moveTo(ax, ay);
+      this.ctx.lineTo(bx, by);
+      this.ctx.stroke();
+      this.ctx.restore();
+    });
+  },
+
+  clientToNatural(cx, cy) {
+    const rect = this.canvas.getBoundingClientRect();
+    const x = (cx - rect.left) / this.state.scale;
+    const y = (cy - rect.top) / this.state.scale;
+    return {
+      x: Math.max(0, Math.min(this.state.nw, Math.round(x))),
+      y: Math.max(0, Math.min(this.state.nh, Math.round(y)))
     };
-
-    this.state.events.unshift(event);
-
-    const node = document.createElement("div");
-    node.className = "event";
-
-    node.innerHTML =
-      `<span class="time">${new Date().toLocaleTimeString()}</span> ` +
-      `<span class="type">${type}</span> ` +
-      `${data.message || ""}`;
-
-    document
-      .getElementById("eventLog")
-      .prepend(node);
-
-    return event;
   },
 
-  status(text){
-    document.getElementById("status").textContent = text;
-  }
+  updateSelBox(nx, ny, nw, nh) {
+    const box = document.getElementById("selbox");
+    const s = this.state.scale;
+    const rect = this.canvas.getBoundingClientRect();
+    const wrapRect = document.getElementById("vwrap").getBoundingClientRect();
+    box.style.display = "block";
+    box.style.left = (rect.left - wrapRect.left + nx * s) + "px";
+    box.style.top = (rect.top - wrapRect.top + ny * s) + "px";
+    box.style.width = (nw * s) + "px";
+    box.style.height = (nh * s) + "px";
+  },
 
+  hideSelBox() {
+    document.getElementById("selbox").style.display = "none";
+  },
+
+  selecting: false,
+  selStart: null,
+
+  onDown(e) {
+    if (!this.state.image) return;
+    e.preventDefault();
+    this.selecting = true;
+    const p = this.clientToNatural(e.clientX, e.clientY);
+    this.selStart = p;
+    this.state.selection = { x: p.x, y: p.y, width: 0, height: 0 };
+    this.updateSelBox(p.x, p.y, 0, 0);
+    this.status("SELECTING", "busy");
+  },
+
+  onMove(e) {
+    if (!this.selecting || !this.selStart) return;
+    e.preventDefault();
+    const p = this.clientToNatural(e.clientX, e.clientY);
+    const x = Math.min(this.selStart.x, p.x);
+    const y = Math.min(this.selStart.y, p.y);
+    const w = Math.abs(p.x - this.selStart.x);
+    const h = Math.abs(p.y - this.selStart.y);
+    this.state.selection = { x, y, width: w, height: h };
+    this.updateSelBox(x, y, w, h);
+  },
+
+  onUp() {
+    if (!this.selecting) return;
+    this.selecting = false;
+    const sel = this.state.selection;
+    if (!sel || sel.width < 8 || sel.height < 8) {
+      this.state.selection = null;
+      this.hideSelBox();
+      this.status(this.state.image ? "IMAGE LOADED" : "READY");
+      document.getElementById("btnMake").disabled = true;
+      document.getElementById("btnClearBox").disabled = true;
+      return;
+    }
+    this.status("BOX READY", "warn");
+    document.getElementById("btnMake").disabled = false;
+    document.getElementById("btnClearBox").disabled = false;
+  },
+
+  clearBox() {
+    this.state.selection = null;
+    this.hideSelBox();
+    document.getElementById("btnMake").disabled = true;
+    document.getElementById("btnClearBox").disabled = true;
+    this.status(this.state.image ? "IMAGE LOADED" : "READY");
+  },
+
+  makeElement() {
+    if (!this.state.selection) return;
+    const partial = this.Analyzer.analyze(this.state.selection);
+    const el = {
+      id: this.id("EOTS", "nextE"),
+      type: partial.type || "unknown",
+      text: partial.text,
+      function: partial.function,
+      appearance: partial.appearance || {},
+      bounds: {
+        x: this.state.selection.x,
+        y: this.state.selection.y,
+        width: this.state.selection.width,
+        height: this.state.selection.height
+      }
+    };
+    this.state.elements.push(el);
+    this.state.focusId = el.id;
+    this.state.selected.clear();
+    this.state.selected.add(el.id);
+    this.clearBox();
+    this.renderElements();
+    this.renderInspector();
+    this.updateRelSelects();
+    this.draw();
+    this.toast(el.id + " erzeugt");
+    this.status("ELEMENT ADDED");
+  },
+
+  selectElement(id, multi) {
+    if (multi) {
+      if (this.state.selected.has(id)) this.state.selected.delete(id);
+      else this.state.selected.add(id);
+    } else {
+      this.state.selected.clear();
+      this.state.selected.add(id);
+    }
+    this.state.focusId = id;
+    this.renderElements();
+    this.renderInspector();
+    this.draw();
+  },
+
+  updateElement() {
+    const id = this.state.focusId;
+    if (!id) return;
+    const el = this.state.elements.find(e => e.id === id);
+    if (!el) return;
+    el.type = document.getElementById("iType").value;
+    el.text = document.getElementById("iText").value.trim() || null;
+    el.function = document.getElementById("iFn").value.trim() || null;
+    this.renderElements();
+    this.draw();
+    this.toast("Aktualisiert");
+  },
+
+  deleteElement() {
+    const id = this.state.focusId;
+    if (!id) return;
+    this.state.elements = this.state.elements.filter(e => e.id !== id);
+    this.state.relationships = this.state.relationships.filter(r => r.source !== id && r.target !== id);
+    this.state.selected.delete(id);
+    this.state.focusId = null;
+    this.renderElements();
+    this.renderRelationships();
+    this.renderInspector();
+    this.updateRelSelects();
+    this.draw();
+    this.toast("Element gelöscht");
+  },
+
+  renderElements() {
+    const list = document.getElementById("elist");
+    document.getElementById("cnt").textContent = this.state.elements.length + " elements";
+    if (!this.state.elements.length) {
+      list.innerHTML = '<div class="empty">Noch keine Elemente.</div>';
+      return;
+    }
+    list.innerHTML = this.state.elements.map(el => `
+      <div class="eitem ${this.state.selected.has(el.id) || el.id === this.state.focusId ? "on" : ""}" data-id="${el.id}">
+        <div>
+          <div class="id">${el.id}</div>
+          <div class="ty">${(el.type || "unknown").toUpperCase()}</div>
+        </div>
+        <div class="tx">${el.text || "—"}</div>
+      </div>
+    `).join("");
+    list.querySelectorAll(".eitem").forEach(node => {
+      node.addEventListener("click", (e) => {
+        this.selectElement(node.dataset.id, e.shiftKey || e.metaKey || e.ctrlKey);
+      });
+    });
+  },
+
+  renderInspector() {
+    const el = this.state.elements.find(e => e.id === this.state.focusId);
+    const has = !!el;
+    document.getElementById("btnUpd").disabled = !has;
+    document.getElementById("btnDel").disabled = !has;
+    if (!el) {
+      document.getElementById("iId").textContent = "—";
+      document.getElementById("iType").value = "unknown";
+      document.getElementById("iText").value = "";
+      document.getElementById("iFn").value = "";
+      document.getElementById("iX").value = "";
+      document.getElementById("iY").value = "";
+      document.getElementById("iW").value = "";
+      document.getElementById("iH").value = "";
+      return;
+    }
+    document.getElementById("iId").textContent = el.id;
+    document.getElementById("iType").value = el.type || "unknown";
+    document.getElementById("iText").value = el.text || "";
+    document.getElementById("iFn").value = el.function || "";
+    document.getElementById("iX").value = el.bounds.x;
+    document.getElementById("iY").value = el.bounds.y;
+    document.getElementById("iW").value = el.bounds.width;
+    document.getElementById("iH").value = el.bounds.height;
+  },
+
+  updateRelSelects() {
+    const opts = this.state.elements.map(e =>
+      `<option value="${e.id}">${e.id} · ${e.type} · ${(e.text || "").slice(0, 18)}</option>`
+    ).join("");
+    document.getElementById("relSrc").innerHTML = '<option value="">—</option>' + opts;
+    document.getElementById("relTgt").innerHTML = '<option value="">—</option>' + opts;
+  },
+
+  addRelation() {
+    const source = document.getElementById("relSrc").value;
+    const target = document.getElementById("relTgt").value;
+    const relationship = document.getElementById("relType").value;
+    if (!source || !target || source === target) {
+      this.toast("Ungültige Relation");
+      return;
+    }
+    if (this.state.relationships.some(r => r.source === source && r.target === target && r.relationship === relationship)) {
+      this.toast("Existiert bereits");
+      return;
+    }
+    this.state.relationships.push({
+      id: this.id("REL", "nextR"),
+      source,
+      relationship,
+      target
+    });
+    this.renderRelationships();
+    this.draw();
+    this.toast("Relation hinzugefügt");
+  },
+
+  renderRelationships() {
+    const list = document.getElementById("rlist");
+    if (!this.state.relationships.length) {
+      list.innerHTML = '<div class="empty">Keine Beziehungen.</div>';
+      return;
+    }
+    list.innerHTML = this.state.relationships.map(r => `
+      <div class="eitem">
+        <span class="id">${r.source}</span>
+        <span class="ty">${r.relationship}</span>
+        <span class="id">${r.target}</span>
+      </div>
+    `).join("");
+  },
+
+  generateContext() {
+    const els = this.state.selected.size
+      ? this.state.elements.filter(e => this.state.selected.has(e.id))
+      : this.state.elements;
+    const rels = this.state.relationships.filter(r =>
+      els.some(e => e.id === r.source) && els.some(e => e.id === r.target)
+    );
+
+    let lines = [];
+    lines.push("EOTS VISUAL CONTEXT");
+    lines.push("schema_version: " + this.schema);
+    lines.push("eots_version: " + this.version);
+    lines.push("");
+    if (this.state.nw) {
+      lines.push("Scene: " + this.state.nw + " × " + this.state.nh);
+    }
+    if (this.state.selection) {
+      const s = this.state.selection;
+      lines.push("Last selection: x=" + s.x + " y=" + s.y + " w=" + s.width + " h=" + s.height);
+    }
+    lines.push("");
+    lines.push("Elements (" + els.length + "):");
+    if (!els.length) {
+      lines.push("  (none)");
+    } else {
+      els.forEach(el => {
+        lines.push("");
+        lines.push("ELEMENT " + el.id);
+        lines.push("  type: " + (el.type || "unknown"));
+        lines.push("  text: " + (el.text === null || el.text === undefined ? "null" : JSON.stringify(el.text)));
+        lines.push("  function: " + (el.function === null || el.function === undefined ? "null" : el.function));
+        lines.push("  bounds: x=" + el.bounds.x + " y=" + el.bounds.y + " width=" + el.bounds.width + " height=" + el.bounds.height);
+      });
+    }
+    lines.push("");
+    lines.push("Relationships (" + rels.length + "):");
+    if (!rels.length) {
+      lines.push("  (none)");
+    } else {
+      rels.forEach(r => {
+        lines.push("  " + r.source + " " + r.relationship + " " + r.target);
+      });
+    }
+    lines.push("");
+    lines.push("Notes:");
+    lines.push("- Only explicitly defined data is included.");
+    lines.push("- Unknown values are null or unknown.");
+    lines.push("- No assumptions were made by EOTS.");
+
+    this.state.contextText = lines.join("\n");
+    document.getElementById("ctx").textContent = this.state.contextText;
+    this.toast("Context generiert");
+    this.status("CONTEXT READY");
+  },
+
+  copyContext() {
+    const text = this.state.contextText || document.getElementById("ctx").textContent;
+    if (!text || text.startsWith("Noch kein")) {
+      this.toast("Kein Context vorhanden");
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => this.toast("In Zwischenablage kopiert")).catch(() => this.fallbackCopy(text));
+    } else {
+      this.fallbackCopy(text);
+    }
+  },
+
+  fallbackCopy(text) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand("copy");
+      this.toast("Kopiert");
+    } catch (e) {
+      this.toast("Kopieren fehlgeschlagen");
+    }
+    document.body.removeChild(ta);
+  },
+
+  exportJSON() {
+    const model = {
+      schema_version: this.schema,
+      eots_version: this.version,
+      scene: {
+        width: this.state.nw || null,
+        height: this.state.nh || null
+      },
+      selection: this.state.selection,
+      elements: this.state.elements.map(e => ({
+        id: e.id,
+        type: e.type,
+        text: e.text,
+        function: e.function,
+        appearance: e.appearance || {},
+        bounds: { ...e.bounds }
+      })),
+      relationships: this.state.relationships.map(r => ({
+        id: r.id,
+        source: r.source,
+        relationship: r.relationship,
+        target: r.target
+      })),
+      context: this.state.contextText || null
+    };
+    const json = JSON.stringify(model, null, 2);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(json).then(() => this.toast("JSON kopiert")).catch(() => {});
+    }
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "eots-" + Date.now() + ".json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    this.toast("JSON exportiert");
+  },
+
+  clearAll() {
+    if (!confirm("Alles löschen?")) return;
+    this.state.elements = [];
+    this.state.relationships = [];
+    this.state.selected.clear();
+    this.state.focusId = null;
+    this.state.selection = null;
+    this.state.contextText = "";
+    this.state.image = null;
+    this.state.nw = 0;
+    this.state.nh = 0;
+    this.hideSelBox();
+    if (this.ctx) this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.canvas.width = 0;
+    this.canvas.height = 0;
+    document.getElementById("ph").classList.remove("hidden");
+    document.getElementById("imgMeta").textContent = "kein Bild";
+    document.getElementById("ctx").textContent = "";
+    document.getElementById("btnMake").disabled = true;
+    document.getElementById("btnClearBox").disabled = true;
+    this.renderElements();
+    this.renderRelationships();
+    this.renderInspector();
+    this.updateRelSelects();
+    this.status("READY");
+    this.toast("Alles gelöscht");
+  },
+
+  switchTab(name) {
+    document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.tab === name));
+    document.getElementById("tab-els").classList.toggle("hidden", name !== "els");
+    document.getElementById("tab-rels").classList.toggle("hidden", name !== "rels");
+    document.getElementById("tab-insp").classList.toggle("hidden", name !== "insp");
+  },
+
+  init() {
+    this.initCanvas();
+    document.getElementById("file").addEventListener("change", async e => {
+      const f = e.target.files[0];
+      if (f) await this.loadImage(f);
+      e.target.value = "";
+    });
+    const wrap = document.getElementById("vwrap");
+    wrap.addEventListener("pointerdown", e => this.onDown(e));
+    wrap.addEventListener("pointermove", e => this.onMove(e));
+    wrap.addEventListener("pointerup", e => this.onUp(e));
+    wrap.addEventListener("pointercancel", e => this.onUp(e));
+    wrap.addEventListener("pointerleave", e => { if (this.selecting) this.onUp(e); });
+
+    document.getElementById("btnClearBox").addEventListener("click", () => this.clearBox());
+    document.getElementById("btnMake").addEventListener("click", () => this.makeElement());
+    document.getElementById("btnUpd").addEventListener("click", () => this.updateElement());
+    document.getElementById("btnDel").addEventListener("click", () => this.deleteElement());
+    document.getElementById("btnAddRel").addEventListener("click", () => this.addRelation());
+    document.getElementById("btnGen").addEventListener("click", () => this.generateContext());
+    document.getElementById("btnCopy").addEventListener("click", () => this.copyContext());
+    document.getElementById("btnExport").addEventListener("click", () => this.exportJSON());
+    document.getElementById("btnClear").addEventListener("click", () => this.clearAll());
+    document.querySelectorAll(".tab").forEach(t => {
+      t.addEventListener("click", () => this.switchTab(t.dataset.tab));
+    });
+
+    let rt;
+    window.addEventListener("resize", () => {
+      clearTimeout(rt);
+      rt = setTimeout(() => { if (this.state.image) this.draw(); }, 120);
+    });
+
+    this.status("READY");
+    this.renderElements();
+    this.renderRelationships();
+    this.renderInspector();
+  }
 };
 
-
-/* =====================================================
-   SELECTION
-===================================================== */
-
-const captureBtn =
-  document.getElementById("captureBtn");
-
-const overlay =
-  document.getElementById("captureOverlay");
-
-const box =
-  document.getElementById("selectionBox");
-
-let selecting = false;
-let startX = 0;
-let startY = 0;
-
-
-captureBtn.addEventListener("click", startCapture);
-
-function startCapture(){
-
-  EOTS.status("SELECT");
-
-  overlay.style.display = "block";
-
-  EOTS.log(
-    "CAPTURE_STARTED",
-    {message:"Bereich auswählen."}
-  );
-
-  selecting = false;
-}
-
-
-overlay.addEventListener("pointerdown", e => {
-
-  selecting = true;
-
-  startX = e.clientX;
-  startY = e.clientY;
-
-  box.style.left = startX + "px";
-  box.style.top = startY + "px";
-  box.style.width = "0px";
-  box.style.height = "0px";
-
-  overlay.setPointerCapture(e.pointerId);
-});
-
-
-overlay.addEventListener("pointermove", e => {
-
-  if(!selecting) return;
-
-  const x = Math.min(startX,e.clientX);
-  const y = Math.min(startY,e.clientY);
-
-  const w = Math.abs(e.clientX-startX);
-  const h = Math.abs(e.clientY-startY);
-
-  box.style.left = x + "px";
-  box.style.top = y + "px";
-  box.style.width = w + "px";
-  box.style.height = h + "px";
-});
-
-
-overlay.addEventListener("pointerup", e => {
-
-  if(!selecting) return;
-
-  selecting = false;
-
-  const x = Math.min(startX,e.clientX);
-  const y = Math.min(startY,e.clientY);
-
-  const width =
-    Math.abs(e.clientX-startX);
-
-  const height =
-    Math.abs(e.clientY-startY);
-
-  overlay.style.display = "none";
-
-  captureSelection({
-    x,
-    y,
-    width,
-    height
-  });
-});
-
-
-/* =====================================================
-   CONTEXT CAPTURE
-===================================================== */
-
-function intersects(a,b){
-
-  return !(
-    a.right < b.left ||
-    a.left > b.right ||
-    a.bottom < b.top ||
-    a.top > b.bottom
-  );
-}
-
-
-function visible(el){
-
-  const style =
-    getComputedStyle(el);
-
-  if(style.display === "none") return false;
-  if(style.visibility === "hidden") return false;
-  if(parseFloat(style.opacity) === 0) return false;
-
-  return true;
-}
-
-
-function elementInfo(el, selection){
-
-  const rect =
-    el.getBoundingClientRect();
-
-  const text =
-    (el.innerText || el.value || "")
-      .replace(/\s+/g," ")
-      .trim()
-      .slice(0,500);
-
-  return {
-
-    tag:el.tagName.toLowerCase(),
-
-    id:el.id || null,
-
-    classes:
-      [...el.classList],
-
-    text,
-
-    rect:{
-      x:Math.round(rect.x),
-      y:Math.round(rect.y),
-      width:Math.round(rect.width),
-      height:Math.round(rect.height)
-    },
-
-    relative_to_selection:{
-      x:Math.round(rect.x-selection.x),
-      y:Math.round(rect.y-selection.y)
-    },
-
-    attributes:
-      Object.fromEntries(
-        [...el.attributes]
-          .filter(a =>
-            a.name !== "style"
-          )
-          .slice(0,30)
-          .map(a => [a.name,a.value])
-      )
-
-  };
-}
-
-
-function getActionableElements(selection){
-
-  const selector = [
-    "button",
-    "a",
-    "input",
-    "textarea",
-    "select",
-    "[role='button']",
-    "[onclick]",
-    "[tabindex]"
-  ].join(",");
-
-  return [...document.querySelectorAll(selector)]
-    .filter(el => {
-
-      if(!visible(el)) return false;
-
-      if(
-        el.closest("#captureOverlay") ||
-        el.closest(".eots-ui")
-      ){
-        return false;
-      }
-
-      const rect =
-        el.getBoundingClientRect();
-
-      return intersects(
-        rect,
-        {
-          left:selection.x,
-          top:selection.y,
-          right:selection.x+selection.width,
-          bottom:selection.y+selection.height
-        }
-      );
-
-    })
-    .map(el => elementInfo(el,selection));
-
-}
-
-
-function captureSelection(selection){
-
-  EOTS.status("CAPTURE");
-
-  const viewport = {
-    width:window.innerWidth,
-    height:window.innerHeight,
-    devicePixelRatio:window.devicePixelRatio
-  };
-
-  const selectionRect = {
-    left:selection.x,
-    top:selection.y,
-    right:selection.x+selection.width,
-    bottom:selection.y+selection.height
-  };
-
-  const allElements =
-    [...document.querySelectorAll("body *")]
-      .filter(el => {
-
-        if(!visible(el)) return false;
-
-        if(
-          el.closest("#captureOverlay") ||
-          el.closest(".eots-ui")
-        ){
-          return false;
-        }
-
-        const rect =
-          el.getBoundingClientRect();
-
-        return intersects(
-          rect,
-          selectionRect
-        );
-
-      });
-
-  const actionable =
-    getActionableElements(selection);
-
-  const text =
-    allElements
-      .map(el =>
-        (el.innerText || "")
-          .replace(/\s+/g," ")
-          .trim()
-      )
-      .filter(Boolean)
-      .slice(0,40);
-
-  const capture = {
-
-    schema_version:"1.1",
-
-    capture_id:
-      EOTS.nextId("CAP","capture"),
-
-    timestamp:EOTS.now(),
-
-    source:{
-      type:"web",
-      url:location.href,
-      title:document.title
-    },
-
-    viewport,
-
-    selection,
-
-    page:{
-      scrollX:window.scrollX,
-      scrollY:window.scrollY
-    },
-
-    semantic:{
-      text:[...new Set(text)].slice(0,40)
-    },
-
-    targets:actionable,
-
-    elements:
-      allElements
-        .slice(0,80)
-        .map(el =>
-          elementInfo(el,selection)
-        )
-
-  };
-
-  EOTS.state.capture = capture;
-
-  document.getElementById("captureCounter")
-    .textContent =
-      capture.capture_id;
-
-  document.getElementById("contextOutput")
-    .textContent =
-      JSON.stringify(capture,null,2);
-
-  document.getElementById("contextPanel")
-    .classList.remove("hidden");
-
-  document.getElementById("questionPanel")
-    .classList.remove("hidden");
-
-  EOTS.status("CAPTURED");
-
-  EOTS.log(
-    "CONTEXT_CAPTURED",
-    {
-      message:
-        `${capture.capture_id} · ` +
-        `${actionable.length} actionable elements`
-    }
-  );
-
-}
-
-
-/* =====================================================
-   LLM REQUEST
-===================================================== */
-
-document
-  .getElementById("askBtn")
-  .addEventListener("click", createLLMRequest);
-
-
-function createLLMRequest(){
-
-  if(!EOTS.state.capture){
-    return;
-  }
-
-  const question =
-    document.getElementById("question")
-      .value
-      .trim();
-
-  if(!question){
-
-    alert(
-      "Bitte zuerst sagen, was wir mit diesem Bereich herausfinden oder verändern wollen."
-    );
-
-    return;
-  }
-
-  const request = {
-
-    schema:"EOTS_LLM_REQUEST",
-
-    version:"1.0",
-
-    request_id:
-      EOTS.nextId("REQ","event"),
-
-    timestamp:EOTS.now(),
-
-    role:
-      "software-development-context",
-
-    user_request:
-      question,
-
-    capture:
-      EOTS.state.capture,
-
-    instructions:[
-      "Analysiere den bereitgestellten Kontext.",
-      "Erfinde keine Elemente oder Funktionen.",
-      "Unterscheide Beobachtung und Schlussfolgerung.",
-      "Wenn eine Softwareänderung sinnvoll ist, formuliere eine CHANGE_REQUEST.",
-      "Führe keine Aktion ohne explizite Benutzerfreigabe aus."
-    ]
-
-  };
-
-  EOTS.state.llmRequest = request;
-
-  document.getElementById("llmOutput")
-    .textContent =
-      JSON.stringify(request,null,2);
-
-  document.getElementById("requestPanel")
-    .classList.remove("hidden");
-
-  EOTS.log(
-    "LLM_REQUEST_CREATED",
-    {
-      message:
-        `${request.request_id} erstellt`
-    }
-  );
-
-}
-
-
-/* =====================================================
-   CLIPBOARD
-===================================================== */
-
-async function copyText(text){
-
-  try{
-
-    await navigator.clipboard.writeText(text);
-
-    EOTS.log(
-      "COPIED",
-      {message:"In Zwischenablage kopiert."}
-    );
-
-  }catch(err){
-
-    alert(
-      "Kopieren wurde vom Browser blockiert."
-    );
-
-  }
-
-}
-
-
-document
-  .getElementById("copyBtn")
-  .addEventListener("click",()=>{
-
-    if(!EOTS.state.llmRequest) return;
-
-    copyText(
-      JSON.stringify(
-        EOTS.state.llmRequest,
-        null,
-        2
-      )
-    );
-
-  });
-
-
-document
-  .getElementById("copyLlmBtn")
-  .addEventListener("click",()=>{
-
-    if(!EOTS.state.llmRequest) return;
-
-    copyText(
-      JSON.stringify(
-        EOTS.state.llmRequest,
-        null,
-        2
-      )
-    );
-
-  });
-
-
-/* =====================================================
-   DEMO ACTION REQUEST
-===================================================== */
-
-/*
-  Diese Funktion simuliert NICHT die Antwort eines LLM.
-
-  Sie zeigt nur, wie ein echter ACTION_REQUEST
-  strukturell aussehen wird.
-
-  Später kann GPT genau dieses JSON erzeugen.
-*/
-
-function createActionRequestFromTarget(target){
-
-  if(!target) return;
-
-  const action = {
-
-    schema:"EOTS_ACTION_REQUEST",
-
-    version:"1.0",
-
-    action_id:
-      EOTS.nextId("ACT","action"),
-
-    timestamp:EOTS.now(),
-
-    target:{
-
-      tag:target.tag,
-
-      id:target.id,
-
-      text:target.text
-
-    },
-
-    action:{
-      type:
-        target.tag === "input"
-          ? "FOCUS"
-          : "CLICK"
-    },
-
-    requiresApproval:true
-
-  };
-
-  EOTS.state.actionRequest = action;
-
-  document.getElementById("actionDescription")
-    .textContent =
-      `${action.action.type} → ` +
-      `${target.tag}` +
-      `${target.id ? "#" + target.id : ""}` +
-      `${target.text ? " · " + target.text : ""}`;
-
-  document.getElementById("actionOutput")
-    .textContent =
-      JSON.stringify(action,null,2);
-
-  document.getElementById("actionPanel")
-    .classList.remove("hidden");
-
-}
-
-
-/* =====================================================
-   APPROVAL
-===================================================== */
-
-document
-  .getElementById("approveBtn")
-  .addEventListener("click",approveAction);
-
-
-function approveAction(){
-
-  const action =
-    EOTS.state.actionRequest;
-
-  if(!action) return;
-
-  EOTS.log(
-    "ACTION_APPROVED",
-    {
-      message:
-        `${action.action_id} freigegeben`
-    }
-  );
-
-  /*
-    Hier wird bewusst noch keine beliebige
-    Aktion ausgeführt.
-
-    Der nächste Schritt ist die echte
-    Target-Auflösung innerhalb des
-    Web-Adapters.
-  */
-
-  action.status = "APPROVED";
-
-  document.getElementById("actionOutput")
-    .textContent =
-      JSON.stringify(action,null,2);
-
-  EOTS.status("APPROVED");
-
-}
-
-
-document
-  .getElementById("denyBtn")
-  .addEventListener("click",()=>{
-
-    const action =
-      EOTS.state.actionRequest;
-
-    if(!action) return;
-
-    action.status = "DENIED";
-
-    EOTS.log(
-      "ACTION_DENIED",
-      {
-        message:
-          `${action.action_id} abgelehnt`
-      }
-    );
-
-    document.getElementById("actionOutput")
-      .textContent =
-        JSON.stringify(action,null,2);
-
-    EOTS.status("READY");
-
-  });
-
-
-/* =====================================================
-   NEW CAPTURE
-===================================================== */
-
-document
-  .getElementById("newCaptureBtn")
-  .addEventListener("click",()=>{
-
-    document
-      .getElementById("requestPanel")
-      .classList.add("hidden");
-
-    document
-      .getElementById("actionPanel")
-      .classList.add("hidden");
-
-    document
-      .getElementById("question")
-      .value = "";
-
-    startCapture();
-
-  });
-
-
-/* =====================================================
-   INIT
-===================================================== */
-
-EOTS.log(
-  "EOTS_READY",
-  {
-    message:
-      "Eye Of The Sky initialisiert."
-  }
-);
-
+document.addEventListener("DOMContentLoaded", () => EOTS.init());
 </script>
-
 </body>
 </html>
