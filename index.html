@@ -2,27 +2,28 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport"
-      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
-<title>EOTS — Eye of the Sky</title>
+<title>CYBERPUNK EMBEDDING / RAG LAB</title>
 
 <style>
-
 :root{
-  --black:#030308;
-  --deep:#080510;
-  --panel:#0d0915;
-  --panel2:#120d1c;
-
-  --cyan:#00f5ff;
-  --pink:#ff2aa8;
-  --green:#4dff91;
+  --cyan:#00f6ff;
+  --cyan2:#00aaff;
+  --magenta:#ff2bd6;
+  --pink:#ff39d4;
+  --green:#4aff9b;
   --yellow:#ffe66d;
+  --red:#ff416c;
 
-  --text:#e9faff;
-  --muted:#66727d;
-  --line:#26333d;
+  --bg:#03050b;
+  --bg2:#070b15;
+  --panel:#080e19;
+  --panel2:#0b1321;
+
+  --line:rgba(0,246,255,.28);
+  --text:#d9fbff;
+  --muted:#62828a;
 }
 
 *{
@@ -31,1893 +32,2559 @@
 
 html,
 body{
+  width:100%;
+  height:100%;
   margin:0;
-  min-height:100%;
-
+  overflow:hidden;
+  background:
+    radial-gradient(
+      circle at 70% 45%,
+      rgba(0,246,255,.08),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 35% 65%,
+      rgba(255,43,214,.06),
+      transparent 30%
+    ),
+    var(--bg);
+  color:var(--text);
   font-family:
     "Courier New",
+    "Lucida Console",
     monospace;
-
-  background:var(--black);
 }
-
 
 /* =========================================================
-   DEMO UI
-   ========================================================= */
+   CRT SCANLINES
+========================================================= */
 
-.demo{
-  min-height:100vh;
-
-  padding:30px;
-
-  color:var(--text);
-
-  background:
-    linear-gradient(
-      rgba(0,245,255,.035) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      rgba(0,245,255,.035) 1px,
-      transparent 1px
-    ),
-    radial-gradient(
-      circle at 70% 10%,
-      rgba(255,42,168,.14),
-      transparent 35%
-    ),
-    radial-gradient(
-      circle at 20% 80%,
-      rgba(0,245,255,.10),
-      transparent 35%
-    ),
-    #030308;
-
-  background-size:
-    32px 32px,
-    32px 32px,
-    auto,
-    auto,
-    auto;
-}
-
-.demo-top{
-  max-width:1100px;
-  margin:auto;
-}
-
-.demo-title{
-  border-left:3px solid var(--cyan);
-
-  padding-left:15px;
-  margin-bottom:30px;
-}
-
-.demo-title h1{
-  margin:0;
-
-  color:var(--cyan);
-
-  letter-spacing:.15em;
-
-  text-shadow:
-    0 0 12px rgba(0,245,255,.6);
-}
-
-.demo-title p{
-  color:var(--muted);
-}
-
-.demo-grid{
-  display:grid;
-
-  grid-template-columns:
-    repeat(auto-fit,minmax(210px,1fr));
-
-  gap:18px;
-}
-
-.card{
-  position:relative;
-
-  min-height:180px;
-
-  padding:22px;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255,255,255,.035),
-      transparent
-    ),
-    var(--panel);
-
-  border:1px solid var(--line);
-
-  box-shadow:
-    inset 0 0 30px rgba(0,245,255,.025),
-    0 20px 60px rgba(0,0,0,.4);
-}
-
-.card::before{
-  content:"UI_NODE";
-
-  position:absolute;
-
-  top:8px;
-  right:10px;
-
-  color:#35404a;
-
-  font-size:8px;
-}
-
-.card h3{
-  color:var(--pink);
-
-  letter-spacing:.12em;
-}
-
-.card p{
-  color:#89949e;
-
-  line-height:1.5;
-}
-
-.demo-button{
-  width:100%;
-
-  padding:14px;
-
-  background:#07151a;
-
-  border:1px solid var(--cyan);
-
-  color:var(--cyan);
-
-  font-family:inherit;
-  font-weight:bold;
-
-  cursor:pointer;
-
-  transition:.15s;
-}
-
-.demo-button:hover{
-  background:var(--cyan);
-
-  color:#020507;
-
-  box-shadow:
-    0 0 25px rgba(0,245,255,.45);
-}
-
-
-/* =========================================================
-   EOTS LAUNCHER
-   ========================================================= */
-
-#eotsLauncher{
-  position:fixed;
-
-  z-index:999998;
-
-  top:18px;
-  right:18px;
-
-  width:54px;
-  height:54px;
-
-  border:1px solid var(--cyan);
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(0,245,255,.12),
-      rgba(255,42,168,.12)
-    ),
-    #08060d;
-
-  color:var(--cyan);
-
-  font-family:inherit;
-
-  font-size:20px;
-
-  cursor:pointer;
-
-  box-shadow:
-    0 0 18px rgba(0,245,255,.25);
-
-  transition:.15s;
-}
-
-#eotsLauncher:hover,
-#eotsLauncher.active{
-  background:var(--cyan);
-
-  color:#020507;
-
-  box-shadow:
-    0 0 35px rgba(0,245,255,.65);
-}
-
-
-/* =========================================================
-   EOTS OVERLAY
-   ========================================================= */
-
-#eots{
-  position:fixed;
-
-  inset:0;
-
-  z-index:999999;
-
-  display:none;
-
-  pointer-events:none;
-}
-
-#eots.active{
-  display:block;
-}
-
-
-/* =========================================================
-   SCANLINES
-   ========================================================= */
-
-#eots::after{
+body::before{
   content:"";
-
-  position:absolute;
-
+  position:fixed;
   inset:0;
-
+  z-index:1000;
   pointer-events:none;
 
   background:
     repeating-linear-gradient(
-      0deg,
-      rgba(255,255,255,.025) 0,
+      to bottom,
+      rgba(255,255,255,.025) 0px,
       rgba(255,255,255,.025) 1px,
-      transparent 1px,
+      transparent 2px,
       transparent 4px
     );
 
-  opacity:.35;
+  mix-blend-mode:screen;
 }
 
-
-/* =========================================================
-   HOVER MARKER
-   ========================================================= */
-
-#hoverBox{
+body::after{
+  content:"";
   position:fixed;
-
-  display:none;
-
+  inset:0;
+  z-index:999;
   pointer-events:none;
 
-  border:1px dashed var(--yellow);
-
-  background:
-    rgba(255,230,109,.035);
-
   box-shadow:
-    0 0 15px rgba(255,230,109,.25);
-
-  z-index:999997;
+    inset 0 0 100px rgba(0,0,0,.85),
+    inset 0 0 20px rgba(0,246,255,.06);
 }
-
-#hoverLabel{
-  position:absolute;
-
-  left:-1px;
-  top:-24px;
-
-  padding:4px 7px;
-
-  background:#09070d;
-
-  border:1px solid var(--yellow);
-
-  color:var(--yellow);
-
-  font-size:9px;
-
-  white-space:nowrap;
-}
-
 
 /* =========================================================
-   SELECTED MARKER
-   ========================================================= */
+   HEADER
+========================================================= */
 
-.eots-selected{
-  position:fixed;
+header{
+  height:74px;
+  position:relative;
 
-  pointer-events:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
 
-  z-index:999996;
-
-  border:2px solid var(--cyan);
+  padding:0 24px;
 
   background:
-    rgba(0,245,255,.045);
+    linear-gradient(
+      90deg,
+      rgba(0,246,255,.05),
+      rgba(255,43,214,.04),
+      rgba(0,246,255,.05)
+    );
+
+  border-bottom:1px solid var(--cyan);
 
   box-shadow:
-    0 0 0 1px rgba(0,245,255,.25),
-    0 0 20px rgba(0,245,255,.45),
-    inset 0 0 15px rgba(0,245,255,.08);
+    0 0 18px rgba(0,246,255,.18),
+    inset 0 -1px 0 rgba(255,43,214,.35);
+
+  z-index:10;
 }
 
-.eots-selected-label{
-  position:absolute;
-
-  left:-2px;
-  top:-25px;
-
-  padding:4px 7px;
-
-  background:var(--cyan);
-
-  color:#020507;
-
-  font-size:9px;
-
-  font-weight:bold;
-
-  white-space:nowrap;
+.logo{
+  display:flex;
+  flex-direction:column;
+  line-height:1;
 }
 
+.logo-main{
+  color:var(--cyan);
+  font-size:22px;
+  letter-spacing:4px;
+
+  text-shadow:
+    0 0 5px var(--cyan),
+    0 0 20px var(--cyan);
+}
+
+.logo-sub{
+  margin-top:7px;
+
+  color:var(--magenta);
+
+  font-size:10px;
+  letter-spacing:3px;
+}
+
+.system-status{
+  display:flex;
+  gap:18px;
+  align-items:center;
+
+  font-size:10px;
+  letter-spacing:1px;
+}
+
+.status-light{
+  width:8px;
+  height:8px;
+
+  border-radius:50%;
+
+  background:var(--green);
+
+  box-shadow:
+    0 0 6px var(--green),
+    0 0 16px var(--green);
+
+  animation:pulse 1.5s infinite;
+}
+
+@keyframes pulse{
+  0%,100%{
+    opacity:.5;
+  }
+
+  50%{
+    opacity:1;
+  }
+}
 
 /* =========================================================
-   CONTROL PANEL
-   ========================================================= */
+   MAIN
+========================================================= */
 
-#eotsPanel{
-  position:fixed;
+.main{
+  display:grid;
+  grid-template-columns:430px 1fr;
 
-  right:15px;
-  bottom:15px;
+  height:calc(100vh - 74px);
+}
 
-  z-index:1000000;
+/* =========================================================
+   LEFT PANEL
+========================================================= */
 
-  width:min(430px,calc(100vw - 20px));
-
-  max-height:
-    calc(100vh - 30px);
+.panel{
+  position:relative;
 
   overflow:auto;
-
-  pointer-events:auto;
 
   padding:16px;
 
   background:
     linear-gradient(
-      135deg,
-      rgba(0,245,255,.035),
-      transparent 50%
-    ),
-    var(--panel);
+      180deg,
+      rgba(5,12,23,.97),
+      rgba(2,7,14,.98)
+    );
 
-  border:
-    1px solid #35434e;
-
-  border-top:
-    2px solid var(--cyan);
+  border-right:1px solid var(--line);
 
   box-shadow:
-    0 30px 100px rgba(0,0,0,.8),
-    0 0 40px rgba(0,245,255,.08);
+    8px 0 35px rgba(0,0,0,.45);
+
+  z-index:5;
 }
 
-
-/* =========================================================
-   HEADER
-   ========================================================= */
-
-.eots-header{
-  display:flex;
-
-  align-items:center;
-  justify-content:space-between;
-
-  padding-bottom:12px;
-
-  border-bottom:1px solid var(--line);
+.panel::-webkit-scrollbar{
+  width:5px;
 }
 
-.logo{
-  display:flex;
-
-  align-items:center;
-
-  gap:10px;
-
-  color:var(--cyan);
-
-  font-weight:bold;
-
-  letter-spacing:.12em;
-
-  font-size:12px;
+.panel::-webkit-scrollbar-track{
+  background:#02050a;
 }
 
-.eye{
-  width:13px;
-  height:13px;
-
-  border:
-    2px solid var(--cyan);
-
-  border-radius:50%;
+.panel::-webkit-scrollbar-thumb{
+  background:var(--cyan);
 
   box-shadow:
     0 0 10px var(--cyan);
 }
 
-.close{
-  background:#08060d;
-
-  border:1px solid #34414b;
-
-  color:#77838d;
-
-  padding:5px 9px;
-
-  font-family:inherit;
-
-  cursor:pointer;
-}
-
-.close:hover{
-  color:var(--pink);
-
-  border-color:var(--pink);
-}
-
-
 /* =========================================================
-   STATUS
-   ========================================================= */
+   SECTION LABEL
+========================================================= */
 
-.status{
-  margin-top:12px;
-
-  padding:8px 10px;
-
-  background:#050408;
-
-  border-left:2px solid var(--green);
-
+.section-label{
   color:var(--muted);
 
   font-size:9px;
+  letter-spacing:3px;
 
-  letter-spacing:.08em;
+  margin:5px 0 7px 3px;
 }
-
-#mode{
-  color:var(--green);
-}
-
 
 /* =========================================================
-   INSTRUCTIONS
-   ========================================================= */
+   CARD
+========================================================= */
 
-.instructions{
-  margin-top:12px;
+.card{
+  position:relative;
 
-  padding:10px;
+  padding:15px;
+  margin-bottom:14px;
 
   background:
-    rgba(255,42,168,.025);
+    linear-gradient(
+      145deg,
+      rgba(8,18,32,.96),
+      rgba(4,9,18,.96)
+    );
 
-  border:1px solid #241d2b;
+  border:1px solid rgba(0,246,255,.35);
 
-  color:#84909a;
+  clip-path:
+    polygon(
+      0 0,
+      calc(100% - 12px) 0,
+      100% 12px,
+      100% 100%,
+      12px 100%,
+      0 calc(100% - 12px)
+    );
 
-  font-size:10px;
-
-  line-height:1.5;
+  box-shadow:
+    inset 0 0 20px rgba(0,246,255,.035),
+    0 0 15px rgba(0,0,0,.4);
 }
 
-.instructions b{
-  color:var(--pink);
+.card::before{
+  content:"";
+
+  position:absolute;
+
+  top:0;
+  left:0;
+
+  width:65px;
+  height:2px;
+
+  background:var(--cyan);
+
+  box-shadow:
+    0 0 8px var(--cyan),
+    0 0 18px var(--cyan);
 }
 
+.card::after{
+  content:"";
 
-/* =========================================================
-   ACTIONS
-   ========================================================= */
+  position:absolute;
 
-.section{
-  margin-top:14px;
+  right:0;
+  bottom:0;
+
+  width:40px;
+  height:2px;
+
+  background:var(--magenta);
+
+  box-shadow:
+    0 0 10px var(--magenta);
 }
 
-.section-title{
-  margin-bottom:7px;
+.card h3{
+  margin:0 0 12px;
 
-  color:#687580;
-
-  font-size:9px;
-
-  letter-spacing:.12em;
-}
-
-.actions{
-  display:grid;
-
-  grid-template-columns:
-    1fr 1fr;
-
-  gap:7px;
-}
-
-.btn{
-  padding:11px 8px;
-
-  background:#0a0710;
-
-  border:1px solid #35424d;
-
-  color:#dce6ea;
-
-  font-family:inherit;
-
-  font-size:9px;
-
-  font-weight:bold;
-
-  cursor:pointer;
-
-  letter-spacing:.04em;
-
-  transition:.12s;
-}
-
-.btn:hover{
   color:var(--cyan);
 
+  font-size:12px;
+  letter-spacing:2px;
+
+  text-shadow:
+    0 0 8px rgba(0,246,255,.7);
+}
+
+/* =========================================================
+   PIPELINE
+========================================================= */
+
+.pipeline{
+  display:flex;
+  flex-direction:column;
+
+  gap:4px;
+
+  margin-bottom:14px;
+}
+
+.pipeline-node{
+  position:relative;
+
+  padding:7px 10px;
+
+  border-left:2px solid var(--cyan);
+
+  background:rgba(0,246,255,.025);
+
+  color:#7bcbd2;
+
+  font-size:9px;
+  letter-spacing:2px;
+
+  transition:.25s;
+}
+
+.pipeline-node.active{
+  color:white;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0,246,255,.18),
+      transparent
+    );
+
+  border-left-color:var(--magenta);
+
+  text-shadow:
+    0 0 8px var(--cyan);
+
+  box-shadow:
+    inset 8px 0 20px rgba(0,246,255,.08);
+}
+
+.pipeline-arrow{
+  text-align:center;
+
+  height:7px;
+
+  color:var(--magenta);
+
+  font-size:8px;
+}
+
+/* =========================================================
+   INPUTS
+========================================================= */
+
+textarea,
+input{
+  width:100%;
+
+  background:
+    linear-gradient(
+      180deg,
+      #02050b,
+      #050a13
+    );
+
+  color:white;
+
+  border:1px solid rgba(0,246,255,.45);
+
+  outline:none;
+
+  padding:11px;
+
+  font-family:inherit;
+  font-size:12px;
+
+  box-shadow:
+    inset 0 0 12px rgba(0,246,255,.04);
+}
+
+textarea{
+  min-height:95px;
+  resize:vertical;
+}
+
+textarea:focus,
+input:focus{
   border-color:var(--cyan);
 
   box-shadow:
-    inset 0 0 15px rgba(0,245,255,.06);
+    0 0 10px rgba(0,246,255,.15),
+    inset 0 0 12px rgba(0,246,255,.06);
 }
-
-.btn.primary{
-  color:var(--cyan);
-
-  border-color:var(--cyan);
-}
-
-.btn.green{
-  color:var(--green);
-
-  border-color:var(--green);
-}
-
-.btn.pink{
-  color:var(--pink);
-
-  border-color:var(--pink);
-}
-
 
 /* =========================================================
-   SELECTED COUNT
-   ========================================================= */
+   BUTTONS
+========================================================= */
 
-.count{
+button{
+  width:100%;
+
+  position:relative;
+
+  margin-top:7px;
+
+  padding:11px;
+
+  border:1px solid var(--cyan);
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0,246,255,.08),
+      rgba(0,246,255,.18)
+    );
+
+  color:var(--cyan);
+
+  font-family:inherit;
+  font-weight:bold;
+
+  letter-spacing:1px;
+
+  cursor:pointer;
+
+  transition:.2s;
+
+  clip-path:
+    polygon(
+      0 0,
+      calc(100% - 8px) 0,
+      100% 8px,
+      100% 100%,
+      0 100%
+    );
+}
+
+button:hover{
+  color:#fff;
+
+  background:var(--cyan);
+
+  box-shadow:
+    0 0 10px var(--cyan),
+    0 0 25px rgba(0,246,255,.35);
+
+  text-shadow:0 0 4px #000;
+}
+
+button:active{
+  transform:translateY(1px);
+}
+
+button.magenta{
+  border-color:var(--magenta);
+  color:var(--magenta);
+}
+
+button.magenta:hover{
+  background:var(--magenta);
+
+  box-shadow:
+    0 0 10px var(--magenta),
+    0 0 25px rgba(255,43,214,.35);
+}
+
+/* =========================================================
+   METRICS
+========================================================= */
+
+.metrics{
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap:7px;
+
+  margin-top:10px;
+}
+
+.metric{
+  padding:8px;
+
+  background:#02050a;
+
+  border:1px solid rgba(0,246,255,.15);
+}
+
+.metric-label{
+  color:var(--muted);
+
+  font-size:8px;
+  letter-spacing:1px;
+}
+
+.metric-value{
+  margin-top:4px;
+
+  color:var(--cyan);
+
+  font-size:13px;
+}
+
+/* =========================================================
+   VECTOR WINDOW
+========================================================= */
+
+.vector-window{
+  max-height:160px;
+
+  overflow:auto;
+
+  padding:10px;
+
+  background:#010308;
+
+  border:1px solid rgba(255,43,214,.25);
+
+  color:#9afcff;
+
+  font-size:9px;
+
+  box-shadow:
+    inset 0 0 20px rgba(255,43,214,.025);
+}
+
+.vector-window::-webkit-scrollbar{
+  width:4px;
+}
+
+.vector-window::-webkit-scrollbar-thumb{
+  background:var(--magenta);
+}
+
+/* =========================================================
+   MEMORY
+========================================================= */
+
+.memory-node{
+  position:relative;
+
+  display:flex;
+
+  gap:9px;
+
+  align-items:flex-start;
+
+  padding:9px 4px;
+
+  border-bottom:1px solid rgba(0,246,255,.1);
+
+  font-size:10px;
+}
+
+.node-dot{
+  flex:none;
+
+  width:8px;
+  height:8px;
+
+  margin-top:3px;
+
+  border-radius:50%;
+
+  background:var(--cyan);
+
+  box-shadow:
+    0 0 6px var(--cyan),
+    0 0 14px var(--cyan);
+
+  animation:pulse 1.8s infinite;
+}
+
+.node-id{
+  color:var(--magenta);
+
+  font-size:8px;
+  letter-spacing:1px;
+}
+
+.node-text{
+  color:#b5d7da;
+
+  margin-top:3px;
+}
+
+/* =========================================================
+   RANKING
+========================================================= */
+
+.rank{
+  margin-top:10px;
+}
+
+.rank-header{
   display:flex;
 
   justify-content:space-between;
 
-  padding:9px 10px;
+  color:var(--muted);
 
-  margin-top:10px;
+  font-size:8px;
 
-  background:#050408;
-
-  border:1px solid #202a33;
-
-  color:#75818c;
-
-  font-size:9px;
+  letter-spacing:2px;
 }
 
-#count{
-  color:var(--cyan);
+.rank-bar{
+  height:8px;
 
-  font-weight:bold;
+  margin:5px 0;
+
+  background:#02050a;
+
+  border:1px solid rgba(0,246,255,.12);
+
+  overflow:hidden;
 }
 
+.rank-fill{
+  height:100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--magenta),
+      var(--cyan)
+    );
+
+  box-shadow:
+    0 0 8px var(--cyan);
+
+  transition:width .7s;
+}
+
+.rank-text{
+  font-size:10px;
+
+  color:#cbecef;
+}
 
 /* =========================================================
-   ELEMENT INFO
-   ========================================================= */
+   3D SCENE
+========================================================= */
 
-#elementInfo{
-  padding:10px;
+#scene{
+  position:relative;
 
-  min-height:40px;
+  width:100%;
+  height:100%;
 
-  background:#050408;
+  overflow:hidden;
 
-  border:1px solid #202a33;
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(0,246,255,.04),
+      transparent 55%
+    );
+}
 
-  color:#bdeff4;
+#scene canvas{
+  display:block;
+}
+
+/* =========================================================
+   HUD
+========================================================= */
+
+.hud{
+  position:absolute;
+
+  inset:0;
+
+  pointer-events:none;
+
+  z-index:3;
+}
+
+.corner{
+  position:absolute;
+
+  width:55px;
+  height:55px;
+
+  border-color:var(--cyan);
+}
+
+.corner.tl{
+  top:16px;
+  left:16px;
+
+  border-top:1px solid;
+  border-left:1px solid;
+}
+
+.corner.tr{
+  top:16px;
+  right:16px;
+
+  border-top:1px solid;
+  border-right:1px solid;
+}
+
+.corner.bl{
+  bottom:16px;
+  left:16px;
+
+  border-bottom:1px solid;
+  border-left:1px solid;
+}
+
+.corner.br{
+  bottom:16px;
+  right:16px;
+
+  border-bottom:1px solid;
+  border-right:1px solid;
+}
+
+.hud-top{
+  position:absolute;
+
+  top:22px;
+  left:50%;
+
+  transform:translateX(-50%);
+
+  color:var(--cyan);
+
+  font-size:9px;
+
+  letter-spacing:4px;
+
+  text-shadow:
+    0 0 8px var(--cyan);
+}
+
+.hud-bottom-left{
+  position:absolute;
+
+  bottom:25px;
+  left:28px;
+
+  color:#47767d;
+
+  font-size:8px;
+
+  line-height:1.7;
+}
+
+.hud-bottom-right{
+  position:absolute;
+
+  bottom:25px;
+  right:28px;
+
+  text-align:right;
+
+  color:#47767d;
+
+  font-size:8px;
+
+  line-height:1.7;
+}
+
+/* =========================================================
+   BOOT
+========================================================= */
+
+#boot{
+  position:fixed;
+
+  inset:0;
+
+  z-index:2000;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  background:#02040a;
+
+  transition:opacity .8s;
+}
+
+.boot-box{
+  width:min(520px,90vw);
+
+  padding:25px;
+
+  border:1px solid var(--cyan);
+
+  background:#030811;
+
+  box-shadow:
+    0 0 20px rgba(0,246,255,.2),
+    inset 0 0 30px rgba(0,246,255,.03);
+}
+
+.boot-title{
+  color:var(--cyan);
+
+  font-size:17px;
+
+  letter-spacing:4px;
+
+  text-shadow:
+    0 0 8px var(--cyan),
+    0 0 25px var(--cyan);
+
+  margin-bottom:20px;
+}
+
+.boot-line{
+  color:#75aeb5;
 
   font-size:10px;
 
-  line-height:1.5;
+  margin:7px 0;
 }
 
-
-/* =========================================================
-   JSON
-   ========================================================= */
-
-textarea{
-  width:100%;
-
-  min-height:210px;
-
-  resize:vertical;
-
-  padding:11px;
-
-  background:#020205;
-
-  border:1px solid #26333d;
-
-  color:#9ffaff;
-
-  font-family:
-    "Courier New",
-    monospace;
-
-  font-size:9px;
-
-  line-height:1.5;
-
-  outline:none;
+.boot-ok{
+  color:var(--green);
 }
 
-textarea:focus{
-  border-color:var(--cyan);
+.boot-error{
+  color:var(--red);
+}
+
+.boot-progress{
+  height:3px;
+
+  margin-top:18px;
+
+  background:#07141b;
+
+  overflow:hidden;
+}
+
+.boot-progress-bar{
+  width:0;
+
+  height:100%;
+
+  background:var(--cyan);
 
   box-shadow:
-    0 0 15px rgba(0,245,255,.08);
-}
+    0 0 8px var(--cyan);
 
+  transition:width .5s;
+}
 
 /* =========================================================
-   MOBILE
-   ========================================================= */
+   RESPONSIVE
+========================================================= */
 
-@media(max-width:600px){
+@media(max-width:850px){
 
-  .demo{
-    padding:20px 12px;
+  body{
+    overflow:auto;
   }
 
-  #eotsPanel{
-    right:5px;
-    bottom:5px;
+  .main{
+    grid-template-columns:1fr;
 
-    width:
-      calc(100vw - 10px);
-
-    max-height:75vh;
+    height:auto;
   }
 
-  #eotsLauncher{
-    top:10px;
-    right:10px;
+  .panel{
+    border-right:0;
+
+    border-bottom:1px solid var(--line);
   }
 
+  #scene{
+    height:600px;
+  }
+
+  header{
+    height:65px;
+  }
+
+  .system-status{
+    display:none;
+  }
 }
-
 </style>
 </head>
 
-
 <body>
 
-
 <!-- =======================================================
-     TEST UI
-     ======================================================= -->
+     BOOT SCREEN
+======================================================= -->
 
-<main class="demo">
+<div id="boot">
 
-  <div class="demo-top">
+  <div class="boot-box">
 
-    <header class="demo-title">
+    <div class="boot-title">
+      EMBEDDING CORE
+    </div>
 
-      <h1>
-        NEO / INTERFACE
-      </h1>
+    <div class="boot-line" id="boot1">
+      [ INIT ] Neural Vector Interface...
+    </div>
 
-      <p>
-        Existing UI // EOTS visual translation layer
-      </p>
+    <div class="boot-line" id="boot2">
+      [ WAIT ] Loading tokenizer...
+    </div>
 
-    </header>
+    <div class="boot-line" id="boot3">
+      [ WAIT ] Loading embedding model...
+    </div>
 
+    <div class="boot-line" id="boot4">
+      [ WAIT ] Initializing vector engine...
+    </div>
 
-    <div class="demo-grid">
+    <div class="boot-line" id="boot5">
+      [ WAIT ] Connecting memory bank...
+    </div>
 
-
-      <section class="card">
-
-        <h3>
-          PROJECT
-        </h3>
-
-        <p>
-          Open the current project environment.
-        </p>
-
-        <button class="demo-button">
-          PROJECT OPEN
-        </button>
-
-      </section>
-
-
-      <section class="card">
-
-        <h3>
-          DATABASE
-        </h3>
-
-        <p>
-          Inspect system records.
-        </p>
-
-        <button class="demo-button">
-          DATABASE OPEN
-        </button>
-
-      </section>
-
-
-      <section class="card">
-
-        <h3>
-          ANALYSIS
-        </h3>
-
-        <p>
-          Start deterministic analysis.
-        </p>
-
-        <button class="demo-button">
-          ANALYSIS START
-        </button>
-
-      </section>
-
-
+    <div class="boot-progress">
+      <div
+        class="boot-progress-bar"
+        id="bootProgress"
+      ></div>
     </div>
 
   </div>
-
-</main>
-
-
-<!-- =======================================================
-     LAUNCHER
-     ======================================================= -->
-
-<button
-  id="eotsLauncher"
-  title="EOTS">
-
-  ◉
-
-</button>
-
-
-<!-- =======================================================
-     EOTS
-     ======================================================= -->
-
-<div id="eots">
-
-
-  <div id="hoverBox">
-
-    <div id="hoverLabel">
-      SCAN
-    </div>
-
-  </div>
-
-
-  <aside id="eotsPanel">
-
-
-    <div class="eots-header">
-
-      <div class="logo">
-
-        <span class="eye"></span>
-
-        <span>
-          EOTS // EYE OF THE SKY
-        </span>
-
-      </div>
-
-
-      <button
-        class="close"
-        id="close">
-
-        ×
-
-      </button>
-
-    </div>
-
-
-    <div class="status">
-
-      SYSTEM ::
-      <span id="mode">
-        READY
-      </span>
-
-    </div>
-
-
-    <div class="instructions">
-
-      <b>MARKIEREN:</b>
-      „Element markieren“ aktivieren,
-      anschließend über die bestehende Oberfläche fahren
-      und das gewünschte Element antippen.
-
-    </div>
-
-
-    <div class="section">
-
-      <div class="section-title">
-        VISUAL CAPTURE
-      </div>
-
-
-      <div class="actions">
-
-        <button
-          class="btn primary"
-          id="select">
-
-          ◎ MARK ELEMENT
-
-        </button>
-
-
-        <button
-          class="btn"
-          id="all">
-
-          ◈ ALL BUTTONS
-
-        </button>
-
-
-        <button
-          class="btn green"
-          id="add">
-
-          + ADD ELEMENT
-
-        </button>
-
-
-        <button
-          class="btn pink"
-          id="clear">
-
-          × CLEAR
-
-        </button>
-
-      </div>
-
-
-      <div class="count">
-
-        <span>
-          CAPTURED NODES
-        </span>
-
-        <span id="count">
-          0
-        </span>
-
-      </div>
-
-    </div>
-
-
-    <div class="section">
-
-      <div class="section-title">
-        SELECTED ELEMENT
-      </div>
-
-      <div id="elementInfo">
-
-        Noch kein Element markiert.
-
-      </div>
-
-    </div>
-
-
-    <div class="section">
-
-      <div class="section-title">
-        LLM CONTEXT // STRUCTURED OUTPUT
-      </div>
-
-      <textarea
-        id="json"
-        spellcheck="false"></textarea>
-
-    </div>
-
-
-    <div class="section">
-
-      <div class="actions">
-
-        <button
-          class="btn"
-          id="copy">
-
-          COPY JSON
-
-        </button>
-
-
-        <button
-          class="btn"
-          id="save">
-
-          SAVE JSON
-
-        </button>
-
-      </div>
-
-    </div>
-
-
-  </aside>
 
 </div>
 
 
-<script>
+<!-- =======================================================
+     HEADER
+======================================================= -->
 
-(() => {
+<header>
 
-"use strict";
+  <div class="logo">
+
+    <div class="logo-main">
+      E-MBED // LAB
+    </div>
+
+    <div class="logo-sub">
+      SEMANTIC VECTOR ANALYSIS SYSTEM
+    </div>
+
+  </div>
+
+  <div class="system-status">
+
+    <span class="status-light"></span>
+
+    <span id="headerStatus">
+      SYSTEM INITIALIZING
+    </span>
+
+    <span>
+      :: NODE_07
+    </span>
+
+  </div>
+
+</header>
+
+
+<!-- =======================================================
+     MAIN
+======================================================= -->
+
+<div class="main">
+
+  <!-- =====================================================
+       CONTROL PANEL
+  ====================================================== -->
+
+  <div class="panel">
+
+    <div class="section-label">
+      PROCESS / PIPELINE
+    </div>
+
+    <div class="pipeline">
+
+      <div
+        class="pipeline-node"
+        id="pipeText"
+      >
+        01 // TEXT INPUT
+      </div>
+
+      <div class="pipeline-arrow">
+        ▼
+      </div>
+
+      <div
+        class="pipeline-node"
+        id="pipeTokenizer"
+      >
+        02 // TOKENIZER
+      </div>
+
+      <div class="pipeline-arrow">
+        ▼
+      </div>
+
+      <div
+        class="pipeline-node"
+        id="pipeEmbedding"
+      >
+        03 // EMBEDDING CORE
+      </div>
+
+      <div class="pipeline-arrow">
+        ▼
+      </div>
+
+      <div
+        class="pipeline-node"
+        id="pipeVector"
+      >
+        04 // VECTOR SPACE
+      </div>
+
+      <div class="pipeline-arrow">
+        ▼
+      </div>
+
+      <div
+        class="pipeline-node"
+        id="pipeMemory"
+      >
+        05 // MEMORY BANK
+      </div>
+
+      <div class="pipeline-arrow">
+        ▼
+      </div>
+
+      <div
+        class="pipeline-node"
+        id="pipeSimilarity"
+      >
+        06 // SIMILARITY ENGINE
+      </div>
+
+      <div class="pipeline-arrow">
+        ▼
+      </div>
+
+      <div
+        class="pipeline-node"
+        id="pipeRanking"
+      >
+        07 // RANKING SYSTEM
+      </div>
+
+    </div>
+
+
+    <!-- EMBEDDING CORE -->
+
+    <div class="card">
+
+      <h3>
+        // EMBEDDING CORE
+      </h3>
+
+      <textarea id="text">Ein Embedding bildet Bedeutung als Vektor im hochdimensionalen Raum ab.</textarea>
+
+      <button id="embedBtn">
+        ▶ GENERATE EMBEDDING
+      </button>
+
+      <div class="metrics">
+
+        <div class="metric">
+          <div class="metric-label">
+            ENGINE
+          </div>
+
+          <div
+            class="metric-value"
+            id="modelShort"
+          >
+            OFFLINE
+          </div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">
+            DIMENSION
+          </div>
+
+          <div
+            class="metric-value"
+            id="dim"
+          >
+            -
+          </div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">
+            TOKENS
+          </div>
+
+          <div
+            class="metric-value"
+            id="tok"
+          >
+            -
+          </div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">
+            STATUS
+          </div>
+
+          <div
+            class="metric-value"
+            id="status"
+          >
+            BOOT
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- VECTOR -->
+
+    <div class="card">
+
+      <h3>
+        // VECTOR STREAM
+      </h3>
+
+      <div
+        class="vector-window"
+        id="vec"
+      >
+        Awaiting vector...
+      </div>
+
+    </div>
+
+
+    <!-- MEMORY -->
+
+    <div class="card">
+
+      <h3>
+        // MEMORY BANK
+      </h3>
+
+      <button
+        id="storeBtn"
+        class="magenta"
+      >
+        + STORE VECTOR NODE
+      </button>
+
+      <div id="store">
+
+        <div class="memory-node">
+
+          <div class="node-dot"></div>
+
+          <div>
+
+            <div class="node-id">
+              MEMORY BANK EMPTY
+            </div>
+
+            <div class="node-text">
+              No vector nodes connected.
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- SIMILARITY -->
+
+    <div class="card">
+
+      <h3>
+        // SIMILARITY SCANNER
+      </h3>
+
+      <input
+        id="query"
+        value="Was ist ein Embedding?"
+      >
+
+      <button id="queryBtn">
+        ◉ SCAN MEMORY
+      </button>
+
+      <div id="ranking"></div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       3D VECTOR SPACE
+  ====================================================== -->
+
+  <div id="scene">
+
+    <div class="hud">
+
+      <div class="corner tl"></div>
+      <div class="corner tr"></div>
+      <div class="corner bl"></div>
+      <div class="corner br"></div>
+
+      <div class="hud-top">
+        VECTOR SPACE // 3D PROJECTION
+      </div>
+
+      <div class="hud-bottom-left">
+        X // EMBEDDING[0]<br>
+        Y // EMBEDDING[1]<br>
+        Z // EMBEDDING[2]<br>
+        CAMERA // ORBIT
+      </div>
+
+      <div class="hud-bottom-right">
+        VECTOR ENGINE<br>
+        COSINE SIMILARITY<br>
+        MEMORY NODES
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script type="module">
+
+/* =========================================================
+   IMPORTS
+========================================================= */
+
+import * as THREE from
+  "https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js";
+
+import {
+  OrbitControls
+} from
+  "https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/controls/OrbitControls.js";
+
+import {
+  pipeline,
+  AutoTokenizer
+} from
+  "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2";
 
 
 /* =========================================================
-   STATE
-   ========================================================= */
+   MODEL
+========================================================= */
 
-let active = false;
-let selecting = false;
-
-let selected = [];
-
-let nodeCounter = 0;
+const MODEL =
+  "Xenova/multilingual-e5-small";
 
 
-/* =========================================================
-   DOM
-   ========================================================= */
+/*
+  multilingual-e5-small:
 
-const launcher =
-  document.getElementById("eotsLauncher");
+  Embedding dimension:
+  d = 384
+*/
 
-const eots =
-  document.getElementById("eots");
+let extractor = null;
+let tokenizer = null;
 
-const panel =
-  document.getElementById("eotsPanel");
+let currentVector = null;
 
-const hoverBox =
-  document.getElementById("hoverBox");
-
-const hoverLabel =
-  document.getElementById("hoverLabel");
-
-const mode =
-  document.getElementById("mode");
-
-const selectBtn =
-  document.getElementById("select");
-
-const addBtn =
-  document.getElementById("add");
-
-const allBtn =
-  document.getElementById("all");
-
-const clearBtn =
-  document.getElementById("clear");
-
-const closeBtn =
-  document.getElementById("close");
-
-const count =
-  document.getElementById("count");
-
-const info =
-  document.getElementById("elementInfo");
-
-const json =
-  document.getElementById("json");
-
-const copyBtn =
-  document.getElementById("copy");
-
-const saveBtn =
-  document.getElementById("save");
+const memory = [];
 
 
 /* =========================================================
-   OPEN / CLOSE
-   ========================================================= */
+   DOM HELPERS
+========================================================= */
 
-function open(){
+const $ = id =>
+  document.getElementById(id);
 
-  active = true;
 
-  eots.classList.add("active");
+/* =========================================================
+   THREE.JS
+========================================================= */
 
-  launcher.classList.add("active");
+const scene =
+  new THREE.Scene();
 
-  setMode(
-    "READY",
-    "green"
+scene.fog =
+  new THREE.FogExp2(
+    0x03050b,
+    0.035
   );
 
-}
+
+const sceneContainer =
+  $("scene");
 
 
-function close(){
+const camera =
+  new THREE.PerspectiveCamera(
+    60,
 
-  active = false;
+    sceneContainer.clientWidth /
+    sceneContainer.clientHeight,
 
-  selecting = false;
-
-  eots.classList.remove("active");
-
-  launcher.classList.remove("active");
-
-  hideHover();
-
-  document.body.style.cursor =
-    "default";
-
-}
-
-
-launcher.addEventListener(
-  "click",
-  () => {
-
-    if(active){
-      close();
-    }else{
-      open();
-    }
-
-  }
-);
-
-
-closeBtn.addEventListener(
-  "click",
-  close
-);
-
-
-/* =========================================================
-   MARK MODE
-   ========================================================= */
-
-selectBtn.addEventListener(
-  "click",
-  startSelecting
-);
-
-
-addBtn.addEventListener(
-  "click",
-  startSelecting
-);
-
-
-function startSelecting(){
-
-  selecting = true;
-
-  setMode(
-    "MARKIERMODUS",
-    "cyan"
+    0.1,
+    1000
   );
 
-  document.body.style.cursor =
-    "crosshair";
 
-}
-
-
-/* =========================================================
-   MOUSE / TOUCH HOVER
-   ========================================================= */
-
-document.addEventListener(
-  "mousemove",
-  scan,
-  true
+camera.position.set(
+  5,
+  4,
+  5
 );
 
 
-document.addEventListener(
-  "touchmove",
-  event => {
+const renderer =
+  new THREE.WebGLRenderer({
+    antialias:true,
+    alpha:true
+  });
 
-    if(!active || !selecting){
-      return;
-    }
 
-    const touch =
-      event.touches[0];
-
-    if(!touch){
-      return;
-    }
-
-    scan({
-      clientX:touch.clientX,
-      clientY:touch.clientY
-    });
-
-  },
-  {
-    passive:true,
-    capture:true
-  }
+renderer.setPixelRatio(
+  Math.min(
+    window.devicePixelRatio,
+    2
+  )
 );
 
 
-function scan(event){
-
-  if(!active || !selecting){
-    return;
-  }
-
-  const target =
-    document.elementFromPoint(
-      event.clientX,
-      event.clientY
-    );
-
-  if(!target){
-    return;
-  }
-
-
-  if(
-    target.closest("#eotsPanel") ||
-    target.closest("#eotsLauncher")
-  ){
-    hideHover();
-    return;
-  }
-
-
-  showHover(target);
-
-}
-
-
-/* =========================================================
-   CLICK / TOUCH SELECTION
-   ========================================================= */
-
-document.addEventListener(
-  "click",
-  selectFromEvent,
-  true
+renderer.setSize(
+  sceneContainer.clientWidth,
+  sceneContainer.clientHeight
 );
 
 
-document.addEventListener(
-  "touchend",
-  event => {
-
-    if(!active || !selecting){
-      return;
-    }
-
-    const touch =
-      event.changedTouches[0];
-
-    if(!touch){
-      return;
-    }
-
-    const target =
-      document.elementFromPoint(
-        touch.clientX,
-        touch.clientY
-      );
-
-    if(target){
-
-      selectTarget(
-        target,
-        event
-      );
-
-    }
-
-  },
-  true
+sceneContainer.appendChild(
+  renderer.domElement
 );
 
 
-function selectFromEvent(event){
-
-  if(!active || !selecting){
-    return;
-  }
-
-  const target =
-    event.target;
-
-
-  if(
-    target.closest("#eotsPanel") ||
-    target.closest("#eotsLauncher")
-  ){
-    return;
-  }
-
-
-  event.preventDefault();
-
-  event.stopPropagation();
-
-
-  selectTarget(
-    target,
-    event
+const controls =
+  new OrbitControls(
+    camera,
+    renderer.domElement
   );
 
-}
+
+controls.enableDamping = true;
+controls.dampingFactor = 0.04;
 
 
-function selectTarget(
-  target,
-  event
+/* =========================================================
+   LIGHTS
+========================================================= */
+
+scene.add(
+  new THREE.AmbientLight(
+    0x66ffff,
+    1.5
+  )
+);
+
+
+const cyanLight =
+  new THREE.PointLight(
+    0x00f6ff,
+    30,
+    20
+  );
+
+cyanLight.position.set(
+  2,
+  4,
+  2
+);
+
+scene.add(cyanLight);
+
+
+const magentaLight =
+  new THREE.PointLight(
+    0xff2bd6,
+    20,
+    20
+  );
+
+magentaLight.position.set(
+  -3,
+  2,
+  -3
+);
+
+scene.add(magentaLight);
+
+
+/* =========================================================
+   GRID
+========================================================= */
+
+const grid =
+  new THREE.GridHelper(
+    30,
+    60,
+    0x00f6ff,
+    0x123844
+  );
+
+grid.position.y = -1;
+
+scene.add(grid);
+
+
+const grid2 =
+  new THREE.GridHelper(
+    30,
+    30,
+    0xff2bd6,
+    0x241127
+  );
+
+grid2.position.y = -0.99;
+
+grid2.rotation.y =
+  Math.PI / 2;
+
+scene.add(grid2);
+
+
+/* =========================================================
+   AXES
+========================================================= */
+
+const axes =
+  new THREE.AxesHelper(4);
+
+axes.position.y = -0.98;
+
+scene.add(axes);
+
+
+/* =========================================================
+   PARTICLES
+========================================================= */
+
+const particleCount = 1800;
+
+const particleGeometry =
+  new THREE.BufferGeometry();
+
+const particlePositions =
+  new Float32Array(
+    particleCount * 3
+  );
+
+
+for(
+  let i=0;
+  i<particleCount;
+  i++
 ){
 
-  if(
-    target === document.body ||
-    target === document.documentElement
-  ){
-    return;
+  particlePositions[i*3] =
+    (Math.random()-0.5)*35;
+
+  particlePositions[i*3+1] =
+    (Math.random()-0.5)*20;
+
+  particlePositions[i*3+2] =
+    (Math.random()-0.5)*35;
+
+}
+
+
+particleGeometry.setAttribute(
+  "position",
+
+  new THREE.BufferAttribute(
+    particlePositions,
+    3
+  )
+);
+
+
+const particleMaterial =
+  new THREE.PointsMaterial({
+
+    color:0x00f6ff,
+
+    size:0.025,
+
+    transparent:true,
+
+    opacity:0.65
+
+  });
+
+
+const particles =
+  new THREE.Points(
+    particleGeometry,
+    particleMaterial
+  );
+
+
+scene.add(particles);
+
+
+/* =========================================================
+   VECTOR
+========================================================= */
+
+let arrow = null;
+
+
+function drawVector(v){
+
+  if(arrow){
+
+    scene.remove(arrow);
+
   }
+
+
+  const dir =
+    new THREE.Vector3(
+      v[0] || 0,
+      v[1] || 0,
+      v[2] || 0
+    );
+
+
+  const len =
+    Math.max(
+      dir.length() * 5,
+      0.15
+    );
+
+
+  arrow =
+    new THREE.ArrowHelper(
+
+      dir.clone().normalize(),
+
+      new THREE.Vector3(
+        0,
+        -1,
+        0
+      ),
+
+      len,
+
+      0x00f6ff,
+
+      0.15,
+      0.07
+
+    );
+
+
+  scene.add(arrow);
+
+}
+
+
+/* =========================================================
+   MEMORY POINTS
+========================================================= */
+
+const memoryObjects = [];
+
+
+function createMemoryPoint(
+  vector,
+  index
+){
+
+  const geometry =
+    new THREE.SphereGeometry(
+      0.09,
+      16,
+      16
+    );
+
+
+  const material =
+    new THREE.MeshBasicMaterial({
+      color:0xff2bd6
+    });
+
+
+  const point =
+    new THREE.Mesh(
+      geometry,
+      material
+    );
+
+
+  const scale = 5;
+
+
+  point.position.set(
+
+    vector[0] * scale,
+
+    vector[1] * scale,
+
+    vector[2] * scale
+
+  );
+
+
+  scene.add(point);
+
+  memoryObjects.push(point);
+
+}
+
+
+/* =========================================================
+   ANIMATION
+========================================================= */
+
+function animate(){
+
+  requestAnimationFrame(
+    animate
+  );
+
+
+  particles.rotation.y +=
+    0.00012;
+
+
+  memoryObjects.forEach(
+    (point,index)=>{
+
+      point.scale.setScalar(
+        1 +
+        Math.sin(
+          Date.now()*0.003 +
+          index
+        ) * 0.25
+      );
+
+    }
+  );
+
+
+  cyanLight.position.x =
+    Math.sin(
+      Date.now()*0.0004
+    ) * 4;
+
+
+  magentaLight.position.z =
+    Math.cos(
+      Date.now()*0.0004
+    ) * 4;
+
+
+  controls.update();
+
+
+  renderer.render(
+    scene,
+    camera
+  );
+
+}
+
+
+animate();
+
+
+/* =========================================================
+   PIPELINE
+========================================================= */
+
+function activatePipeline(id){
+
+  document
+    .querySelectorAll(
+      ".pipeline-node"
+    )
+    .forEach(
+      node =>
+        node.classList.remove(
+          "active"
+        )
+    );
 
 
   const element =
-    inspect(target);
+    $(id);
 
 
-  const already =
-    selected.find(
-      item =>
-        item.domKey === element.domKey
+  if(element){
+
+    element.classList.add(
+      "active"
     );
-
-
-  if(!already){
-
-    selected.push(element);
 
   }
 
-
-  selecting = false;
-
-  document.body.style.cursor =
-    "default";
+}
 
 
-  setMode(
-    already
-      ? "BEREITS MARKIERT"
-      : "ELEMENT MARKIERT",
-    already
-      ? "yellow"
-      : "green"
+/* =========================================================
+   BOOT
+========================================================= */
+
+async function bootStep(
+  id,
+  delay,
+  progress
+){
+
+  await new Promise(
+    resolve =>
+      setTimeout(
+        resolve,
+        delay
+      )
   );
 
 
-  showHover(target);
+  $(id)
+    .classList.remove(
+      "boot-line"
+    );
 
-  render();
-
-}
-
-
-/* =========================================================
-   HOVER BOX
-   ========================================================= */
-
-function showHover(element){
-
-  const rect =
-    element.getBoundingClientRect();
-
-
-  hoverBox.style.display =
-    "block";
-
-
-  hoverBox.style.left =
-    rect.left + "px";
-
-
-  hoverBox.style.top =
-    rect.top + "px";
-
-
-  hoverBox.style.width =
-    rect.width + "px";
-
-
-  hoverBox.style.height =
-    rect.height + "px";
-
-
-  hoverLabel.textContent =
-    "SCAN // " +
-    describe(element);
-
-}
-
-
-function hideHover(){
-
-  hoverBox.style.display =
-    "none";
-
-}
-
-
-/* =========================================================
-   INSPECT ELEMENT
-   ========================================================= */
-
-function inspect(element){
-
-  nodeCounter++;
-
-
-  const rect =
-    element.getBoundingClientRect();
-
-
-  const style =
-    getComputedStyle(element);
-
-
-  const text =
-    clean(
-      element.innerText ||
-      element.textContent ||
-      ""
+  $(id)
+    .classList.add(
+      "boot-ok"
     );
 
 
-  const domKey =
-    getDomKey(element);
-
-
-  return {
-
-    node:
-      "NODE-" +
-      String(nodeCounter)
-        .padStart(3,"0"),
-
-    domKey,
-
-    element:
-      element.tagName
-        .toLowerCase(),
-
-    role:
-      element.getAttribute("role") ||
-      inferRole(element),
-
-    type:
-      element.getAttribute("type") ||
-      null,
-
-    text:
-      text.substring(0,500),
-
-    aria_label:
-      element.getAttribute(
-        "aria-label"
-      ) || null,
-
-    title:
-      element.getAttribute(
-        "title"
-      ) || null,
-
-    id:
-      element.id || null,
-
-    classes:
-      typeof element.className === "string"
-        ? element.className
-        : null,
-
-    geometry:{
-      x:round(rect.left),
-      y:round(rect.top),
-      width:round(rect.width),
-      height:round(rect.height)
-    },
-
-    visual:{
-      display:style.display,
-      visibility:style.visibility,
-      fontSize:style.fontSize,
-      borderRadius:style.borderRadius,
-      cursor:style.cursor
-    },
-
-    interaction:{
-      clickable:
-        isClickable(element),
-
-      disabled:
-        !!element.disabled
-    }
-
-  };
+  $("bootProgress")
+    .style.width =
+      progress + "%";
 
 }
 
 
 /* =========================================================
-   ALL BUTTONS
-   ========================================================= */
+   MODEL INITIALIZATION
+========================================================= */
 
-allBtn.addEventListener(
-  "click",
-  () => {
+async function initialize(){
 
-    selected = [];
+  try{
 
-    const elements =
-      document.querySelectorAll(
-        "button," +
-        "[role='button']," +
-        "input[type='button']," +
-        "input[type='submit']"
-      );
+    $("status")
+      .textContent =
+      "LOADING";
 
 
-    elements.forEach(
-      element => {
+    $("headerStatus")
+      .textContent =
+      "MODEL INITIALIZING";
 
-        if(
-          element.closest("#eotsPanel") ||
-          element.closest("#eotsLauncher")
-        ){
-          return;
-        }
 
-        selected.push(
-          inspect(element)
+    await bootStep(
+      "boot1",
+      250,
+      15
+    );
+
+
+    $("boot2")
+      .textContent =
+      "[ LOAD ] Tokenizer...";
+
+
+    tokenizer =
+      await AutoTokenizer
+        .from_pretrained(
+          MODEL
         );
 
-      }
+
+    $("boot2")
+      .textContent =
+      "[ OK ] Tokenizer online";
+
+
+    $("boot2")
+      .classList.add(
+        "boot-ok"
+      );
+
+
+    $("bootProgress")
+      .style.width =
+      "35%";
+
+
+    $("boot3")
+      .textContent =
+      "[ LOAD ] Embedding model...";
+
+
+    extractor =
+      await pipeline(
+        "feature-extraction",
+        MODEL
+      );
+
+
+    $("boot3")
+      .textContent =
+      "[ OK ] Embedding model online";
+
+
+    $("boot3")
+      .classList.add(
+        "boot-ok"
+      );
+
+
+    $("bootProgress")
+      .style.width =
+      "65%";
+
+
+    await bootStep(
+      "boot4",
+      250,
+      82
     );
 
 
-    setMode(
-      `${selected.length} BUTTONS`,
-      "green"
+    $("boot4")
+      .textContent =
+      "[ OK ] Vector engine initialized";
+
+
+    await bootStep(
+      "boot5",
+      250,
+      100
     );
 
 
-    render();
+    $("boot5")
+      .textContent =
+      "[ OK ] Memory bank connected";
+
+
+    $("modelShort")
+      .textContent =
+      "E5-SMALL";
+
+
+    $("dim")
+      .textContent =
+      "384";
+
+
+    $("status")
+      .textContent =
+      "ONLINE";
+
+
+    $("headerStatus")
+      .textContent =
+      "EMBEDDING CORE ONLINE";
+
+
+    activatePipeline(
+      "pipeEmbedding"
+    );
+
+
+    await new Promise(
+      resolve =>
+        setTimeout(
+          resolve,
+          500
+        )
+    );
+
+
+    $("boot")
+      .style.opacity =
+      "0";
+
+
+    setTimeout(
+      ()=>{
+        $("boot")
+          .style.display =
+          "none";
+      },
+      800
+    );
 
   }
-);
+  catch(error){
 
-
-/* =========================================================
-   CLEAR
-   ========================================================= */
-
-clearBtn.addEventListener(
-  "click",
-  () => {
-
-    selected = [];
-
-    hideHover();
-
-    setMode(
-      "AUSWAHL GELÖSCHT",
-      "yellow"
+    console.error(
+      "MODEL INITIALIZATION ERROR:",
+      error
     );
 
-    render();
+
+    $("status")
+      .textContent =
+      "ERROR";
+
+
+    $("headerStatus")
+      .textContent =
+      "MODEL LOAD FAILURE";
+
+
+    $("boot3")
+      .textContent =
+      "[ ERROR ] Embedding model failed";
+
+
+    $("boot3")
+      .classList.add(
+        "boot-error"
+      );
+
+
+    $("boot4")
+      .textContent =
+      "[ ERROR ] Vector engine offline";
+
+
+    $("boot4")
+      .classList.add(
+        "boot-error"
+      );
 
   }
-);
-
-
-/* =========================================================
-   RENDER JSON
-   ========================================================= */
-
-function render(){
-
-  count.textContent =
-    selected.length;
-
-
-  if(selected.length){
-
-    const last =
-      selected[selected.length - 1];
-
-
-    info.innerHTML =
-      `<b>${escapeHTML(last.node)}</b><br>` +
-      `${escapeHTML(last.element)} · ` +
-      `${escapeHTML(last.role)}<br>` +
-      `${escapeHTML(last.text || "kein Text")}<br>` +
-      `${last.geometry.width} × ${last.geometry.height}px`;
-
-  }else{
-
-    info.textContent =
-      "Noch kein Element markiert.";
-
-  }
-
-
-  const context = {
-
-    eots_version:
-      "1.0",
-
-    source:
-      "live_ui",
-
-    purpose:
-      "Visual UI context for LLM interpretation",
-
-    instruction:
-      "Nutze ausschließlich die erfassten Informationen. Erfinde keine UI-Elemente, Funktionen oder Beziehungen.",
-
-    captured_nodes:
-      selected
-
-  };
-
-
-  json.value =
-    JSON.stringify(
-      context,
-      null,
-      2
-    );
 
 }
 
 
 /* =========================================================
-   COPY
-   ========================================================= */
+   CREATE EMBEDDING
+========================================================= */
 
-copyBtn.addEventListener(
-  "click",
-  async () => {
+$("embedBtn")
+  .onclick =
+  async()=>{
 
-    try{
+    if(!extractor){
 
-      await navigator.clipboard.writeText(
-        json.value
-      );
+      $("status")
+        .textContent =
+        "MODEL OFFLINE";
 
-      copyBtn.textContent =
-        "COPIED ✓";
-
-
-      setTimeout(
-        () => {
-
-          copyBtn.textContent =
-            "COPY JSON";
-
-        },
-        1000
-      );
-
-    }catch(error){
-
-      json.select();
-
-      document.execCommand(
-        "copy"
-      );
+      return;
 
     }
 
-  }
-);
+
+    const text =
+      $("text")
+        .value
+        .trim();
 
 
-/* =========================================================
-   SAVE
-   ========================================================= */
+    if(!text)
+      return;
 
-saveBtn.addEventListener(
-  "click",
-  () => {
 
-    const blob =
-      new Blob(
-        [json.value],
+    activatePipeline(
+      "pipeText"
+    );
+
+
+    $("status")
+      .textContent =
+      "TOKENIZING";
+
+
+    const tokens =
+      await tokenizer(
+        "passage: " + text
+      );
+
+
+    $("tok")
+      .textContent =
+      tokens.input_ids.length;
+
+
+    activatePipeline(
+      "pipeTokenizer"
+    );
+
+
+    await new Promise(
+      resolve =>
+        setTimeout(
+          resolve,
+          150
+        )
+    );
+
+
+    $("status")
+      .textContent =
+      "EMBEDDING";
+
+
+    activatePipeline(
+      "pipeEmbedding"
+    );
+
+
+    const output =
+      await extractor(
+        "passage: " + text,
         {
-          type:
-            "application/json"
+          pooling:"mean",
+          normalize:true
         }
       );
 
 
-    const url =
-      URL.createObjectURL(blob);
+    currentVector =
+      Array.from(
+        output.data
+      );
 
 
-    const a =
-      document.createElement("a");
+    $("dim")
+      .textContent =
+      currentVector.length;
 
 
-    a.href =
-      url;
-
-    a.download =
-      "eots-context.json";
+    $("status")
+      .textContent =
+      "VECTOR READY";
 
 
-    document.body.appendChild(a);
-
-    a.click();
-
-    a.remove();
+    activatePipeline(
+      "pipeVector"
+    );
 
 
-    URL.revokeObjectURL(url);
+    $("vec")
+      .textContent =
+      JSON.stringify(
+        currentVector.slice(
+          0,
+          64
+        ),
+        null,
+        2
+      );
+
+
+    drawVector(
+      currentVector
+    );
+
+  };
+
+
+/* =========================================================
+   STORE VECTOR
+========================================================= */
+
+$("storeBtn")
+  .onclick =
+  ()=>{
+
+    if(!currentVector){
+
+      $("status")
+        .textContent =
+        "NO VECTOR";
+
+      return;
+
+    }
+
+
+    const text =
+      $("text")
+        .value
+        .trim();
+
+
+    if(!text)
+      return;
+
+
+    const node = {
+
+      id:
+        "NODE_" +
+        String(
+          memory.length + 1
+        ).padStart(
+          3,
+          "0"
+        ),
+
+      text,
+
+      vector:[
+        ...currentVector
+      ]
+
+    };
+
+
+    memory.push(
+      node
+    );
+
+
+    createMemoryPoint(
+      node.vector,
+      memory.length
+    );
+
+
+    activatePipeline(
+      "pipeMemory"
+    );
+
+
+    renderStore();
+
+
+    $("status")
+      .textContent =
+      "MEMORY NODE STORED";
+
+  };
+
+
+/* =========================================================
+   MEMORY RENDER
+========================================================= */
+
+function renderStore(){
+
+  const container =
+    $("store");
+
+
+  if(!memory.length){
+
+    container.innerHTML =
+      "MEMORY BANK EMPTY";
+
+    return;
+
+  }
+
+
+  container.innerHTML =
+    memory
+      .map(
+        memoryNode => `
+
+        <div class="memory-node">
+
+          <div class="node-dot"></div>
+
+          <div>
+
+            <div class="node-id">
+              ${escapeHtml(
+                memoryNode.id
+              )}
+            </div>
+
+            <div class="node-text">
+              ${escapeHtml(
+                memoryNode.text
+              )}
+            </div>
+
+          </div>
+
+        </div>
+
+        `
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   COSINE SIMILARITY
+========================================================= */
+
+function cosine(a,b){
+
+  let dot = 0;
+
+  let normA = 0;
+
+  let normB = 0;
+
+
+  for(
+    let i=0;
+    i<a.length;
+    i++
+  ){
+
+    dot +=
+      a[i] * b[i];
+
+    normA +=
+      a[i] * a[i];
+
+    normB +=
+      b[i] * b[i];
+
+  }
+
+
+  return dot /
+    (
+      Math.sqrt(normA) *
+      Math.sqrt(normB)
+    );
+
+}
+
+
+/* =========================================================
+   QUERY
+========================================================= */
+
+$("queryBtn")
+  .onclick =
+  async()=>{
+
+    if(!extractor){
+
+      $("status")
+        .textContent =
+        "MODEL OFFLINE";
+
+      return;
+
+    }
+
+
+    if(!memory.length){
+
+      $("ranking")
+        .innerHTML = `
+
+          <div class="rank-text">
+            MEMORY BANK EMPTY
+          </div>
+
+        `;
+
+      return;
+
+    }
+
+
+    const query =
+      $("query")
+        .value
+        .trim();
+
+
+    if(!query)
+      return;
+
+
+    $("status")
+      .textContent =
+      "QUERY EMBEDDING";
+
+
+    activatePipeline(
+      "pipeSimilarity"
+    );
+
+
+    const output =
+      await extractor(
+        "query: " + query,
+        {
+          pooling:"mean",
+          normalize:true
+        }
+      );
+
+
+    const queryVector =
+      Array.from(
+        output.data
+      );
+
+
+    $("status")
+      .textContent =
+      "SCANNING MEMORY";
+
+
+    const results =
+      memory
+        .map(
+          node => ({
+
+            ...node,
+
+            score:
+              cosine(
+                queryVector,
+                node.vector
+              )
+
+          })
+        )
+        .sort(
+          (a,b)=>
+            b.score -
+            a.score
+        );
+
+
+    activatePipeline(
+      "pipeRanking"
+    );
+
+
+    $("status")
+      .textContent =
+      "RANKING READY";
+
+
+    renderRanking(
+      results
+    );
+
+  };
+
+
+/* =========================================================
+   RANKING
+========================================================= */
+
+function renderRanking(
+  results
+){
+
+  const container =
+    $("ranking");
+
+
+  container.innerHTML = `
+
+    <div class="rank-header">
+
+      <span>
+        TARGET MATCHES
+      </span>
+
+      <span>
+        COSINE
+      </span>
+
+    </div>
+
+  `;
+
+
+  results.forEach(
+    (result,index)=>{
+
+      const percentage =
+        Math.max(
+          0,
+          Math.min(
+            100,
+            result.score * 100
+          )
+        );
+
+
+      const div =
+        document.createElement(
+          "div"
+        );
+
+
+      div.className =
+        "rank";
+
+
+      div.innerHTML = `
+
+        <div class="rank-header">
+
+          <span>
+            #${index + 1}
+            ${escapeHtml(
+              result.id
+            )}
+          </span>
+
+          <span>
+            ${result.score.toFixed(4)}
+          </span>
+
+        </div>
+
+        <div class="rank-bar">
+
+          <div
+            class="rank-fill"
+            style="
+              width:${percentage}%
+            "
+          ></div>
+
+        </div>
+
+        <div class="rank-text">
+          ${escapeHtml(
+            result.text
+          )}
+        </div>
+
+      `;
+
+
+      container.appendChild(
+        div
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
+
+function escapeHtml(
+  value
+){
+
+  return String(value)
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+
+}
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+window.addEventListener(
+  "resize",
+  ()=>{
+
+    const width =
+      sceneContainer.clientWidth;
+
+    const height =
+      sceneContainer.clientHeight;
+
+
+    camera.aspect =
+      width / height;
+
+    camera.updateProjectionMatrix();
+
+
+    renderer.setSize(
+      width,
+      height
+    );
 
   }
 );
 
 
 /* =========================================================
-   HELPERS
-   ========================================================= */
+   START
+========================================================= */
 
-function setMode(
-  text,
-  color
-){
+initialize();
 
-  mode.textContent =
-    text;
-
-
-  const colors = {
-
-    cyan:"var(--cyan)",
-
-    green:"var(--green)",
-
-    yellow:"var(--yellow)"
-
-  };
-
-
-  mode.style.color =
-    colors[color] ||
-    "var(--green)";
-
-}
-
-
-function clean(text){
-
-  return String(text)
-    .replace(/\s+/g," ")
-    .trim();
-
-}
-
-
-function round(value){
-
-  return Math.round(
-    value * 10
-  ) / 10;
-
-}
-
-
-function isClickable(element){
-
-  const tag =
-    element.tagName
-      .toLowerCase();
-
-
-  if([
-    "button",
-    "a",
-    "input",
-    "select",
-    "textarea"
-  ].includes(tag)){
-
-    return true;
-
-  }
-
-
-  if(
-    element.getAttribute(
-      "role"
-    ) === "button"
-  ){
-
-    return true;
-
-  }
-
-
-  return getComputedStyle(
-    element
-  ).cursor === "pointer";
-
-}
-
-
-function inferRole(element){
-
-  const tag =
-    element.tagName
-      .toLowerCase();
-
-
-  if(tag === "button")
-    return "button";
-
-
-  if(tag === "a")
-    return "link";
-
-
-  if(tag === "input")
-    return "input";
-
-
-  if(tag === "nav")
-    return "navigation";
-
-
-  if(/^h[1-6]$/.test(tag))
-    return "heading";
-
-
-  return "container";
-
-}
-
-
-function describe(element){
-
-  const text =
-    clean(
-      element.innerText ||
-      element.textContent ||
-      ""
-    );
-
-
-  return (
-    text ||
-    element.getAttribute(
-      "aria-label"
-    ) ||
-    element.tagName
-      .toLowerCase()
-  ).substring(0,35);
-
-}
-
-
-function getDomKey(element){
-
-  if(!element.dataset.eotsKey){
-
-    element.dataset.eotsKey =
-      "e" +
-      Math.random()
-        .toString(36)
-        .substring(2,10);
-
-  }
-
-
-  return element.dataset.eotsKey;
-
-}
-
-
-function escapeHTML(text){
-
-  return String(text)
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
-
-}
-
-
-/* =========================================================
-   INITIAL JSON
-   ========================================================= */
-
-render();
-
-})();
 </script>
 
 </body>
