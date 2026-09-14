@@ -1,80 +1,131 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport"
-      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
+>
 
 <title>NEURAL MEMORY — Embedding RAG Lab</title>
 
 <style>
+
+/* =====================================================
+   GLOBAL
+===================================================== */
+
 :root{
+
   --bg:#020308;
+
   --panel:#060914;
+
   --panel2:#09101d;
+
   --cyan:#00f5ff;
+
   --cyan2:#00aaff;
+
   --pink:#ff00aa;
+
   --green:#4aff88;
+
   --yellow:#ffe600;
+
   --red:#ff3355;
+
   --text:#d9faff;
+
   --muted:#62818c;
+
   --line:rgba(0,245,255,.22);
-  --glow:0 0 12px rgba(0,245,255,.55),
-         0 0 35px rgba(0,245,255,.18);
+
+  --glow:
+    0 0 12px rgba(0,245,255,.55),
+    0 0 35px rgba(0,245,255,.18);
 }
+
 
 *{
   box-sizing:border-box;
 }
 
-html,body{
+
+html,
+body{
+
   margin:0;
+
   width:100%;
-  height:100%;
+
+  min-height:100%;
+
   background:var(--bg);
+
   color:var(--text);
+
   font-family:
     "Courier New",
     monospace;
+
   overflow-x:hidden;
+
 }
 
+
 body{
+
   background:
+
     radial-gradient(
       circle at 50% 20%,
       rgba(0,245,255,.08),
       transparent 35%
     ),
+
     linear-gradient(
       rgba(0,245,255,.018) 1px,
       transparent 1px
     ),
+
     linear-gradient(
       90deg,
       rgba(0,245,255,.018) 1px,
       transparent 1px
     ),
+
     var(--bg);
 
   background-size:
     auto,
     40px 40px,
     40px 40px;
+
 }
 
-/* SCANLINES */
+
+/* =====================================================
+   SCANLINES
+===================================================== */
 
 body::before{
+
   content:"";
+
   position:fixed;
+
   inset:0;
+
   pointer-events:none;
+
   z-index:9999;
 
   background:
+
     repeating-linear-gradient(
       to bottom,
       rgba(255,255,255,.018) 0px,
@@ -82,53 +133,78 @@ body::before{
       transparent 2px,
       transparent 5px
     );
+
 }
 
-/* HEADER */
+
+/* =====================================================
+   HEADER
+===================================================== */
 
 header{
+
   position:sticky;
+
   top:0;
+
   z-index:100;
 
   height:72px;
 
   display:flex;
+
   align-items:center;
+
   justify-content:space-between;
 
   padding:0 22px;
 
   background:
+
     linear-gradient(
       90deg,
       rgba(0,245,255,.05),
       rgba(255,0,170,.05)
     ),
+
     rgba(2,3,8,.92);
 
-  border-bottom:1px solid var(--line);
+  border-bottom:
+    1px solid var(--line);
 
   box-shadow:
     0 0 25px rgba(0,245,255,.08);
 
-  backdrop-filter:blur(8px);
+  backdrop-filter:
+    blur(8px);
+
 }
+
 
 .logo{
+
   display:flex;
+
   align-items:center;
+
   gap:14px;
+
 }
 
+
 .logoMark{
+
   width:34px;
+
   height:34px;
 
-  border:1px solid var(--cyan);
+  border:
+    1px solid var(--cyan);
 
   display:flex;
+
   align-items:center;
+
   justify-content:center;
 
   color:var(--cyan);
@@ -136,50 +212,77 @@ header{
   box-shadow:var(--glow);
 
   font-size:18px;
+
 }
+
 
 .logoText{
+
   letter-spacing:3px;
+
   font-size:15px;
+
 }
+
 
 .logoText span{
+
   color:var(--cyan);
+
 }
 
+
 .status{
+
   display:flex;
+
   align-items:center;
+
   gap:8px;
 
   font-size:11px;
+
   color:var(--muted);
 
   letter-spacing:1px;
+
 }
 
+
 .statusDot{
+
   width:8px;
+
   height:8px;
 
   border-radius:50%;
 
   background:var(--red);
 
-  box-shadow:0 0 10px var(--red);
+  box-shadow:
+    0 0 10px var(--red);
 
-  transition:.3s;
 }
+
 
 .statusDot.online{
+
   background:var(--green);
-  box-shadow:0 0 12px var(--green);
+
+  box-shadow:
+    0 0 12px var(--green);
+
 }
 
-/* LAYOUT */
+
+/* =====================================================
+   LAYOUT
+===================================================== */
 
 main{
+
   width:min(1500px,100%);
+
   margin:auto;
 
   padding:22px;
@@ -192,30 +295,41 @@ main{
     minmax(280px,360px);
 
   gap:18px;
+
 }
+
 
 @media(max-width:1100px){
 
   main{
+
     grid-template-columns:1fr;
+
   }
 
 }
 
-/* PANELS */
+
+/* =====================================================
+   PANELS
+===================================================== */
 
 .panel{
+
   position:relative;
 
   background:
+
     linear-gradient(
       180deg,
       rgba(0,245,255,.025),
       rgba(255,0,170,.018)
     ),
+
     var(--panel);
 
-  border:1px solid var(--line);
+  border:
+    1px solid var(--line);
 
   min-height:100px;
 
@@ -223,50 +337,70 @@ main{
     inset 0 0 30px rgba(0,245,255,.025);
 
   overflow:hidden;
+
 }
 
+
 .panel::before{
+
   content:"";
+
   position:absolute;
 
   left:0;
+
   top:0;
 
   width:70px;
+
   height:1px;
 
   background:var(--cyan);
 
-  box-shadow:0 0 10px var(--cyan);
+  box-shadow:
+    0 0 10px var(--cyan);
+
 }
 
+
 .panelTitle{
+
   padding:14px 16px;
 
-  border-bottom:1px solid rgba(0,245,255,.12);
+  border-bottom:
+    1px solid rgba(0,245,255,.12);
 
   font-size:11px;
 
   letter-spacing:2px;
 
   color:var(--cyan);
+
 }
+
 
 .panelBody{
+
   padding:16px;
+
 }
 
-/* INPUT */
+
+/* =====================================================
+   INPUTS
+===================================================== */
 
 textarea,
 input{
+
   width:100%;
 
   background:#02050b;
 
   color:var(--text);
 
-  border:1px solid rgba(0,245,255,.25);
+  border:
+    1px solid rgba(0,245,255,.25);
 
   outline:none;
 
@@ -279,28 +413,43 @@ input{
   resize:vertical;
 
   transition:.2s;
+
 }
 
+
 textarea{
+
   min-height:120px;
+
 }
+
 
 textarea:focus,
 input:focus{
+
   border-color:var(--cyan);
 
   box-shadow:
     0 0 15px rgba(0,245,255,.15);
+
 }
 
-/* BUTTONS */
+
+/* =====================================================
+   BUTTONS
+===================================================== */
 
 button{
+
   width:100%;
 
-  border:1px solid var(--cyan);
+  min-height:44px;
+
+  border:
+    1px solid var(--cyan);
 
   background:
+
     linear-gradient(
       90deg,
       rgba(0,245,255,.06),
@@ -322,42 +471,69 @@ button{
   cursor:pointer;
 
   transition:.2s;
+
 }
 
+
 button:hover{
-  background:rgba(0,245,255,.12);
+
+  background:
+    rgba(0,245,255,.12);
 
   box-shadow:
     0 0 18px rgba(0,245,255,.22);
+
 }
+
 
 button:disabled{
+
   opacity:.35;
+
   cursor:not-allowed;
+
 }
+
 
 button.pink{
+
   border-color:var(--pink);
+
   color:var(--pink);
+
 }
+
 
 button.green{
+
   border-color:var(--green);
+
   color:var(--green);
+
 }
 
-/* PIPELINE */
+
+/* =====================================================
+   PIPELINE
+===================================================== */
 
 .pipeline{
+
   display:flex;
+
   flex-direction:column;
+
   gap:7px;
+
 }
 
+
 .stage{
+
   position:relative;
 
-  border:1px solid rgba(0,245,255,.12);
+  border:
+    1px solid rgba(0,245,255,.12);
 
   background:#030710;
 
@@ -368,9 +544,12 @@ button.green{
   color:#47626c;
 
   transition:.4s;
+
 }
 
+
 .stage.active{
+
   color:var(--cyan);
 
   border-color:var(--cyan);
@@ -380,20 +559,28 @@ button.green{
 
   text-shadow:
     0 0 8px var(--cyan);
+
 }
+
 
 .stage.done{
+
   color:var(--green);
 
-  border-color:rgba(74,255,136,.4);
+  border-color:
+    rgba(74,255,136,.4);
+
 }
 
+
 .stage::before{
+
   content:"";
 
   display:inline-block;
 
   width:6px;
+
   height:6px;
 
   margin-right:9px;
@@ -401,32 +588,44 @@ button.green{
   border-radius:50%;
 
   background:#20343b;
+
 }
 
+
 .stage.active::before{
+
   background:var(--cyan);
 
   box-shadow:
     0 0 10px var(--cyan);
+
 }
 
+
 .stage.done::before{
+
   background:var(--green);
 
   box-shadow:
     0 0 10px var(--green);
+
 }
 
-/* BOOT / LOG */
+
+/* =====================================================
+   LOG
+===================================================== */
 
 .log{
+
   height:145px;
 
   overflow:auto;
 
   background:#010207;
 
-  border:1px solid rgba(0,245,255,.12);
+  border:
+    1px solid rgba(0,245,255,.12);
 
   padding:10px;
 
@@ -435,30 +634,40 @@ button.green{
   line-height:1.7;
 
   color:#59737b;
+
 }
+
 
 .logLine.ok{
   color:var(--green);
 }
 
+
 .logLine.info{
   color:var(--cyan);
 }
+
 
 .logLine.warn{
   color:var(--yellow);
 }
 
+
 .logLine.error{
   color:var(--red);
 }
 
-/* VECTOR */
+
+/* =====================================================
+   VECTOR
+===================================================== */
 
 .vectorBox{
+
   background:#010308;
 
-  border:1px solid rgba(0,245,255,.14);
+  border:
+    1px solid rgba(0,245,255,.14);
 
   padding:12px;
 
@@ -473,172 +682,90 @@ button.green{
   word-break:break-all;
 
   color:#8acdd5;
+
 }
 
+
 .vectorDim{
+
   color:var(--yellow);
 
   font-size:13px;
 
   margin-bottom:8px;
+
 }
 
-/* 3D */
+
+/* =====================================================
+   INTERACTIVE 3D SCENE
+===================================================== */
 
 .scene{
+
   position:relative;
 
   height:520px;
 
   background:
+
     radial-gradient(
       ellipse at center,
       rgba(0,245,255,.07),
-      transparent 55%
+      transparent 60%
     ),
+
     #010308;
 
   overflow:hidden;
 
-  perspective:700px;
+  touch-action:none;
+
+  user-select:none;
+
+  -webkit-user-select:none;
+
 }
 
-.grid3d{
+
+#vectorCanvas{
+
   position:absolute;
 
-  left:-20%;
-  width:140%;
+  inset:0;
 
-  bottom:-40px;
+  width:100%;
 
-  height:70%;
+  height:100%;
 
-  transform:
-    perspective(400px)
-    rotateX(62deg);
+  display:block;
 
-  background:
-    linear-gradient(
-      rgba(0,245,255,.15) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      rgba(0,245,255,.15) 1px,
-      transparent 1px
-    );
+  touch-action:none;
 
-  background-size:
-    45px 45px;
-
-  box-shadow:
-    0 -20px 60px rgba(0,245,255,.08);
-}
-
-.axis{
-  position:absolute;
-
-  left:50%;
-  top:50%;
-
-  transform-origin:left center;
-
-  height:1px;
-
-  width:230px;
-
-  background:var(--cyan);
-
-  box-shadow:0 0 10px var(--cyan);
-}
-
-.axis.x{
-  transform:rotate(0deg);
-}
-
-.axis.y{
-  transform:rotate(120deg);
-}
-
-.axis.z{
-  transform:rotate(-120deg);
-}
-
-.axisLabel{
-  position:absolute;
-
-  font-size:10px;
-
-  color:var(--cyan);
-
-  text-shadow:
-    0 0 8px var(--cyan);
-}
-
-.axisLabel.x{
-  right:25px;
-  top:49%;
-}
-
-.axisLabel.y{
-  left:27%;
-  top:29%;
-}
-
-.axisLabel.z{
-  right:27%;
-  top:29%;
-}
-
-.point{
-  position:absolute;
-
-  width:9px;
-  height:9px;
-
-  border-radius:50%;
-
-  background:var(--pink);
-
-  box-shadow:
-    0 0 8px var(--pink),
-    0 0 25px var(--pink);
-
-  transform:
-    translate(-50%,-50%);
-
-  animation:
-    pulse 1.6s infinite ease-in-out;
-}
-
-@keyframes pulse{
-
-  0%,100%{
-    opacity:.65;
-    transform:
-      translate(-50%,-50%)
-      scale(.8);
-  }
-
-  50%{
-    opacity:1;
-    transform:
-      translate(-50%,-50%)
-      scale(1.5);
-  }
+  cursor:grab;
 
 }
 
-/* HUD */
+
+#vectorCanvas:active{
+
+  cursor:grabbing;
+
+}
+
 
 .hud{
+
   position:absolute;
 
   top:12px;
+
   left:12px;
+
   right:12px;
 
   display:flex;
+
   justify-content:space-between;
 
   pointer-events:none;
@@ -648,16 +775,129 @@ button.green{
   color:var(--muted);
 
   letter-spacing:1px;
+
 }
+
 
 .hudRight{
+
   color:var(--pink);
+
 }
 
-/* MEMORY */
+
+.touchHint{
+
+  position:absolute;
+
+  left:14px;
+
+  bottom:14px;
+
+  font-size:8px;
+
+  line-height:1.7;
+
+  color:#45636c;
+
+  letter-spacing:1px;
+
+  pointer-events:none;
+
+}
+
+
+.selectedVector{
+
+  position:absolute;
+
+  right:14px;
+
+  bottom:14px;
+
+  width:230px;
+
+  padding:12px;
+
+  background:
+    rgba(2,5,12,.88);
+
+  border:
+    1px solid rgba(255,0,170,.35);
+
+  box-shadow:
+    0 0 18px rgba(255,0,170,.08);
+
+  pointer-events:none;
+
+  backdrop-filter:blur(5px);
+
+}
+
+
+.selectedTitle{
+
+  color:var(--pink);
+
+  font-size:9px;
+
+  letter-spacing:2px;
+
+  margin-bottom:7px;
+
+}
+
+
+#selectedContent{
+
+  color:#8baab1;
+
+  font-size:9px;
+
+  line-height:1.5;
+
+  word-break:break-word;
+
+}
+
+
+@media(max-width:600px){
+
+  .scene{
+
+    height:430px;
+
+  }
+
+  .selectedVector{
+
+    width:180px;
+
+    right:8px;
+
+    bottom:8px;
+
+  }
+
+  .touchHint{
+
+    left:8px;
+
+    bottom:8px;
+
+  }
+
+}
+
+
+/* =====================================================
+   MEMORY
+===================================================== */
 
 .memoryList{
+
   display:flex;
+
   flex-direction:column;
 
   gap:8px;
@@ -665,12 +905,16 @@ button.green{
   max-height:330px;
 
   overflow:auto;
+
 }
 
+
 .memory{
+
   padding:10px;
 
-  border:1px solid rgba(0,245,255,.12);
+  border:
+    1px solid rgba(0,245,255,.12);
 
   background:#030710;
 
@@ -679,62 +923,93 @@ button.green{
   cursor:pointer;
 
   transition:.2s;
+
 }
 
+
 .memory:hover{
+
   border-color:var(--cyan);
 
   box-shadow:
     0 0 12px rgba(0,245,255,.1);
+
 }
 
+
 .memoryId{
+
   color:var(--pink);
 
   font-size:9px;
 
   margin-bottom:5px;
+
 }
 
+
 .memoryText{
+
   color:#9bb8bf;
 
   line-height:1.4;
+
 }
 
-/* RANKING */
+
+/* =====================================================
+   RANKING
+===================================================== */
 
 .rank{
-  border:1px solid rgba(0,245,255,.12);
+
+  border:
+    1px solid rgba(0,245,255,.12);
 
   padding:10px;
 
   margin-bottom:8px;
 
   background:#030710;
+
 }
 
+
 .rankTop{
+
   display:flex;
 
   justify-content:space-between;
 
+  gap:10px;
+
   font-size:10px;
+
 }
+
 
 .rankScore{
+
   color:var(--green);
+
+  white-space:nowrap;
+
 }
 
+
 .bar{
+
   height:3px;
 
   background:#0b1820;
 
   margin-top:7px;
+
 }
 
+
 .barFill{
+
   height:100%;
 
   background:
@@ -750,18 +1025,25 @@ button.green{
   width:0%;
 
   transition:1s;
+
 }
 
-/* ERROR */
+
+/* =====================================================
+   ERROR
+===================================================== */
 
 .errorBox{
+
   display:none;
 
-  border:1px solid var(--red);
+  border:
+    1px solid var(--red);
 
   color:#ff8a99;
 
-  background:rgba(255,0,50,.05);
+  background:
+    rgba(255,0,50,.05);
 
   padding:12px;
 
@@ -770,15 +1052,23 @@ button.green{
   font-size:10px;
 
   line-height:1.5;
+
 }
+
 
 .errorBox.show{
+
   display:block;
+
 }
 
-/* METRICS */
+
+/* =====================================================
+   METRICS
+===================================================== */
 
 .metrics{
+
   display:grid;
 
   grid-template-columns:1fr 1fr;
@@ -786,63 +1076,91 @@ button.green{
   gap:8px;
 
   margin-top:12px;
+
 }
 
+
 .metric{
+
   padding:10px;
 
   background:#030710;
 
-  border:1px solid rgba(0,245,255,.12);
+  border:
+    1px solid rgba(0,245,255,.12);
+
 }
 
+
 .metricLabel{
+
   font-size:8px;
 
   color:var(--muted);
 
   letter-spacing:1px;
+
 }
 
+
 .metricValue{
+
   margin-top:5px;
 
   font-size:14px;
 
   color:var(--cyan);
+
 }
 
-/* FOOTER */
+
+/* =====================================================
+   FOOTER
+===================================================== */
 
 footer{
+
   width:min(1500px,100%);
 
   margin:auto;
 
-  padding:0 22px 30px;
+  padding:
+    0 22px 30px;
 
   color:#304850;
 
   font-size:9px;
 
   letter-spacing:1px;
+
 }
+
 </style>
+
 </head>
 
+
 <body>
+
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
 
 <header>
 
   <div class="logo">
 
-    <div class="logoMark">Σ</div>
+    <div class="logoMark">
+      Σ
+    </div>
 
     <div class="logoText">
       NEURAL <span>MEMORY</span>
     </div>
 
   </div>
+
 
   <div class="status">
 
@@ -860,13 +1178,21 @@ footer{
 </header>
 
 
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
 <main>
 
+
 <!-- =====================================================
-     LEFT
+     LEFT COLUMN
 ===================================================== -->
 
 <section>
+
+
+  <!-- TEXT INPUT -->
 
   <div class="panel">
 
@@ -880,17 +1206,26 @@ footer{
         id="textInput"
         placeholder="Schreibe hier einen Satz oder eine Erinnerung ...">Der Kunde hat am Freitag einen Termin in Stuttgart.</textarea>
 
+
       <button
-        id="embedBtn">
+        id="embedBtn"
+        type="button">
+
         GENERATE EMBEDDING
+
       </button>
+
 
       <button
         id="storeBtn"
         class="green"
+        type="button"
         disabled>
+
         STORE VECTOR
+
       </button>
+
 
       <div
         id="errorBox"
@@ -901,6 +1236,8 @@ footer{
 
   </div>
 
+
+  <!-- PIPELINE -->
 
   <div
     class="panel"
@@ -917,37 +1254,54 @@ footer{
         <div
           id="stageText"
           class="stage">
+
           TEXT
+
         </div>
+
 
         <div
           id="stageToken"
           class="stage">
+
           TOKENIZATION
+
         </div>
+
 
         <div
           id="stageModel"
           class="stage">
+
           EMBEDDING MODEL
+
         </div>
+
 
         <div
           id="stageVector"
           class="stage">
+
           VECTOR 384D
+
         </div>
+
 
         <div
           id="stageStore"
           class="stage">
+
           VECTOR STORE
+
         </div>
+
 
         <div
           id="stageSearch"
           class="stage">
+
           COSINE SEARCH
+
         </div>
 
       </div>
@@ -956,6 +1310,8 @@ footer{
 
   </div>
 
+
+  <!-- LOG -->
 
   <div
     class="panel"
@@ -976,59 +1332,84 @@ footer{
 
   </div>
 
+
 </section>
 
 
 <!-- =====================================================
-     CENTER
+     CENTER COLUMN
 ===================================================== -->
 
 <section>
 
+
+  <!-- 3D SPACE -->
+
   <div class="panel">
 
     <div class="panelTitle">
-      EMBEDDING SPACE / 3D VIEW
+      EMBEDDING SPACE / INTERACTIVE 3D
     </div>
 
-    <div class="panelBody"
-         style="padding:0">
+    <div
+      class="panelBody"
+      style="padding:0">
 
       <div
         id="scene"
         class="scene">
 
+
+        <canvas
+          id="vectorCanvas">
+        </canvas>
+
+
         <div class="hud">
 
           <div>
-            VECTOR SPACE // R³ VIEW
+            VECTOR SPACE // INTERACTIVE 3D
           </div>
 
           <div
             id="hudStatus"
             class="hudRight">
+
             NO VECTOR
+
           </div>
 
         </div>
 
-        <div class="grid3d"></div>
 
-        <div class="axis x"></div>
-        <div class="axis y"></div>
-        <div class="axis z"></div>
+        <div class="touchHint">
 
-        <div class="axisLabel x">
-          v₁
+          DRAG = ROTATE<br>
+
+          PINCH = ZOOM<br>
+
+          TAP = SELECT
+
         </div>
 
-        <div class="axisLabel y">
-          v₂
+
+        <div class="selectedVector">
+
+          <div class="selectedTitle">
+
+            NO VECTOR SELECTED
+
+          </div>
+
+
+          <div id="selectedContent">
+
+            Tippe einen Embedding-Punkt an.
+
+          </div>
+
         </div>
 
-        <div class="axisLabel z">
-          v₃
-        </div>
 
       </div>
 
@@ -1037,12 +1418,16 @@ footer{
   </div>
 
 
+  <!-- VECTOR -->
+
   <div
     class="panel"
     style="margin-top:18px">
 
     <div class="panelTitle">
+
       EMBEDDING VECTOR
+
     </div>
 
     <div class="panelBody">
@@ -1050,32 +1435,43 @@ footer{
       <div
         id="vectorDim"
         class="vectorDim">
+
         d = —
+
       </div>
+
 
       <div
         id="vectorBox"
         class="vectorBox">
+
         Noch kein Embedding berechnet.
+
       </div>
 
     </div>
 
   </div>
 
+
 </section>
 
 
 <!-- =====================================================
-     RIGHT
+     RIGHT COLUMN
 ===================================================== -->
 
 <section>
 
+
+  <!-- MEMORY BANK -->
+
   <div class="panel">
 
     <div class="panelTitle">
+
       MEMORY BANK
+
     </div>
 
     <div class="panelBody">
@@ -1084,12 +1480,16 @@ footer{
         id="memoryList"
         class="memoryList">
 
+
         <div
           style="
           color:#405861;
           font-size:10px">
+
           VECTOR STORE EMPTY
+
         </div>
+
 
       </div>
 
@@ -1098,12 +1498,16 @@ footer{
   </div>
 
 
+  <!-- QUERY -->
+
   <div
     class="panel"
     style="margin-top:18px">
 
     <div class="panelTitle">
+
       SEMANTIC QUERY
+
     </div>
 
     <div class="panelBody">
@@ -1112,14 +1516,20 @@ footer{
         id="queryInput"
         placeholder="z.B. Wann ist der Stuttgart-Termin?">
 
+
       <button
         id="searchBtn"
         class="pink"
+        type="button"
         disabled>
+
         RUN COSINE SEARCH
+
       </button>
 
+
       <div class="metrics">
+
 
         <div class="metric">
 
@@ -1130,10 +1540,13 @@ footer{
           <div
             id="memoryCount"
             class="metricValue">
+
             0
+
           </div>
 
         </div>
+
 
         <div class="metric">
 
@@ -1144,10 +1557,13 @@ footer{
           <div
             id="dimension"
             class="metricValue">
+
             —
+
           </div>
 
         </div>
+
 
       </div>
 
@@ -1155,25 +1571,30 @@ footer{
 
   </div>
 
+
+  <!-- RANKING -->
 
   <div
     class="panel"
     style="margin-top:18px">
 
     <div class="panelTitle">
+
       RELEVANCE SCANNER
+
     </div>
 
     <div class="panelBody">
 
-      <div
-        id="ranking">
+      <div id="ranking">
 
         <div
           style="
           color:#405861;
           font-size:10px">
+
           NO SEARCH RESULT
+
         </div>
 
       </div>
@@ -1181,6 +1602,7 @@ footer{
     </div>
 
   </div>
+
 
 </section>
 
@@ -1190,20 +1612,29 @@ footer{
 <footer>
 
   NEURAL MEMORY LAB //
-  TEXT → TOKENS → TRANSFORMER → EMBEDDING → VECTOR STORE → COSINE
+
+  TEXT →
+  TOKENS →
+  TRANSFORMER →
+  EMBEDDING →
+  VECTOR STORE →
+  COSINE
 
 </footer>
 
 
 <script type="module">
 
+
 /* =====================================================
-   IMPORT
+   TRANSFORMERS.JS
 ===================================================== */
 
 import {
   pipeline
-} from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
+}
+from
+"https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
 
 
 /* =====================================================
@@ -1233,13 +1664,17 @@ let memory = [];
 
 let memoryCounter = 0;
 
+let selectedRecord = null;
+
 
 /* =====================================================
    DOM
 ===================================================== */
 
-const $ = id =>
-  document.getElementById(id);
+const $ =
+  id =>
+    document.getElementById(id);
+
 
 const textInput =
   $("textInput");
@@ -1296,14 +1731,17 @@ const dimension =
 
 function addLog(
   message,
-  type = "info"
+  type="info"
 ){
 
   const line =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
   line.className =
     "logLine " + type;
+
 
   const time =
     new Date()
@@ -1314,13 +1752,19 @@ function addLog(
         }
       );
 
+
   line.textContent =
     `[${time}] ${message}`;
 
-  log.appendChild(line);
+
+  log.appendChild(
+    line
+  );
+
 
   log.scrollTop =
     log.scrollHeight;
+
 }
 
 
@@ -1328,36 +1772,56 @@ function addLog(
    ERROR
 ===================================================== */
 
-function showError(error){
+function showError(
+  error
+){
 
-  errorBox.classList.add("show");
+  errorBox.classList.add(
+    "show"
+  );
+
 
   errorBox.innerHTML = `
-    <strong>MODEL LOAD / EMBEDDING ERROR</strong><br><br>
+
+    <strong>
+      MODEL / EMBEDDING ERROR
+    </strong>
+
+    <br><br>
+
     ${escapeHtml(
       error?.message ||
       String(error)
     )}
+
     <br><br>
-    Prüfe, ob diese HTML-Datei über einen
-    Browser/Webserver ausgeführt wird und
-    ob eine Internetverbindung für den ersten
-    Modell-Download vorhanden ist.
+
+    Prüfe, ob die Datei über
+    einen Browser/Webserver läuft
+    und ob beim ersten Start eine
+    Internetverbindung besteht.
+
   `;
+
 
   addLog(
     error?.message ||
     String(error),
     "error"
   );
+
 }
 
 
 function clearError(){
 
-  errorBox.classList.remove("show");
+  errorBox.classList.remove(
+    "show"
+  );
 
-  errorBox.innerHTML = "";
+  errorBox.innerHTML =
+    "";
+
 }
 
 
@@ -1365,53 +1829,101 @@ function clearError(){
    ESCAPE
 ===================================================== */
 
-function escapeHtml(value){
+function escapeHtml(
+  value
+){
 
   return String(value)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
+
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+
 }
 
 
 /* =====================================================
-   PIPELINE UI
+   PIPELINE
 ===================================================== */
 
-function activateStage(id){
+const stageIds = [
 
-  const stages =
-    [
-      "stageText",
-      "stageToken",
-      "stageModel",
-      "stageVector",
-      "stageStore",
-      "stageSearch"
-    ];
+  "stageText",
+
+  "stageToken",
+
+  "stageModel",
+
+  "stageVector",
+
+  "stageStore",
+
+  "stageSearch"
+
+];
+
+
+function activateStage(
+  id
+){
 
   const index =
-    stages.indexOf(id);
+    stageIds.indexOf(id);
 
-  stages.forEach(
+
+  stageIds.forEach(
     (stageId,i)=>{
 
-      const el =
+      const element =
         $(stageId);
 
-      el.classList.remove(
+
+      element.classList.remove(
         "active",
         "done"
       );
 
-      if(i < index){
-        el.classList.add("done");
+
+      if(
+        i < index
+      ){
+
+        element.classList.add(
+          "done"
+        );
+
       }
 
-      if(i === index){
-        el.classList.add("active");
+
+      if(
+        i === index
+      ){
+
+        element.classList.add(
+          "active"
+        );
+
       }
 
     }
@@ -1420,11 +1932,14 @@ function activateStage(id){
 }
 
 
-function completeStage(id){
+function completeStage(
+  id
+){
 
   $(id)
     .classList
     .remove("active");
+
 
   $(id)
     .classList
@@ -1439,23 +1954,25 @@ function completeStage(id){
 
 function setOffline(){
 
-  statusDot
-    .classList
-    .remove("online");
+  statusDot.classList.remove(
+    "online"
+  );
 
   statusText.textContent =
     "EMBEDDING CORE OFFLINE";
+
 }
 
 
 function setOnline(){
 
-  statusDot
-    .classList
-    .add("online");
+  statusDot.classList.add(
+    "online"
+  );
 
   statusText.textContent =
     "EMBEDDING CORE ONLINE";
+
 }
 
 
@@ -1466,77 +1983,95 @@ function setOnline(){
 async function loadModel(){
 
   if(modelReady){
+
     return;
+
   }
+
 
   if(modelLoading){
+
     return;
+
   }
 
-  modelLoading = true;
+
+  modelLoading =
+    true;
+
 
   clearError();
+
 
   embedBtn.disabled =
     true;
 
+
   embedBtn.textContent =
     "LOADING EMBEDDING CORE...";
+
 
   activateStage(
     "stageModel"
   );
+
 
   addLog(
     "Embedding Core wird gestartet.",
     "info"
   );
 
+
   addLog(
     `Modell: ${MODEL}`,
     "info"
   );
 
+
   addLog(
-    "Erster Start kann deutlich länger dauern.",
+    "Erster Start kann länger dauern.",
     "warn"
   );
 
+
   try{
+
 
     extractor =
       await pipeline(
-        "feature-extraction",
-        MODEL,
-        {
 
-          /*
-           * Browser verwendet standardmäßig
-           * eine quantisierte Modellvariante,
-           * wenn verfügbar.
-           */
+        "feature-extraction",
+
+        MODEL,
+
+        {
 
           progress_callback:
             progress => {
 
               if(
                 progress &&
-                progress.status === "progress"
+                progress.status ===
+                  "progress"
               ){
 
                 const percent =
                   Math.round(
-                    progress.progress || 0
+                    progress.progress ||
+                    0
                   );
+
 
                 embedBtn.textContent =
                   `MODEL DOWNLOAD ${percent}%`;
 
               }
 
+
               if(
                 progress &&
-                progress.status === "done"
+                progress.status ===
+                  "done"
               ){
 
                 addLog(
@@ -1551,50 +2086,70 @@ async function loadModel(){
             }
 
         }
+
       );
 
-    modelReady = true;
+
+    modelReady =
+      true;
+
 
     completeStage(
       "stageModel"
     );
 
+
     setOnline();
+
 
     addLog(
       "Embedding Core ONLINE.",
       "ok"
     );
 
+
     addLog(
       "384-dimensionale Vektoren verfügbar.",
       "ok"
     );
 
+
     dimension.textContent =
       EMBEDDING_DIM;
+
 
     embedBtn.textContent =
       "GENERATE EMBEDDING";
 
+
     embedBtn.disabled =
       false;
 
+
     searchBtn.disabled =
       memory.length === 0;
+
 
   }
 
   catch(error){
 
-    console.error(error);
+    console.error(
+      error
+    );
+
 
     setOffline();
 
-    showError(error);
+
+    showError(
+      error
+    );
+
 
     embedBtn.textContent =
       "RETRY MODEL LOAD";
+
 
     embedBtn.disabled =
       false;
@@ -1617,16 +2172,22 @@ async function loadModel(){
 
 async function createEmbedding(
   text,
-  mode = "passage"
+  mode="passage"
 ){
 
-  if(!text.trim()){
+  if(
+    !text.trim()
+  ){
+
     throw new Error(
       "Kein Text vorhanden."
     );
+
   }
 
+
   await loadModel();
+
 
   if(!extractor){
 
@@ -1637,32 +2198,23 @@ async function createEmbedding(
   }
 
 
-  /*
-   * E5 verwendet unterschiedliche Präfixe
-   * für Dokumente und Suchanfragen.
-   *
-   * passage: -> gespeicherter Text
-   * query:   -> Suchanfrage
-   */
-
   const prepared =
     `${mode}: ${text.trim()}`;
 
 
   const output =
     await extractor(
+
       prepared,
+
       {
         pooling:"mean",
+
         normalize:true
       }
+
     );
 
-
-  /*
-   * Transformers.js liefert hier
-   * einen Tensor zurück.
-   */
 
   const vector =
     Array.from(
@@ -1670,15 +2222,23 @@ async function createEmbedding(
     );
 
 
-  if(vector.length !== EMBEDDING_DIM){
+  if(
+    vector.length !==
+    EMBEDDING_DIM
+  ){
 
     throw new Error(
+
       `Unerwartete Vektordimension: ${
         vector.length
-      } statt ${EMBEDDING_DIM}.`
+      } statt ${
+        EMBEDDING_DIM
+      }.`
+
     );
 
   }
+
 
   return vector;
 
@@ -1686,7 +2246,7 @@ async function createEmbedding(
 
 
 /* =====================================================
-   VECTOR GENERATION
+   GENERATE EMBEDDING
 ===================================================== */
 
 async function generateEmbedding(){
@@ -1694,116 +2254,161 @@ async function generateEmbedding(){
   const text =
     textInput.value.trim();
 
+
   if(!text){
 
     showError({
+
       message:
         "Bitte zuerst einen Satz eingeben."
+
     });
 
     return;
+
   }
 
+
   clearError();
+
 
   embedBtn.disabled =
     true;
 
+
   storeBtn.disabled =
     true;
+
 
   activateStage(
     "stageText"
   );
+
 
   addLog(
     "Text empfangen.",
     "info"
   );
 
-  await sleep(200);
+
+  await sleep(
+    180
+  );
+
 
   completeStage(
     "stageText"
   );
 
+
   activateStage(
     "stageToken"
   );
+
 
   addLog(
     "Text → Tokenisierung → Modellinput.",
     "info"
   );
 
-  await sleep(250);
+
+  await sleep(
+    220
+  );
+
 
   completeStage(
     "stageToken"
   );
 
+
   activateStage(
     "stageModel"
   );
 
+
   try{
+
 
     currentVector =
       await createEmbedding(
+
         text,
+
         "passage"
+
       );
+
 
     completeStage(
       "stageModel"
     );
 
+
     activateStage(
       "stageVector"
     );
 
-    await sleep(250);
+
+    await sleep(
+      180
+    );
+
 
     completeStage(
       "stageVector"
     );
 
+
     showVector(
       currentVector
     );
 
-    renderPoint(
-      currentVector,
-      true
+
+    renderCurrentVectorPreview(
+      currentVector
     );
+
 
     storeBtn.disabled =
       false;
 
+
     embedBtn.disabled =
       false;
+
 
     embedBtn.textContent =
       "GENERATE EMBEDDING";
 
+
     hudStatus.textContent =
       "VECTOR READY";
+
 
     addLog(
       `Embedding erzeugt: d=${currentVector.length}`,
       "ok"
     );
 
+
   }
 
   catch(error){
 
-    console.error(error);
+    console.error(
+      error
+    );
 
-    showError(error);
+
+    showError(
+      error
+    );
+
 
     embedBtn.disabled =
       false;
+
 
     embedBtn.textContent =
       modelReady
@@ -1819,32 +2424,33 @@ async function generateEmbedding(){
    VECTOR DISPLAY
 ===================================================== */
 
-function showVector(vector){
+function showVector(
+  vector
+){
 
   vectorDim.textContent =
     `d = ${vector.length}`;
 
+
   dimension.textContent =
     vector.length;
 
-  /*
-   * Nicht alle 384 Werte direkt in eine
-   * riesige Textwand schreiben.
-   *
-   * Wir zeigen die ersten Werte und
-   * die Dimension vollständig an.
-   */
 
   const preview =
     vector
-      .slice(0,60)
+      .slice(
+        0,
+        60
+      )
       .map(
-        (v,i)=>
-          `v${i+1}=${v.toFixed(6)}`
+        (value,index)=>
+          `v${index+1}=${value.toFixed(6)}`
       )
       .join("\n");
 
+
   vectorBox.textContent =
+
 `${preview}
 
 ...
@@ -1858,30 +2464,41 @@ ${vectorNorm(vector).toFixed(8)}`;
 
 
 /* =====================================================
-   STORE
+   STORE VECTOR
 ===================================================== */
 
 function storeCurrentVector(){
 
   if(!currentVector){
+
     return;
+
   }
+
 
   const text =
     textInput.value.trim();
 
+
   if(!text){
+
     return;
+
   }
 
+
   memoryCounter++;
+
 
   const record = {
 
     id:
       `MEM-${String(
         memoryCounter
-      ).padStart(4,"0")}`,
+      ).padStart(
+        4,
+        "0"
+      )}`,
 
     text,
 
@@ -1893,31 +2510,44 @@ function storeCurrentVector(){
 
   };
 
-  memory.push(record);
+
+  memory.push(
+    record
+  );
+
 
   activateStage(
     "stageStore"
   );
 
+
   completeStage(
     "stageStore"
   );
 
+
   renderMemory();
+
 
   searchBtn.disabled =
     false;
 
+
   memoryCount.textContent =
     memory.length;
+
 
   addLog(
     `${record.id} im Vector Store gespeichert.`,
     "ok"
   );
 
+
   storeBtn.disabled =
     true;
+
+
+  drawVectorSpace();
 
 }
 
@@ -1928,63 +2558,79 @@ function storeCurrentVector(){
 
 function renderMemory(){
 
-  memoryList.innerHTML = "";
+  memoryList.innerHTML =
+    "";
 
-  if(memory.length === 0){
 
-    memoryList.innerHTML =
-      `<div style="color:#405861;font-size:10px">
+  if(
+    memory.length === 0
+  ){
+
+    memoryList.innerHTML = `
+
+      <div
+        style="
+        color:#405861;
+        font-size:10px">
+
         VECTOR STORE EMPTY
-       </div>`;
+
+      </div>
+
+    `;
 
     return;
+
   }
+
 
   memory.forEach(
     record => {
 
-      const el =
-        document.createElement("div");
+      const element =
+        document.createElement(
+          "div"
+        );
 
-      el.className =
+
+      element.className =
         "memory";
 
-      el.innerHTML = `
+
+      element.innerHTML = `
 
         <div class="memoryId">
+
           ${record.id}
+
         </div>
 
+
         <div class="memoryText">
-          ${escapeHtml(record.text)}
+
+          ${escapeHtml(
+            record.text
+          )}
+
         </div>
 
       `;
 
-      el.onclick = () => {
 
-        textInput.value =
-          record.text;
+      element.addEventListener(
+        "click",
+        () => {
 
-        currentVector =
-          [...record.vector];
+          selectEmbedding(
+            record
+          );
 
-        showVector(
-          currentVector
-        );
+        }
+      );
 
-        renderPoint(
-          currentVector,
-          true
-        );
-
-        hudStatus.textContent =
-          record.id;
-
-      };
 
       memoryList.appendChild(
-        el
+        element
       );
 
     }
@@ -1994,12 +2640,17 @@ function renderMemory(){
 
 
 /* =====================================================
-   COSINE SIMILARITY
+   COSINE
 ===================================================== */
 
-function dot(a,b){
+function dot(
+  a,
+  b
+){
 
-  let sum = 0;
+  let sum =
+    0;
+
 
   for(
     let i=0;
@@ -2008,43 +2659,61 @@ function dot(a,b){
   ){
 
     sum +=
-      a[i] * b[i];
+      a[i] *
+      b[i];
 
   }
+
 
   return sum;
 
 }
 
 
-function vectorNorm(v){
+function vectorNorm(
+  vector
+){
 
-  let sum = 0;
+  let sum =
+    0;
+
 
   for(
     let i=0;
-    i<v.length;
+    i<vector.length;
     i++
   ){
 
     sum +=
-      v[i] * v[i];
+      vector[i] *
+      vector[i];
 
   }
 
-  return Math.sqrt(sum);
+
+  return Math.sqrt(
+    sum
+  );
 
 }
 
 
-function cosineSimilarity(a,b){
+function cosineSimilarity(
+  a,
+  b
+){
 
   const numerator =
-    dot(a,b);
+    dot(
+      a,
+      b
+    );
+
 
   const denominator =
     vectorNorm(a) *
     vectorNorm(b);
+
 
   if(
     denominator === 0
@@ -2053,6 +2722,7 @@ function cosineSimilarity(a,b){
     return 0;
 
   }
+
 
   return (
     numerator /
@@ -2071,50 +2741,71 @@ async function runSearch(){
   const query =
     queryInput.value.trim();
 
+
   if(!query){
 
     showError({
+
       message:
         "Bitte eine Suchanfrage eingeben."
+
     });
 
     return;
+
   }
 
-  if(memory.length === 0){
+
+  if(
+    memory.length === 0
+  ){
 
     showError({
+
       message:
         "Der Vector Store ist leer."
+
     });
 
     return;
+
   }
 
+
   clearError();
+
 
   searchBtn.disabled =
     true;
 
+
   activateStage(
     "stageSearch"
   );
+
 
   addLog(
     `Query: "${query}"`,
     "info"
   );
 
+
   try{
+
 
     const queryVector =
       await createEmbedding(
+
         query,
+
         "query"
+
       );
+
 
     const results =
       memory
+
         .map(
           record => ({
 
@@ -2128,39 +2819,57 @@ async function runSearch(){
 
           })
         )
+
         .sort(
           (a,b)=>
-            b.score - a.score
+            b.score -
+            a.score
         );
+
 
     renderRanking(
       results
     );
 
+
+    drawQueryVector(
+      queryVector
+    );
+
+
     completeStage(
       "stageSearch"
     );
+
 
     addLog(
       `${results.length} Vektoren verglichen.`,
       "ok"
     );
 
+
     addLog(
       `Top-1 Cosine: ${results[0].score.toFixed(6)}`,
       "ok"
     );
 
+
     hudStatus.textContent =
       "SEARCH COMPLETE";
+
 
   }
 
   catch(error){
 
-    console.error(error);
+    console.error(
+      error
+    );
 
-    showError(error);
+
+    showError(
+      error
+    );
 
   }
 
@@ -2178,18 +2887,33 @@ async function runSearch(){
    RANKING
 ===================================================== */
 
-function renderRanking(results){
+function renderRanking(
+  results
+){
 
-  ranking.innerHTML = "";
+  ranking.innerHTML =
+    "";
 
-  if(!results.length){
 
-    ranking.innerHTML =
-      `<div style="color:#405861;font-size:10px">
+  if(
+    !results.length
+  ){
+
+    ranking.innerHTML = `
+
+      <div
+        style="
+        color:#405861;
+        font-size:10px">
+
         NO RESULT
-       </div>`;
+
+      </div>
+
+    `;
 
     return;
+
   }
 
 
@@ -2205,25 +2929,23 @@ function renderRanking(results){
     (record,index)=>{
 
       const item =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
+
 
       item.className =
         "rank";
 
 
-      /*
-       * Balken ist reine Visualisierung.
-       *
-       * Der eigentliche Wert bleibt
-       * der Cosinuswert.
-       */
-
       const visualWidth =
         maxScore > 0
+
           ? (
               record.score /
               maxScore
             ) * 100
+
           : 0;
 
 
@@ -2232,25 +2954,35 @@ function renderRanking(results){
         <div class="rankTop">
 
           <span>
+
             #${index+1}
             ${record.id}
+
           </span>
 
+
           <span class="rankScore">
+
             COSINE
             ${record.score.toFixed(6)}
+
           </span>
 
         </div>
+
 
         <div class="bar">
 
           <div
             class="barFill"
-            style="width:${visualWidth}%">
+            style="
+              width:${visualWidth}%
+            ">
+
           </div>
 
         </div>
+
 
         <div
           style="
@@ -2267,6 +2999,19 @@ function renderRanking(results){
 
       `;
 
+
+      item.addEventListener(
+        "click",
+        () => {
+
+          selectEmbedding(
+            record
+          );
+
+        }
+      );
+
+
       ranking.appendChild(
         item
       );
@@ -2278,109 +3023,1631 @@ function renderRanking(results){
 
 
 /* =====================================================
-   3D VECTOR VISUALIZATION
+   INTERACTIVE 3D VECTOR SPACE
 ===================================================== */
 
-function renderPoint(
-  vector,
-  current = false
+const canvas =
+  document.getElementById(
+    "vectorCanvas"
+  );
+
+
+const ctx =
+  canvas.getContext(
+    "2d"
+  );
+
+
+const scene =
+  document.getElementById(
+    "scene"
+  );
+
+
+const selectedVector =
+  document.getElementById(
+    "selectedVector"
+  );
+
+
+const selectedContent =
+  document.getElementById(
+    "selectedContent"
+  );
+
+
+/* =====================================================
+   CAMERA
+===================================================== */
+
+const camera = {
+
+  rotationX:-0.45,
+
+  rotationY:0.65,
+
+  zoom:1,
+
+  distance:5
+
+};
+
+
+/* =====================================================
+   POINTER STATE
+===================================================== */
+
+const pointers =
+  new Map();
+
+
+let lastPinchDistance =
+  null;
+
+
+let pointerDownPosition =
+  null;
+
+
+let pointerMoved =
+  false;
+
+
+/* =====================================================
+   QUERY VISUALIZATION
+===================================================== */
+
+let queryVectorForDisplay =
+  null;
+
+
+/* =====================================================
+   RESIZE
+===================================================== */
+
+function resizeCanvas(){
+
+  const rect =
+    scene.getBoundingClientRect();
+
+
+  const dpr =
+    Math.min(
+      window.devicePixelRatio || 1,
+      2
+    );
+
+
+  canvas.width =
+    Math.floor(
+      rect.width *
+      dpr
+    );
+
+
+  canvas.height =
+    Math.floor(
+      rect.height *
+      dpr
+    );
+
+
+  canvas.style.width =
+    `${rect.width}px`;
+
+
+  canvas.style.height =
+    `${rect.height}px`;
+
+
+  ctx.setTransform(
+    dpr,
+    0,
+    0,
+    dpr,
+    0,
+    0
+  );
+
+
+  drawVectorSpace();
+
+}
+
+
+window.addEventListener(
+  "resize",
+  resizeCanvas
+);
+
+
+/* =====================================================
+   3D ROTATION
+===================================================== */
+
+function rotatePoint(
+  point
 ){
 
-  if(!vector ||
-     vector.length < 3){
-    return;
-  }
+  let x =
+    point.x;
+
+  let y =
+    point.y;
+
+  let z =
+    point.z;
+
+
+  const cosX =
+    Math.cos(
+      camera.rotationX
+    );
+
+
+  const sinX =
+    Math.sin(
+      camera.rotationX
+    );
+
+
+  const y1 =
+    y * cosX -
+    z * sinX;
+
+
+  const z1 =
+    y * sinX +
+    z * cosX;
+
+
+  const cosY =
+    Math.cos(
+      camera.rotationY
+    );
+
+
+  const sinY =
+    Math.sin(
+      camera.rotationY
+    );
+
+
+  const x2 =
+    x * cosY +
+    z1 * sinY;
+
+
+  const z2 =
+    -x * sinY +
+    z1 * cosY;
+
+
+  return {
+
+    x:x2,
+
+    y:y1,
+
+    z:z2
+
+  };
+
+}
+
+
+/* =====================================================
+   PROJECTION
+===================================================== */
+
+function projectPoint(
+  point
+){
+
+  const rect =
+    scene.getBoundingClientRect();
+
+
+  const cx =
+    rect.width / 2;
+
+
+  const cy =
+    rect.height / 2;
+
+
+  const depth =
+    Math.max(
+      0.5,
+      camera.distance -
+      point.z
+    );
+
+
+  const focal =
+    420 *
+    camera.zoom;
+
+
+  return {
+
+    x:
+      cx +
+      point.x *
+      focal /
+      depth,
+
+
+    y:
+      cy +
+      point.y *
+      focal /
+      depth,
+
+
+    depth
+
+  };
+
+}
+
+
+/* =====================================================
+   DISPLAY COORDINATES
+===================================================== */
+
+function getDisplayPoint(
+  record
+){
+
+  const v =
+    record.vector;
 
 
   /*
    * WICHTIG:
    *
-   * Das ist keine PCA/t-SNE/UMAP-
-   * Projektion.
+   * Nur v1, v2, v3 werden hier
+   * für die Visualisierung benutzt.
    *
-   * Wir zeigen hier absichtlich
-   * direkt v1, v2, v3.
-   *
-   * Das dient dem mathematischen
-   * Verständnis des Vektors.
+   * Der 384D-Vektor selbst
+   * bleibt unverändert.
    */
 
+  return {
 
-  const x =
-    vector[0];
+    x:v[0] * 5,
 
-  const y =
-    vector[1];
+    y:v[1] * 5,
 
-  const z =
-    vector[2];
+    z:v[2] * 5
 
+  };
 
-  /*
-   * Nur visuelle Skalierung.
-   */
-
-  const sx =
-    50 + x * 35;
-
-  const sy =
-    50 - y * 35;
+}
 
 
-  const depth =
-    Math.max(
-      .5,
-      Math.min(
-        1.5,
-        1 + z
+/* =====================================================
+   DRAW GRID
+===================================================== */
+
+function drawGrid(){
+
+  for(
+    let i=-8;
+    i<=8;
+    i++
+  ){
+
+    const a =
+      projectPoint(
+        rotatePoint({
+
+          x:i * .5,
+
+          y:1.8,
+
+          z:-4
+
+        })
+      );
+
+
+    const b =
+      projectPoint(
+        rotatePoint({
+
+          x:i * .5,
+
+          y:1.8,
+
+          z:4
+
+        })
+      );
+
+
+    ctx.beginPath();
+
+
+    ctx.moveTo(
+      a.x,
+      a.y
+    );
+
+
+    ctx.lineTo(
+      b.x,
+      b.y
+    );
+
+
+    ctx.strokeStyle =
+      "rgba(0,245,255,.10)";
+
+
+    ctx.lineWidth =
+      1;
+
+
+    ctx.stroke();
+
+  }
+
+
+  for(
+    let i=-8;
+    i<=8;
+    i++
+  ){
+
+    const a =
+      projectPoint(
+        rotatePoint({
+
+          x:-4,
+
+          y:1.8,
+
+          z:i * .5
+
+        })
+      );
+
+
+    const b =
+      projectPoint(
+        rotatePoint({
+
+          x:4,
+
+          y:1.8,
+
+          z:i * .5
+
+        })
+      );
+
+
+    ctx.beginPath();
+
+
+    ctx.moveTo(
+      a.x,
+      a.y
+    );
+
+
+    ctx.lineTo(
+      b.x,
+      b.y
+    );
+
+
+    ctx.strokeStyle =
+      "rgba(0,245,255,.10)";
+
+
+    ctx.lineWidth =
+      1;
+
+
+    ctx.stroke();
+
+  }
+
+}
+
+
+/* =====================================================
+   AXIS
+===================================================== */
+
+function drawAxis(
+  start,
+  end,
+  label
+){
+
+  const a =
+    projectPoint(
+      rotatePoint(
+        start
       )
     );
 
 
+  const b =
+    projectPoint(
+      rotatePoint(
+        end
+      )
+    );
+
+
+  ctx.beginPath();
+
+
+  ctx.moveTo(
+    a.x,
+    a.y
+  );
+
+
+  ctx.lineTo(
+    b.x,
+    b.y
+  );
+
+
+  ctx.strokeStyle =
+    "rgba(0,245,255,.75)";
+
+
+  ctx.shadowColor =
+    "#00f5ff";
+
+
+  ctx.shadowBlur =
+    8;
+
+
+  ctx.lineWidth =
+    1;
+
+
+  ctx.stroke();
+
+
+  ctx.shadowBlur =
+    0;
+
+
+  ctx.fillStyle =
+    "#00f5ff";
+
+
+  ctx.font =
+    "10px monospace";
+
+
+  ctx.fillText(
+    label,
+    b.x + 6,
+    b.y
+  );
+
+}
+
+
+/* =====================================================
+   ORIGIN
+===================================================== */
+
+function getOrigin(){
+
+  return projectPoint(
+    rotatePoint({
+
+      x:0,
+
+      y:0,
+
+      z:0
+
+    })
+  );
+
+}
+
+
+/* =====================================================
+   DRAW MEMORY
+===================================================== */
+
+function drawEmbeddings(){
+
+  const projected =
+    [];
+
+
+  memory.forEach(
+    record => {
+
+      const point =
+        getDisplayPoint(
+          record
+        );
+
+
+      const rotated =
+        rotatePoint(
+          point
+        );
+
+
+      const screen =
+        projectPoint(
+          rotated
+        );
+
+
+      projected.push({
+
+        record,
+
+        rotated,
+
+        screen
+
+      });
+
+    }
+  );
+
+
+  projected.sort(
+    (a,b)=>
+      b.screen.depth -
+      a.screen.depth
+  );
+
+
+  const origin =
+    getOrigin();
+
+
+  projected.forEach(
+    item => {
+
+      const {
+
+        record,
+
+        rotated,
+
+        screen
+
+      } = item;
+
+
+      const isSelected =
+        selectedRecord &&
+        selectedRecord.id ===
+        record.id;
+
+
+      const depthScale =
+        1 /
+        Math.max(
+          .7,
+          rotated.z + 5
+        );
+
+
+      const size =
+        Math.max(
+          5,
+          Math.min(
+            13,
+            7 *
+            camera.zoom *
+            depthScale
+          )
+        );
+
+
+      /*
+       * Verbindung zum Ursprung
+       */
+
+      ctx.beginPath();
+
+
+      ctx.moveTo(
+        origin.x,
+        origin.y
+      );
+
+
+      ctx.lineTo(
+        screen.x,
+        screen.y
+      );
+
+
+      ctx.strokeStyle =
+        isSelected
+
+          ? "rgba(255,230,0,.55)"
+
+          : "rgba(255,0,170,.14)";
+
+
+      ctx.lineWidth =
+        isSelected
+          ? 2
+          : 1;
+
+
+      ctx.stroke();
+
+
+      /*
+       * Punkt
+       */
+
+      ctx.beginPath();
+
+
+      ctx.arc(
+
+        screen.x,
+
+        screen.y,
+
+        size,
+
+        0,
+
+        Math.PI * 2
+
+      );
+
+
+      ctx.fillStyle =
+        isSelected
+          ? "#ffe600"
+          : "#ff00aa";
+
+
+      ctx.shadowColor =
+        isSelected
+          ? "#ffe600"
+          : "#ff00aa";
+
+
+      ctx.shadowBlur =
+        isSelected
+          ? 22
+          : 13;
+
+
+      ctx.fill();
+
+
+      ctx.shadowBlur =
+        0;
+
+
+      /*
+       * Label
+       */
+
+      ctx.fillStyle =
+        isSelected
+          ? "#ffe600"
+          : "#ff7bd5";
+
+
+      ctx.font =
+        "9px monospace";
+
+
+      ctx.fillText(
+
+        record.id,
+
+        screen.x + 9,
+
+        screen.y - 8
+
+      );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   DRAW QUERY
+===================================================== */
+
+function drawQueryVector(){
+
+  if(
+    !queryVectorForDisplay
+  ){
+
+    return;
+
+  }
+
+
+  const record = {
+
+    vector:
+      queryVectorForDisplay
+
+  };
+
+
   const point =
-    document.createElement("div");
-
-  point.className =
-    "point";
-
-  point.style.left =
-    `${sx}%`;
-
-  point.style.top =
-    `${sy}%`;
-
-  point.style.transform =
-    `translate(-50%,-50%)
-     scale(${depth})`;
-
-  point.title =
-    `v1=${x.toFixed(5)}
-v2=${y.toFixed(5)}
-v3=${z.toFixed(5)}`;
+    getDisplayPoint(
+      record
+    );
 
 
-  $("scene")
-    .appendChild(
+  const rotated =
+    rotatePoint(
       point
     );
 
 
+  const screen =
+    projectPoint(
+      rotated
+    );
+
+
+  ctx.beginPath();
+
+
+  ctx.arc(
+
+    screen.x,
+
+    screen.y,
+
+    9,
+
+    0,
+
+    Math.PI * 2
+
+  );
+
+
+  ctx.fillStyle =
+    "#4aff88";
+
+
+  ctx.shadowColor =
+    "#4aff88";
+
+
+  ctx.shadowBlur =
+    22;
+
+
+  ctx.fill();
+
+
+  ctx.shadowBlur =
+    0;
+
+
+  ctx.fillStyle =
+    "#4aff88";
+
+
+  ctx.font =
+    "10px monospace";
+
+
+  ctx.fillText(
+
+    "QUERY",
+
+    screen.x + 12,
+
+    screen.y
+
+  );
+
+
   /*
-   * Nach einigen Punkten nicht
-   * unendlich viele DOM-Punkte sammeln.
+   * Query → selected memory
    */
 
-  const points =
-    $("scene")
-      .querySelectorAll(
-        ".point"
+  if(
+    selectedRecord
+  ){
+
+    const selectedPoint =
+      projectPoint(
+
+        rotatePoint(
+
+          getDisplayPoint(
+            selectedRecord
+          )
+
+        )
+
       );
 
-  if(points.length > 25){
 
-    points[0].remove();
+    ctx.beginPath();
+
+
+    ctx.moveTo(
+      screen.x,
+      screen.y
+    );
+
+
+    ctx.lineTo(
+      selectedPoint.x,
+      selectedPoint.y
+    );
+
+
+    ctx.setLineDash([
+      5,
+      5
+    ]);
+
+
+    ctx.strokeStyle =
+      "rgba(74,255,136,.65)";
+
+
+    ctx.lineWidth =
+      1.5;
+
+
+    ctx.stroke();
+
+
+    ctx.setLineDash([]);
 
   }
+
+}
+
+
+/* =====================================================
+   MAIN DRAW
+===================================================== */
+
+function drawVectorSpace(){
+
+  const rect =
+    scene.getBoundingClientRect();
+
+
+  ctx.clearRect(
+
+    0,
+
+    0,
+
+    rect.width,
+
+    rect.height
+
+  );
+
+
+  ctx.fillStyle =
+    "#010308";
+
+
+  ctx.fillRect(
+
+    0,
+
+    0,
+
+    rect.width,
+
+    rect.height
+
+  );
+
+
+  drawGrid();
+
+
+  drawAxis(
+
+    {
+      x:-3,
+      y:0,
+      z:0
+    },
+
+    {
+      x:3,
+      y:0,
+      z:0
+    },
+
+    "v₁"
+
+  );
+
+
+  drawAxis(
+
+    {
+      x:0,
+      y:-3,
+      z:0
+    },
+
+    {
+      x:0,
+      y:3,
+      z:0
+    },
+
+    "v₂"
+
+  );
+
+
+  drawAxis(
+
+    {
+      x:0,
+      y:0,
+      z:-3
+    },
+
+    {
+      x:0,
+      y:0,
+      z:3
+    },
+
+    "v₃"
+
+  );
+
+
+  drawEmbeddings();
+
+
+  drawQueryVector();
+
+}
+
+
+/* =====================================================
+   POINTER DOWN
+===================================================== */
+
+canvas.addEventListener(
+  "pointerdown",
+  event => {
+
+    canvas.setPointerCapture(
+      event.pointerId
+    );
+
+
+    pointers.set(
+
+      event.pointerId,
+
+      {
+
+        x:event.clientX,
+
+        y:event.clientY
+
+      }
+
+    );
+
+
+    pointerDownPosition = {
+
+      x:event.clientX,
+
+      y:event.clientY
+
+    };
+
+
+    pointerMoved =
+      false;
+
+
+    if(
+      pointers.size === 2
+    ){
+
+      lastPinchDistance =
+        getPointerDistance();
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   POINTER MOVE
+===================================================== */
+
+canvas.addEventListener(
+  "pointermove",
+  event => {
+
+    if(
+      !pointers.has(
+        event.pointerId
+      )
+    ){
+
+      return;
+
+    }
+
+
+    const previous =
+      pointers.get(
+        event.pointerId
+      );
+
+
+    const dx =
+      event.clientX -
+      previous.x;
+
+
+    const dy =
+      event.clientY -
+      previous.y;
+
+
+    if(
+      Math.hypot(
+        dx,
+        dy
+      ) > 5
+    ){
+
+      pointerMoved =
+        true;
+
+    }
+
+
+    pointers.set(
+
+      event.pointerId,
+
+      {
+
+        x:event.clientX,
+
+        y:event.clientY
+
+      }
+
+    );
+
+
+    /*
+     * 1 Finger = Rotation
+     */
+
+    if(
+      pointers.size === 1
+    ){
+
+      camera.rotationY +=
+        dx * .008;
+
+
+      camera.rotationX +=
+        dy * .008;
+
+
+      camera.rotationX =
+        Math.max(
+
+          -1.5,
+
+          Math.min(
+
+            1.5,
+
+            camera.rotationX
+
+          )
+
+        );
+
+
+      drawVectorSpace();
+
+    }
+
+
+    /*
+     * 2 Finger = Zoom
+     */
+
+    if(
+      pointers.size === 2
+    ){
+
+      const distance =
+        getPointerDistance();
+
+
+      if(
+        lastPinchDistance !== null
+      ){
+
+        const delta =
+          distance -
+          lastPinchDistance;
+
+
+        camera.zoom *=
+          Math.exp(
+            delta * .006
+          );
+
+
+        camera.zoom =
+          Math.max(
+
+            .45,
+
+            Math.min(
+
+              4,
+
+              camera.zoom
+
+            )
+
+          );
+
+
+        drawVectorSpace();
+
+      }
+
+
+      lastPinchDistance =
+        distance;
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   POINTER UP
+===================================================== */
+
+canvas.addEventListener(
+  "pointerup",
+  event => {
+
+    /*
+     * Tap nur dann als Auswahl
+     * behandeln, wenn vorher nicht
+     * gedreht/gezogen wurde.
+     */
+
+    if(
+      !pointerMoved &&
+      pointerDownPosition
+    ){
+
+      selectNearestPoint(
+
+        event.clientX,
+
+        event.clientY
+
+      );
+
+    }
+
+
+    pointers.delete(
+      event.pointerId
+    );
+
+
+    if(
+      pointers.size < 2
+    ){
+
+      lastPinchDistance =
+        null;
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   POINTER CANCEL
+===================================================== */
+
+canvas.addEventListener(
+  "pointercancel",
+  event => {
+
+    pointers.delete(
+      event.pointerId
+    );
+
+
+    lastPinchDistance =
+      null;
+
+  }
+);
+
+
+/* =====================================================
+   PINCH DISTANCE
+===================================================== */
+
+function getPointerDistance(){
+
+  const values =
+    Array.from(
+      pointers.values()
+    );
+
+
+  if(
+    values.length < 2
+  ){
+
+    return null;
+
+  }
+
+
+  const a =
+    values[0];
+
+
+  const b =
+    values[1];
+
+
+  return Math.hypot(
+
+    a.x - b.x,
+
+    a.y - b.y
+
+  );
+
+}
+
+
+/* =====================================================
+   MOUSE WHEEL
+===================================================== */
+
+canvas.addEventListener(
+  "wheel",
+  event => {
+
+    event.preventDefault();
+
+
+    camera.zoom *=
+      Math.exp(
+        -event.deltaY *
+        .001
+      );
+
+
+    camera.zoom =
+      Math.max(
+
+        .45,
+
+        Math.min(
+
+          4,
+
+          camera.zoom
+
+        )
+
+      );
+
+
+    drawVectorSpace();
+
+  },
+  {
+    passive:false
+  }
+);
+
+
+/* =====================================================
+   SELECT NEAREST POINT
+===================================================== */
+
+function selectNearestPoint(
+  clientX,
+  clientY
+){
+
+  if(
+    memory.length === 0
+  ){
+
+    return;
+
+  }
+
+
+  const rect =
+    canvas.getBoundingClientRect();
+
+
+  const x =
+    clientX -
+    rect.left;
+
+
+  const y =
+    clientY -
+    rect.top;
+
+
+  let closest =
+    null;
+
+
+  let closestDistance =
+    Infinity;
+
+
+  memory.forEach(
+    record => {
+
+      const screen =
+        projectPoint(
+
+          rotatePoint(
+
+            getDisplayPoint(
+              record
+            )
+
+          )
+
+        );
+
+
+      const distance =
+        Math.hypot(
+
+          x - screen.x,
+
+          y - screen.y
+
+        );
+
+
+      if(
+        distance <
+        closestDistance
+      ){
+
+        closestDistance =
+          distance;
+
+
+        closest =
+          record;
+
+      }
+
+    }
+  );
+
+
+  if(
+    closest &&
+    closestDistance < 35
+  ){
+
+    selectEmbedding(
+      closest
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   SELECT EMBEDDING
+===================================================== */
+
+function selectEmbedding(
+  record
+){
+
+  selectedRecord =
+    record;
+
+
+  selectedVector
+    .querySelector(
+      ".selectedTitle"
+    )
+    .textContent =
+      `${record.id} // SELECTED`;
+
+
+  const v =
+    record.vector;
+
+
+  selectedContent.innerHTML = `
+
+    <strong
+      style="color:#d9faff">
+
+      ${escapeHtml(
+        record.text
+      )}
+
+    </strong>
+
+
+    <br><br>
+
+
+    v₁ =
+    ${v[0].toFixed(6)}
+
+    <br>
+
+
+    v₂ =
+    ${v[1].toFixed(6)}
+
+    <br>
+
+
+    v₃ =
+    ${v[2].toFixed(6)}
+
+    <br><br>
+
+
+    DIMENSION =
+    ${v.length}
+
+    <br>
+
+
+    L2-NORM =
+    ${vectorNorm(v).toFixed(6)}
+
+  `;
+
+
+  hudStatus.textContent =
+    `${record.id} SELECTED`;
+
+
+  textInput.value =
+    record.text;
+
+
+  currentVector =
+    [...record.vector];
+
+
+  showVector(
+    currentVector
+  );
+
+
+  storeBtn.disabled =
+    true;
+
+
+  drawVectorSpace();
+
+
+  addLog(
+    `${record.id} ausgewählt.`,
+    "ok"
+  );
+
+}
+
+
+/* =====================================================
+   QUERY VECTOR
+===================================================== */
+
+function drawQueryVector(
+  vector
+){
+
+  queryVectorForDisplay =
+    [...vector];
+
+
+  drawVectorSpace();
+
+}
+
+
+/* =====================================================
+   CURRENT VECTOR PREVIEW
+===================================================== */
+
+function renderCurrentVectorPreview(
+  vector
+){
+
+  /*
+   * Temporärer Punkt,
+   * solange er noch nicht
+   * gespeichert wurde.
+   */
+
+  queryVectorForDisplay =
+    null;
+
+
+  const rect =
+    scene.getBoundingClientRect();
+
+
+  if(
+    !rect.width ||
+    !rect.height
+  ){
+
+    return;
+
+  }
+
+
+  drawVectorSpace();
 
 }
 
@@ -2389,7 +4656,9 @@ v3=${z.toFixed(5)}`;
    UTIL
 ===================================================== */
 
-function sleep(ms){
+function sleep(
+  ms
+){
 
   return new Promise(
     resolve =>
@@ -2411,30 +4680,36 @@ addLog(
   "ok"
 );
 
+
 addLog(
   "UI bereit.",
   "ok"
 );
+
 
 addLog(
   "Embedding Core wartet auf Benutzeraktion.",
   "info"
 );
 
+
 addLog(
   `Target Model: ${MODEL}`,
   "info"
 );
 
+
 addLog(
-  "Dimension: 384",
+  "Embedding Dimension: 384",
   "info"
 );
+
 
 addLog(
   "Vector Store: IN-MEMORY",
   "info"
 );
+
 
 addLog(
   "Cosine Similarity: ACTIVE",
@@ -2451,10 +4726,12 @@ embedBtn.addEventListener(
   generateEmbedding
 );
 
+
 storeBtn.addEventListener(
   "click",
   storeCurrentVector
 );
+
 
 searchBtn.addEventListener(
   "click",
@@ -2477,7 +4754,21 @@ queryInput.addEventListener(
   }
 );
 
+
+/* =====================================================
+   INITIAL CANVAS
+===================================================== */
+
+requestAnimationFrame(
+  () => {
+
+    resizeCanvas();
+
+  }
+);
+
 </script>
 
 </body>
+
 </html>
