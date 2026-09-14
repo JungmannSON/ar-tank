@@ -2,422 +2,287 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
-<title>CYBERPUNK EMBEDDING / RAG LAB</title>
+<title>NEURAL MEMORY — Embedding RAG Lab</title>
 
 <style>
 :root{
-  --cyan:#00f6ff;
+  --bg:#020308;
+  --panel:#060914;
+  --panel2:#09101d;
+  --cyan:#00f5ff;
   --cyan2:#00aaff;
-  --magenta:#ff2bd6;
-  --pink:#ff39d4;
-  --green:#4aff9b;
-  --yellow:#ffe66d;
-  --red:#ff416c;
-
-  --bg:#03050b;
-  --bg2:#070b15;
-  --panel:#080e19;
-  --panel2:#0b1321;
-
-  --line:rgba(0,246,255,.28);
-  --text:#d9fbff;
-  --muted:#62828a;
+  --pink:#ff00aa;
+  --green:#4aff88;
+  --yellow:#ffe600;
+  --red:#ff3355;
+  --text:#d9faff;
+  --muted:#62818c;
+  --line:rgba(0,245,255,.22);
+  --glow:0 0 12px rgba(0,245,255,.55),
+         0 0 35px rgba(0,245,255,.18);
 }
 
 *{
   box-sizing:border-box;
 }
 
-html,
-body{
+html,body{
+  margin:0;
   width:100%;
   height:100%;
-  margin:0;
-  overflow:hidden;
-  background:
-    radial-gradient(
-      circle at 70% 45%,
-      rgba(0,246,255,.08),
-      transparent 30%
-    ),
-    radial-gradient(
-      circle at 35% 65%,
-      rgba(255,43,214,.06),
-      transparent 30%
-    ),
-    var(--bg);
+  background:var(--bg);
   color:var(--text);
   font-family:
     "Courier New",
-    "Lucida Console",
     monospace;
+  overflow-x:hidden;
 }
 
-/* =========================================================
-   CRT SCANLINES
-========================================================= */
+body{
+  background:
+    radial-gradient(
+      circle at 50% 20%,
+      rgba(0,245,255,.08),
+      transparent 35%
+    ),
+    linear-gradient(
+      rgba(0,245,255,.018) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(0,245,255,.018) 1px,
+      transparent 1px
+    ),
+    var(--bg);
+
+  background-size:
+    auto,
+    40px 40px,
+    40px 40px;
+}
+
+/* SCANLINES */
 
 body::before{
   content:"";
   position:fixed;
   inset:0;
-  z-index:1000;
   pointer-events:none;
+  z-index:9999;
 
   background:
     repeating-linear-gradient(
       to bottom,
-      rgba(255,255,255,.025) 0px,
-      rgba(255,255,255,.025) 1px,
+      rgba(255,255,255,.018) 0px,
+      rgba(255,255,255,.018) 1px,
       transparent 2px,
-      transparent 4px
+      transparent 5px
     );
-
-  mix-blend-mode:screen;
 }
 
-body::after{
-  content:"";
-  position:fixed;
-  inset:0;
-  z-index:999;
-  pointer-events:none;
-
-  box-shadow:
-    inset 0 0 100px rgba(0,0,0,.85),
-    inset 0 0 20px rgba(0,246,255,.06);
-}
-
-/* =========================================================
-   HEADER
-========================================================= */
+/* HEADER */
 
 header{
-  height:74px;
-  position:relative;
+  position:sticky;
+  top:0;
+  z-index:100;
+
+  height:72px;
 
   display:flex;
   align-items:center;
   justify-content:space-between;
 
-  padding:0 24px;
+  padding:0 22px;
 
   background:
     linear-gradient(
       90deg,
-      rgba(0,246,255,.05),
-      rgba(255,43,214,.04),
-      rgba(0,246,255,.05)
-    );
+      rgba(0,245,255,.05),
+      rgba(255,0,170,.05)
+    ),
+    rgba(2,3,8,.92);
 
-  border-bottom:1px solid var(--cyan);
+  border-bottom:1px solid var(--line);
 
   box-shadow:
-    0 0 18px rgba(0,246,255,.18),
-    inset 0 -1px 0 rgba(255,43,214,.35);
+    0 0 25px rgba(0,245,255,.08);
 
-  z-index:10;
+  backdrop-filter:blur(8px);
 }
 
 .logo{
   display:flex;
-  flex-direction:column;
-  line-height:1;
-}
-
-.logo-main{
-  color:var(--cyan);
-  font-size:22px;
-  letter-spacing:4px;
-
-  text-shadow:
-    0 0 5px var(--cyan),
-    0 0 20px var(--cyan);
-}
-
-.logo-sub{
-  margin-top:7px;
-
-  color:var(--magenta);
-
-  font-size:10px;
-  letter-spacing:3px;
-}
-
-.system-status{
-  display:flex;
-  gap:18px;
   align-items:center;
+  gap:14px;
+}
 
-  font-size:10px;
+.logoMark{
+  width:34px;
+  height:34px;
+
+  border:1px solid var(--cyan);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  color:var(--cyan);
+
+  box-shadow:var(--glow);
+
+  font-size:18px;
+}
+
+.logoText{
+  letter-spacing:3px;
+  font-size:15px;
+}
+
+.logoText span{
+  color:var(--cyan);
+}
+
+.status{
+  display:flex;
+  align-items:center;
+  gap:8px;
+
+  font-size:11px;
+  color:var(--muted);
+
   letter-spacing:1px;
 }
 
-.status-light{
+.statusDot{
   width:8px;
   height:8px;
 
   border-radius:50%;
 
+  background:var(--red);
+
+  box-shadow:0 0 10px var(--red);
+
+  transition:.3s;
+}
+
+.statusDot.online{
   background:var(--green);
-
-  box-shadow:
-    0 0 6px var(--green),
-    0 0 16px var(--green);
-
-  animation:pulse 1.5s infinite;
+  box-shadow:0 0 12px var(--green);
 }
 
-@keyframes pulse{
-  0%,100%{
-    opacity:.5;
-  }
+/* LAYOUT */
 
-  50%{
-    opacity:1;
-  }
-}
+main{
+  width:min(1500px,100%);
+  margin:auto;
 
-/* =========================================================
-   MAIN
-========================================================= */
+  padding:22px;
 
-.main{
   display:grid;
-  grid-template-columns:430px 1fr;
 
-  height:calc(100vh - 74px);
+  grid-template-columns:
+    minmax(280px,360px)
+    minmax(420px,1fr)
+    minmax(280px,360px);
+
+  gap:18px;
 }
 
-/* =========================================================
-   LEFT PANEL
-========================================================= */
+@media(max-width:1100px){
+
+  main{
+    grid-template-columns:1fr;
+  }
+
+}
+
+/* PANELS */
 
 .panel{
   position:relative;
 
-  overflow:auto;
-
-  padding:16px;
-
   background:
     linear-gradient(
       180deg,
-      rgba(5,12,23,.97),
-      rgba(2,7,14,.98)
-    );
+      rgba(0,245,255,.025),
+      rgba(255,0,170,.018)
+    ),
+    var(--panel);
 
-  border-right:1px solid var(--line);
+  border:1px solid var(--line);
 
-  box-shadow:
-    8px 0 35px rgba(0,0,0,.45);
-
-  z-index:5;
-}
-
-.panel::-webkit-scrollbar{
-  width:5px;
-}
-
-.panel::-webkit-scrollbar-track{
-  background:#02050a;
-}
-
-.panel::-webkit-scrollbar-thumb{
-  background:var(--cyan);
+  min-height:100px;
 
   box-shadow:
-    0 0 10px var(--cyan);
+    inset 0 0 30px rgba(0,245,255,.025);
+
+  overflow:hidden;
 }
 
-/* =========================================================
-   SECTION LABEL
-========================================================= */
-
-.section-label{
-  color:var(--muted);
-
-  font-size:9px;
-  letter-spacing:3px;
-
-  margin:5px 0 7px 3px;
-}
-
-/* =========================================================
-   CARD
-========================================================= */
-
-.card{
-  position:relative;
-
-  padding:15px;
-  margin-bottom:14px;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(8,18,32,.96),
-      rgba(4,9,18,.96)
-    );
-
-  border:1px solid rgba(0,246,255,.35);
-
-  clip-path:
-    polygon(
-      0 0,
-      calc(100% - 12px) 0,
-      100% 12px,
-      100% 100%,
-      12px 100%,
-      0 calc(100% - 12px)
-    );
-
-  box-shadow:
-    inset 0 0 20px rgba(0,246,255,.035),
-    0 0 15px rgba(0,0,0,.4);
-}
-
-.card::before{
+.panel::before{
   content:"";
-
   position:absolute;
 
-  top:0;
   left:0;
+  top:0;
 
-  width:65px;
-  height:2px;
+  width:70px;
+  height:1px;
 
   background:var(--cyan);
 
-  box-shadow:
-    0 0 8px var(--cyan),
-    0 0 18px var(--cyan);
+  box-shadow:0 0 10px var(--cyan);
 }
 
-.card::after{
-  content:"";
+.panelTitle{
+  padding:14px 16px;
 
-  position:absolute;
+  border-bottom:1px solid rgba(0,245,255,.12);
 
-  right:0;
-  bottom:0;
+  font-size:11px;
 
-  width:40px;
-  height:2px;
-
-  background:var(--magenta);
-
-  box-shadow:
-    0 0 10px var(--magenta);
-}
-
-.card h3{
-  margin:0 0 12px;
+  letter-spacing:2px;
 
   color:var(--cyan);
-
-  font-size:12px;
-  letter-spacing:2px;
-
-  text-shadow:
-    0 0 8px rgba(0,246,255,.7);
 }
 
-/* =========================================================
-   PIPELINE
-========================================================= */
-
-.pipeline{
-  display:flex;
-  flex-direction:column;
-
-  gap:4px;
-
-  margin-bottom:14px;
+.panelBody{
+  padding:16px;
 }
 
-.pipeline-node{
-  position:relative;
-
-  padding:7px 10px;
-
-  border-left:2px solid var(--cyan);
-
-  background:rgba(0,246,255,.025);
-
-  color:#7bcbd2;
-
-  font-size:9px;
-  letter-spacing:2px;
-
-  transition:.25s;
-}
-
-.pipeline-node.active{
-  color:white;
-
-  background:
-    linear-gradient(
-      90deg,
-      rgba(0,246,255,.18),
-      transparent
-    );
-
-  border-left-color:var(--magenta);
-
-  text-shadow:
-    0 0 8px var(--cyan);
-
-  box-shadow:
-    inset 8px 0 20px rgba(0,246,255,.08);
-}
-
-.pipeline-arrow{
-  text-align:center;
-
-  height:7px;
-
-  color:var(--magenta);
-
-  font-size:8px;
-}
-
-/* =========================================================
-   INPUTS
-========================================================= */
+/* INPUT */
 
 textarea,
 input{
   width:100%;
 
-  background:
-    linear-gradient(
-      180deg,
-      #02050b,
-      #050a13
-    );
+  background:#02050b;
 
-  color:white;
+  color:var(--text);
 
-  border:1px solid rgba(0,246,255,.45);
+  border:1px solid rgba(0,245,255,.25);
 
   outline:none;
 
-  padding:11px;
+  padding:12px;
 
   font-family:inherit;
-  font-size:12px;
 
-  box-shadow:
-    inset 0 0 12px rgba(0,246,255,.04);
+  font-size:13px;
+
+  resize:vertical;
+
+  transition:.2s;
 }
 
 textarea{
-  min-height:95px;
-  resize:vertical;
+  min-height:120px;
 }
 
 textarea:focus,
@@ -425,580 +290,569 @@ input:focus{
   border-color:var(--cyan);
 
   box-shadow:
-    0 0 10px rgba(0,246,255,.15),
-    inset 0 0 12px rgba(0,246,255,.06);
+    0 0 15px rgba(0,245,255,.15);
 }
 
-/* =========================================================
-   BUTTONS
-========================================================= */
+/* BUTTONS */
 
 button{
   width:100%;
-
-  position:relative;
-
-  margin-top:7px;
-
-  padding:11px;
 
   border:1px solid var(--cyan);
 
   background:
     linear-gradient(
       90deg,
-      rgba(0,246,255,.08),
-      rgba(0,246,255,.18)
+      rgba(0,245,255,.06),
+      rgba(255,0,170,.06)
     );
 
   color:var(--cyan);
 
-  font-family:inherit;
-  font-weight:bold;
+  padding:13px;
 
-  letter-spacing:1px;
+  margin-top:10px;
+
+  font-family:inherit;
+
+  font-size:11px;
+
+  letter-spacing:2px;
 
   cursor:pointer;
 
   transition:.2s;
-
-  clip-path:
-    polygon(
-      0 0,
-      calc(100% - 8px) 0,
-      100% 8px,
-      100% 100%,
-      0 100%
-    );
 }
 
 button:hover{
-  color:#fff;
+  background:rgba(0,245,255,.12);
 
+  box-shadow:
+    0 0 18px rgba(0,245,255,.22);
+}
+
+button:disabled{
+  opacity:.35;
+  cursor:not-allowed;
+}
+
+button.pink{
+  border-color:var(--pink);
+  color:var(--pink);
+}
+
+button.green{
+  border-color:var(--green);
+  color:var(--green);
+}
+
+/* PIPELINE */
+
+.pipeline{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+.stage{
+  position:relative;
+
+  border:1px solid rgba(0,245,255,.12);
+
+  background:#030710;
+
+  padding:10px 12px;
+
+  font-size:11px;
+
+  color:#47626c;
+
+  transition:.4s;
+}
+
+.stage.active{
+  color:var(--cyan);
+
+  border-color:var(--cyan);
+
+  box-shadow:
+    0 0 14px rgba(0,245,255,.2);
+
+  text-shadow:
+    0 0 8px var(--cyan);
+}
+
+.stage.done{
+  color:var(--green);
+
+  border-color:rgba(74,255,136,.4);
+}
+
+.stage::before{
+  content:"";
+
+  display:inline-block;
+
+  width:6px;
+  height:6px;
+
+  margin-right:9px;
+
+  border-radius:50%;
+
+  background:#20343b;
+}
+
+.stage.active::before{
   background:var(--cyan);
 
   box-shadow:
-    0 0 10px var(--cyan),
-    0 0 25px rgba(0,246,255,.35);
-
-  text-shadow:0 0 4px #000;
+    0 0 10px var(--cyan);
 }
 
-button:active{
-  transform:translateY(1px);
-}
-
-button.magenta{
-  border-color:var(--magenta);
-  color:var(--magenta);
-}
-
-button.magenta:hover{
-  background:var(--magenta);
+.stage.done::before{
+  background:var(--green);
 
   box-shadow:
-    0 0 10px var(--magenta),
-    0 0 25px rgba(255,43,214,.35);
+    0 0 10px var(--green);
 }
 
-/* =========================================================
-   METRICS
-========================================================= */
+/* BOOT / LOG */
+
+.log{
+  height:145px;
+
+  overflow:auto;
+
+  background:#010207;
+
+  border:1px solid rgba(0,245,255,.12);
+
+  padding:10px;
+
+  font-size:10px;
+
+  line-height:1.7;
+
+  color:#59737b;
+}
+
+.logLine.ok{
+  color:var(--green);
+}
+
+.logLine.info{
+  color:var(--cyan);
+}
+
+.logLine.warn{
+  color:var(--yellow);
+}
+
+.logLine.error{
+  color:var(--red);
+}
+
+/* VECTOR */
+
+.vectorBox{
+  background:#010308;
+
+  border:1px solid rgba(0,245,255,.14);
+
+  padding:12px;
+
+  max-height:250px;
+
+  overflow:auto;
+
+  font-size:10px;
+
+  line-height:1.7;
+
+  word-break:break-all;
+
+  color:#8acdd5;
+}
+
+.vectorDim{
+  color:var(--yellow);
+
+  font-size:13px;
+
+  margin-bottom:8px;
+}
+
+/* 3D */
+
+.scene{
+  position:relative;
+
+  height:520px;
+
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(0,245,255,.07),
+      transparent 55%
+    ),
+    #010308;
+
+  overflow:hidden;
+
+  perspective:700px;
+}
+
+.grid3d{
+  position:absolute;
+
+  left:-20%;
+  width:140%;
+
+  bottom:-40px;
+
+  height:70%;
+
+  transform:
+    perspective(400px)
+    rotateX(62deg);
+
+  background:
+    linear-gradient(
+      rgba(0,245,255,.15) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(0,245,255,.15) 1px,
+      transparent 1px
+    );
+
+  background-size:
+    45px 45px;
+
+  box-shadow:
+    0 -20px 60px rgba(0,245,255,.08);
+}
+
+.axis{
+  position:absolute;
+
+  left:50%;
+  top:50%;
+
+  transform-origin:left center;
+
+  height:1px;
+
+  width:230px;
+
+  background:var(--cyan);
+
+  box-shadow:0 0 10px var(--cyan);
+}
+
+.axis.x{
+  transform:rotate(0deg);
+}
+
+.axis.y{
+  transform:rotate(120deg);
+}
+
+.axis.z{
+  transform:rotate(-120deg);
+}
+
+.axisLabel{
+  position:absolute;
+
+  font-size:10px;
+
+  color:var(--cyan);
+
+  text-shadow:
+    0 0 8px var(--cyan);
+}
+
+.axisLabel.x{
+  right:25px;
+  top:49%;
+}
+
+.axisLabel.y{
+  left:27%;
+  top:29%;
+}
+
+.axisLabel.z{
+  right:27%;
+  top:29%;
+}
+
+.point{
+  position:absolute;
+
+  width:9px;
+  height:9px;
+
+  border-radius:50%;
+
+  background:var(--pink);
+
+  box-shadow:
+    0 0 8px var(--pink),
+    0 0 25px var(--pink);
+
+  transform:
+    translate(-50%,-50%);
+
+  animation:
+    pulse 1.6s infinite ease-in-out;
+}
+
+@keyframes pulse{
+
+  0%,100%{
+    opacity:.65;
+    transform:
+      translate(-50%,-50%)
+      scale(.8);
+  }
+
+  50%{
+    opacity:1;
+    transform:
+      translate(-50%,-50%)
+      scale(1.5);
+  }
+
+}
+
+/* HUD */
+
+.hud{
+  position:absolute;
+
+  top:12px;
+  left:12px;
+  right:12px;
+
+  display:flex;
+  justify-content:space-between;
+
+  pointer-events:none;
+
+  font-size:9px;
+
+  color:var(--muted);
+
+  letter-spacing:1px;
+}
+
+.hudRight{
+  color:var(--pink);
+}
+
+/* MEMORY */
+
+.memoryList{
+  display:flex;
+  flex-direction:column;
+
+  gap:8px;
+
+  max-height:330px;
+
+  overflow:auto;
+}
+
+.memory{
+  padding:10px;
+
+  border:1px solid rgba(0,245,255,.12);
+
+  background:#030710;
+
+  font-size:10px;
+
+  cursor:pointer;
+
+  transition:.2s;
+}
+
+.memory:hover{
+  border-color:var(--cyan);
+
+  box-shadow:
+    0 0 12px rgba(0,245,255,.1);
+}
+
+.memoryId{
+  color:var(--pink);
+
+  font-size:9px;
+
+  margin-bottom:5px;
+}
+
+.memoryText{
+  color:#9bb8bf;
+
+  line-height:1.4;
+}
+
+/* RANKING */
+
+.rank{
+  border:1px solid rgba(0,245,255,.12);
+
+  padding:10px;
+
+  margin-bottom:8px;
+
+  background:#030710;
+}
+
+.rankTop{
+  display:flex;
+
+  justify-content:space-between;
+
+  font-size:10px;
+}
+
+.rankScore{
+  color:var(--green);
+}
+
+.bar{
+  height:3px;
+
+  background:#0b1820;
+
+  margin-top:7px;
+}
+
+.barFill{
+  height:100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--cyan),
+      var(--pink)
+    );
+
+  box-shadow:
+    0 0 8px var(--cyan);
+
+  width:0%;
+
+  transition:1s;
+}
+
+/* ERROR */
+
+.errorBox{
+  display:none;
+
+  border:1px solid var(--red);
+
+  color:#ff8a99;
+
+  background:rgba(255,0,50,.05);
+
+  padding:12px;
+
+  margin-top:12px;
+
+  font-size:10px;
+
+  line-height:1.5;
+}
+
+.errorBox.show{
+  display:block;
+}
+
+/* METRICS */
 
 .metrics{
   display:grid;
 
   grid-template-columns:1fr 1fr;
 
-  gap:7px;
+  gap:8px;
 
-  margin-top:10px;
+  margin-top:12px;
 }
 
 .metric{
-  padding:8px;
-
-  background:#02050a;
-
-  border:1px solid rgba(0,246,255,.15);
-}
-
-.metric-label{
-  color:var(--muted);
-
-  font-size:8px;
-  letter-spacing:1px;
-}
-
-.metric-value{
-  margin-top:4px;
-
-  color:var(--cyan);
-
-  font-size:13px;
-}
-
-/* =========================================================
-   VECTOR WINDOW
-========================================================= */
-
-.vector-window{
-  max-height:160px;
-
-  overflow:auto;
-
   padding:10px;
 
-  background:#010308;
+  background:#030710;
 
-  border:1px solid rgba(255,43,214,.25);
-
-  color:#9afcff;
-
-  font-size:9px;
-
-  box-shadow:
-    inset 0 0 20px rgba(255,43,214,.025);
+  border:1px solid rgba(0,245,255,.12);
 }
 
-.vector-window::-webkit-scrollbar{
-  width:4px;
-}
-
-.vector-window::-webkit-scrollbar-thumb{
-  background:var(--magenta);
-}
-
-/* =========================================================
-   MEMORY
-========================================================= */
-
-.memory-node{
-  position:relative;
-
-  display:flex;
-
-  gap:9px;
-
-  align-items:flex-start;
-
-  padding:9px 4px;
-
-  border-bottom:1px solid rgba(0,246,255,.1);
-
-  font-size:10px;
-}
-
-.node-dot{
-  flex:none;
-
-  width:8px;
-  height:8px;
-
-  margin-top:3px;
-
-  border-radius:50%;
-
-  background:var(--cyan);
-
-  box-shadow:
-    0 0 6px var(--cyan),
-    0 0 14px var(--cyan);
-
-  animation:pulse 1.8s infinite;
-}
-
-.node-id{
-  color:var(--magenta);
-
+.metricLabel{
   font-size:8px;
-  letter-spacing:1px;
-}
-
-.node-text{
-  color:#b5d7da;
-
-  margin-top:3px;
-}
-
-/* =========================================================
-   RANKING
-========================================================= */
-
-.rank{
-  margin-top:10px;
-}
-
-.rank-header{
-  display:flex;
-
-  justify-content:space-between;
 
   color:var(--muted);
 
-  font-size:8px;
-
-  letter-spacing:2px;
+  letter-spacing:1px;
 }
 
-.rank-bar{
-  height:8px;
+.metricValue{
+  margin-top:5px;
 
-  margin:5px 0;
-
-  background:#02050a;
-
-  border:1px solid rgba(0,246,255,.12);
-
-  overflow:hidden;
-}
-
-.rank-fill{
-  height:100%;
-
-  background:
-    linear-gradient(
-      90deg,
-      var(--magenta),
-      var(--cyan)
-    );
-
-  box-shadow:
-    0 0 8px var(--cyan);
-
-  transition:width .7s;
-}
-
-.rank-text{
-  font-size:10px;
-
-  color:#cbecef;
-}
-
-/* =========================================================
-   3D SCENE
-========================================================= */
-
-#scene{
-  position:relative;
-
-  width:100%;
-  height:100%;
-
-  overflow:hidden;
-
-  background:
-    radial-gradient(
-      ellipse at center,
-      rgba(0,246,255,.04),
-      transparent 55%
-    );
-}
-
-#scene canvas{
-  display:block;
-}
-
-/* =========================================================
-   HUD
-========================================================= */
-
-.hud{
-  position:absolute;
-
-  inset:0;
-
-  pointer-events:none;
-
-  z-index:3;
-}
-
-.corner{
-  position:absolute;
-
-  width:55px;
-  height:55px;
-
-  border-color:var(--cyan);
-}
-
-.corner.tl{
-  top:16px;
-  left:16px;
-
-  border-top:1px solid;
-  border-left:1px solid;
-}
-
-.corner.tr{
-  top:16px;
-  right:16px;
-
-  border-top:1px solid;
-  border-right:1px solid;
-}
-
-.corner.bl{
-  bottom:16px;
-  left:16px;
-
-  border-bottom:1px solid;
-  border-left:1px solid;
-}
-
-.corner.br{
-  bottom:16px;
-  right:16px;
-
-  border-bottom:1px solid;
-  border-right:1px solid;
-}
-
-.hud-top{
-  position:absolute;
-
-  top:22px;
-  left:50%;
-
-  transform:translateX(-50%);
+  font-size:14px;
 
   color:var(--cyan);
+}
+
+/* FOOTER */
+
+footer{
+  width:min(1500px,100%);
+
+  margin:auto;
+
+  padding:0 22px 30px;
+
+  color:#304850;
 
   font-size:9px;
 
-  letter-spacing:4px;
-
-  text-shadow:
-    0 0 8px var(--cyan);
-}
-
-.hud-bottom-left{
-  position:absolute;
-
-  bottom:25px;
-  left:28px;
-
-  color:#47767d;
-
-  font-size:8px;
-
-  line-height:1.7;
-}
-
-.hud-bottom-right{
-  position:absolute;
-
-  bottom:25px;
-  right:28px;
-
-  text-align:right;
-
-  color:#47767d;
-
-  font-size:8px;
-
-  line-height:1.7;
-}
-
-/* =========================================================
-   BOOT
-========================================================= */
-
-#boot{
-  position:fixed;
-
-  inset:0;
-
-  z-index:2000;
-
-  display:flex;
-
-  align-items:center;
-  justify-content:center;
-
-  background:#02040a;
-
-  transition:opacity .8s;
-}
-
-.boot-box{
-  width:min(520px,90vw);
-
-  padding:25px;
-
-  border:1px solid var(--cyan);
-
-  background:#030811;
-
-  box-shadow:
-    0 0 20px rgba(0,246,255,.2),
-    inset 0 0 30px rgba(0,246,255,.03);
-}
-
-.boot-title{
-  color:var(--cyan);
-
-  font-size:17px;
-
-  letter-spacing:4px;
-
-  text-shadow:
-    0 0 8px var(--cyan),
-    0 0 25px var(--cyan);
-
-  margin-bottom:20px;
-}
-
-.boot-line{
-  color:#75aeb5;
-
-  font-size:10px;
-
-  margin:7px 0;
-}
-
-.boot-ok{
-  color:var(--green);
-}
-
-.boot-error{
-  color:var(--red);
-}
-
-.boot-progress{
-  height:3px;
-
-  margin-top:18px;
-
-  background:#07141b;
-
-  overflow:hidden;
-}
-
-.boot-progress-bar{
-  width:0;
-
-  height:100%;
-
-  background:var(--cyan);
-
-  box-shadow:
-    0 0 8px var(--cyan);
-
-  transition:width .5s;
-}
-
-/* =========================================================
-   RESPONSIVE
-========================================================= */
-
-@media(max-width:850px){
-
-  body{
-    overflow:auto;
-  }
-
-  .main{
-    grid-template-columns:1fr;
-
-    height:auto;
-  }
-
-  .panel{
-    border-right:0;
-
-    border-bottom:1px solid var(--line);
-  }
-
-  #scene{
-    height:600px;
-  }
-
-  header{
-    height:65px;
-  }
-
-  .system-status{
-    display:none;
-  }
+  letter-spacing:1px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- =======================================================
-     BOOT SCREEN
-======================================================= -->
-
-<div id="boot">
-
-  <div class="boot-box">
-
-    <div class="boot-title">
-      EMBEDDING CORE
-    </div>
-
-    <div class="boot-line" id="boot1">
-      [ INIT ] Neural Vector Interface...
-    </div>
-
-    <div class="boot-line" id="boot2">
-      [ WAIT ] Loading tokenizer...
-    </div>
-
-    <div class="boot-line" id="boot3">
-      [ WAIT ] Loading embedding model...
-    </div>
-
-    <div class="boot-line" id="boot4">
-      [ WAIT ] Initializing vector engine...
-    </div>
-
-    <div class="boot-line" id="boot5">
-      [ WAIT ] Connecting memory bank...
-    </div>
-
-    <div class="boot-progress">
-      <div
-        class="boot-progress-bar"
-        id="bootProgress"
-      ></div>
-    </div>
-
-  </div>
-
-</div>
-
-
-<!-- =======================================================
-     HEADER
-======================================================= -->
-
 <header>
 
   <div class="logo">
 
-    <div class="logo-main">
-      E-MBED // LAB
-    </div>
+    <div class="logoMark">Σ</div>
 
-    <div class="logo-sub">
-      SEMANTIC VECTOR ANALYSIS SYSTEM
+    <div class="logoText">
+      NEURAL <span>MEMORY</span>
     </div>
 
   </div>
 
-  <div class="system-status">
+  <div class="status">
 
-    <span class="status-light"></span>
+    <div
+      id="statusDot"
+      class="statusDot">
+    </div>
 
-    <span id="headerStatus">
-      SYSTEM INITIALIZING
-    </span>
-
-    <span>
-      :: NODE_07
+    <span id="statusText">
+      EMBEDDING CORE OFFLINE
     </span>
 
   </div>
@@ -1006,1274 +860,1146 @@ button.magenta:hover{
 </header>
 
 
-<!-- =======================================================
-     MAIN
-======================================================= -->
+<main>
 
-<div class="main">
+<!-- =====================================================
+     LEFT
+===================================================== -->
 
-  <!-- =====================================================
-       CONTROL PANEL
-  ====================================================== -->
+<section>
 
   <div class="panel">
 
-    <div class="section-label">
-      PROCESS / PIPELINE
+    <div class="panelTitle">
+      01 / TEXT INPUT
     </div>
 
-    <div class="pipeline">
+    <div class="panelBody">
+
+      <textarea
+        id="textInput"
+        placeholder="Schreibe hier einen Satz oder eine Erinnerung ...">Der Kunde hat am Freitag einen Termin in Stuttgart.</textarea>
+
+      <button
+        id="embedBtn">
+        GENERATE EMBEDDING
+      </button>
+
+      <button
+        id="storeBtn"
+        class="green"
+        disabled>
+        STORE VECTOR
+      </button>
 
       <div
-        class="pipeline-node"
-        id="pipeText"
-      >
-        01 // TEXT INPUT
-      </div>
-
-      <div class="pipeline-arrow">
-        ▼
-      </div>
-
-      <div
-        class="pipeline-node"
-        id="pipeTokenizer"
-      >
-        02 // TOKENIZER
-      </div>
-
-      <div class="pipeline-arrow">
-        ▼
-      </div>
-
-      <div
-        class="pipeline-node"
-        id="pipeEmbedding"
-      >
-        03 // EMBEDDING CORE
-      </div>
-
-      <div class="pipeline-arrow">
-        ▼
-      </div>
-
-      <div
-        class="pipeline-node"
-        id="pipeVector"
-      >
-        04 // VECTOR SPACE
-      </div>
-
-      <div class="pipeline-arrow">
-        ▼
-      </div>
-
-      <div
-        class="pipeline-node"
-        id="pipeMemory"
-      >
-        05 // MEMORY BANK
-      </div>
-
-      <div class="pipeline-arrow">
-        ▼
-      </div>
-
-      <div
-        class="pipeline-node"
-        id="pipeSimilarity"
-      >
-        06 // SIMILARITY ENGINE
-      </div>
-
-      <div class="pipeline-arrow">
-        ▼
-      </div>
-
-      <div
-        class="pipeline-node"
-        id="pipeRanking"
-      >
-        07 // RANKING SYSTEM
+        id="errorBox"
+        class="errorBox">
       </div>
 
     </div>
 
+  </div>
 
-    <!-- EMBEDDING CORE -->
 
-    <div class="card">
+  <div
+    class="panel"
+    style="margin-top:18px">
 
-      <h3>
-        // EMBEDDING CORE
-      </h3>
+    <div class="panelTitle">
+      PIPELINE
+    </div>
 
-      <textarea id="text">Ein Embedding bildet Bedeutung als Vektor im hochdimensionalen Raum ab.</textarea>
+    <div class="panelBody">
 
-      <button id="embedBtn">
-        ▶ GENERATE EMBEDDING
+      <div class="pipeline">
+
+        <div
+          id="stageText"
+          class="stage">
+          TEXT
+        </div>
+
+        <div
+          id="stageToken"
+          class="stage">
+          TOKENIZATION
+        </div>
+
+        <div
+          id="stageModel"
+          class="stage">
+          EMBEDDING MODEL
+        </div>
+
+        <div
+          id="stageVector"
+          class="stage">
+          VECTOR 384D
+        </div>
+
+        <div
+          id="stageStore"
+          class="stage">
+          VECTOR STORE
+        </div>
+
+        <div
+          id="stageSearch"
+          class="stage">
+          COSINE SEARCH
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div
+    class="panel"
+    style="margin-top:18px">
+
+    <div class="panelTitle">
+      SYSTEM LOG
+    </div>
+
+    <div class="panelBody">
+
+      <div
+        id="log"
+        class="log">
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     CENTER
+===================================================== -->
+
+<section>
+
+  <div class="panel">
+
+    <div class="panelTitle">
+      EMBEDDING SPACE / 3D VIEW
+    </div>
+
+    <div class="panelBody"
+         style="padding:0">
+
+      <div
+        id="scene"
+        class="scene">
+
+        <div class="hud">
+
+          <div>
+            VECTOR SPACE // R³ VIEW
+          </div>
+
+          <div
+            id="hudStatus"
+            class="hudRight">
+            NO VECTOR
+          </div>
+
+        </div>
+
+        <div class="grid3d"></div>
+
+        <div class="axis x"></div>
+        <div class="axis y"></div>
+        <div class="axis z"></div>
+
+        <div class="axisLabel x">
+          v₁
+        </div>
+
+        <div class="axisLabel y">
+          v₂
+        </div>
+
+        <div class="axisLabel z">
+          v₃
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div
+    class="panel"
+    style="margin-top:18px">
+
+    <div class="panelTitle">
+      EMBEDDING VECTOR
+    </div>
+
+    <div class="panelBody">
+
+      <div
+        id="vectorDim"
+        class="vectorDim">
+        d = —
+      </div>
+
+      <div
+        id="vectorBox"
+        class="vectorBox">
+        Noch kein Embedding berechnet.
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     RIGHT
+===================================================== -->
+
+<section>
+
+  <div class="panel">
+
+    <div class="panelTitle">
+      MEMORY BANK
+    </div>
+
+    <div class="panelBody">
+
+      <div
+        id="memoryList"
+        class="memoryList">
+
+        <div
+          style="
+          color:#405861;
+          font-size:10px">
+          VECTOR STORE EMPTY
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div
+    class="panel"
+    style="margin-top:18px">
+
+    <div class="panelTitle">
+      SEMANTIC QUERY
+    </div>
+
+    <div class="panelBody">
+
+      <input
+        id="queryInput"
+        placeholder="z.B. Wann ist der Stuttgart-Termin?">
+
+      <button
+        id="searchBtn"
+        class="pink"
+        disabled>
+        RUN COSINE SEARCH
       </button>
 
       <div class="metrics">
 
         <div class="metric">
-          <div class="metric-label">
-            ENGINE
+
+          <div class="metricLabel">
+            MEMORY COUNT
           </div>
 
           <div
-            class="metric-value"
-            id="modelShort"
-          >
-            OFFLINE
+            id="memoryCount"
+            class="metricValue">
+            0
           </div>
+
         </div>
 
         <div class="metric">
-          <div class="metric-label">
-            DIMENSION
+
+          <div class="metricLabel">
+            VECTOR DIM
           </div>
 
           <div
-            class="metric-value"
-            id="dim"
-          >
-            -
-          </div>
-        </div>
-
-        <div class="metric">
-          <div class="metric-label">
-            TOKENS
+            id="dimension"
+            class="metricValue">
+            —
           </div>
 
-          <div
-            class="metric-value"
-            id="tok"
-          >
-            -
-          </div>
-        </div>
-
-        <div class="metric">
-          <div class="metric-label">
-            STATUS
-          </div>
-
-          <div
-            class="metric-value"
-            id="status"
-          >
-            BOOT
-          </div>
         </div>
 
       </div>
 
     </div>
 
+  </div>
 
-    <!-- VECTOR -->
 
-    <div class="card">
+  <div
+    class="panel"
+    style="margin-top:18px">
 
-      <h3>
-        // VECTOR STREAM
-      </h3>
+    <div class="panelTitle">
+      RELEVANCE SCANNER
+    </div>
+
+    <div class="panelBody">
 
       <div
-        class="vector-window"
-        id="vec"
-      >
-        Awaiting vector...
-      </div>
+        id="ranking">
 
-    </div>
-
-
-    <!-- MEMORY -->
-
-    <div class="card">
-
-      <h3>
-        // MEMORY BANK
-      </h3>
-
-      <button
-        id="storeBtn"
-        class="magenta"
-      >
-        + STORE VECTOR NODE
-      </button>
-
-      <div id="store">
-
-        <div class="memory-node">
-
-          <div class="node-dot"></div>
-
-          <div>
-
-            <div class="node-id">
-              MEMORY BANK EMPTY
-            </div>
-
-            <div class="node-text">
-              No vector nodes connected.
-            </div>
-
-          </div>
-
+        <div
+          style="
+          color:#405861;
+          font-size:10px">
+          NO SEARCH RESULT
         </div>
 
       </div>
 
     </div>
 
-
-    <!-- SIMILARITY -->
-
-    <div class="card">
-
-      <h3>
-        // SIMILARITY SCANNER
-      </h3>
-
-      <input
-        id="query"
-        value="Was ist ein Embedding?"
-      >
-
-      <button id="queryBtn">
-        ◉ SCAN MEMORY
-      </button>
-
-      <div id="ranking"></div>
-
-    </div>
-
   </div>
 
+</section>
 
-  <!-- =====================================================
-       3D VECTOR SPACE
-  ====================================================== -->
+</main>
 
-  <div id="scene">
 
-    <div class="hud">
+<footer>
 
-      <div class="corner tl"></div>
-      <div class="corner tr"></div>
-      <div class="corner bl"></div>
-      <div class="corner br"></div>
+  NEURAL MEMORY LAB //
+  TEXT → TOKENS → TRANSFORMER → EMBEDDING → VECTOR STORE → COSINE
 
-      <div class="hud-top">
-        VECTOR SPACE // 3D PROJECTION
-      </div>
-
-      <div class="hud-bottom-left">
-        X // EMBEDDING[0]<br>
-        Y // EMBEDDING[1]<br>
-        Z // EMBEDDING[2]<br>
-        CAMERA // ORBIT
-      </div>
-
-      <div class="hud-bottom-right">
-        VECTOR ENGINE<br>
-        COSINE SIMILARITY<br>
-        MEMORY NODES
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
+</footer>
 
 
 <script type="module">
 
-/* =========================================================
-   IMPORTS
-========================================================= */
-
-import * as THREE from
-  "https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js";
+/* =====================================================
+   IMPORT
+===================================================== */
 
 import {
-  OrbitControls
-} from
-  "https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/controls/OrbitControls.js";
-
-import {
-  pipeline,
-  AutoTokenizer
-} from
-  "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2";
+  pipeline
+} from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
 
 
-/* =========================================================
-   MODEL
-========================================================= */
+/* =====================================================
+   CONFIG
+===================================================== */
 
 const MODEL =
   "Xenova/multilingual-e5-small";
 
+const EMBEDDING_DIM =
+  384;
 
-/*
-  multilingual-e5-small:
 
-  Embedding dimension:
-  d = 384
-*/
+/* =====================================================
+   STATE
+===================================================== */
 
 let extractor = null;
-let tokenizer = null;
+
+let modelLoading = false;
+
+let modelReady = false;
 
 let currentVector = null;
 
-const memory = [];
+let memory = [];
+
+let memoryCounter = 0;
 
 
-/* =========================================================
-   DOM HELPERS
-========================================================= */
+/* =====================================================
+   DOM
+===================================================== */
 
 const $ = id =>
   document.getElementById(id);
 
+const textInput =
+  $("textInput");
 
-/* =========================================================
-   THREE.JS
-========================================================= */
+const queryInput =
+  $("queryInput");
 
-const scene =
-  new THREE.Scene();
+const embedBtn =
+  $("embedBtn");
 
-scene.fog =
-  new THREE.FogExp2(
-    0x03050b,
-    0.035
-  );
+const storeBtn =
+  $("storeBtn");
 
+const searchBtn =
+  $("searchBtn");
 
-const sceneContainer =
-  $("scene");
+const vectorBox =
+  $("vectorBox");
 
+const vectorDim =
+  $("vectorDim");
 
-const camera =
-  new THREE.PerspectiveCamera(
-    60,
+const memoryList =
+  $("memoryList");
 
-    sceneContainer.clientWidth /
-    sceneContainer.clientHeight,
+const ranking =
+  $("ranking");
 
-    0.1,
-    1000
-  );
+const log =
+  $("log");
 
+const errorBox =
+  $("errorBox");
 
-camera.position.set(
-  5,
-  4,
-  5
-);
+const statusDot =
+  $("statusDot");
 
+const statusText =
+  $("statusText");
 
-const renderer =
-  new THREE.WebGLRenderer({
-    antialias:true,
-    alpha:true
-  });
+const hudStatus =
+  $("hudStatus");
 
+const memoryCount =
+  $("memoryCount");
 
-renderer.setPixelRatio(
-  Math.min(
-    window.devicePixelRatio,
-    2
-  )
-);
+const dimension =
+  $("dimension");
 
 
-renderer.setSize(
-  sceneContainer.clientWidth,
-  sceneContainer.clientHeight
-);
+/* =====================================================
+   LOG
+===================================================== */
 
-
-sceneContainer.appendChild(
-  renderer.domElement
-);
-
-
-const controls =
-  new OrbitControls(
-    camera,
-    renderer.domElement
-  );
-
-
-controls.enableDamping = true;
-controls.dampingFactor = 0.04;
-
-
-/* =========================================================
-   LIGHTS
-========================================================= */
-
-scene.add(
-  new THREE.AmbientLight(
-    0x66ffff,
-    1.5
-  )
-);
-
-
-const cyanLight =
-  new THREE.PointLight(
-    0x00f6ff,
-    30,
-    20
-  );
-
-cyanLight.position.set(
-  2,
-  4,
-  2
-);
-
-scene.add(cyanLight);
-
-
-const magentaLight =
-  new THREE.PointLight(
-    0xff2bd6,
-    20,
-    20
-  );
-
-magentaLight.position.set(
-  -3,
-  2,
-  -3
-);
-
-scene.add(magentaLight);
-
-
-/* =========================================================
-   GRID
-========================================================= */
-
-const grid =
-  new THREE.GridHelper(
-    30,
-    60,
-    0x00f6ff,
-    0x123844
-  );
-
-grid.position.y = -1;
-
-scene.add(grid);
-
-
-const grid2 =
-  new THREE.GridHelper(
-    30,
-    30,
-    0xff2bd6,
-    0x241127
-  );
-
-grid2.position.y = -0.99;
-
-grid2.rotation.y =
-  Math.PI / 2;
-
-scene.add(grid2);
-
-
-/* =========================================================
-   AXES
-========================================================= */
-
-const axes =
-  new THREE.AxesHelper(4);
-
-axes.position.y = -0.98;
-
-scene.add(axes);
-
-
-/* =========================================================
-   PARTICLES
-========================================================= */
-
-const particleCount = 1800;
-
-const particleGeometry =
-  new THREE.BufferGeometry();
-
-const particlePositions =
-  new Float32Array(
-    particleCount * 3
-  );
-
-
-for(
-  let i=0;
-  i<particleCount;
-  i++
+function addLog(
+  message,
+  type = "info"
 ){
 
-  particlePositions[i*3] =
-    (Math.random()-0.5)*35;
-
-  particlePositions[i*3+1] =
-    (Math.random()-0.5)*20;
-
-  particlePositions[i*3+2] =
-    (Math.random()-0.5)*35;
-
-}
-
-
-particleGeometry.setAttribute(
-  "position",
-
-  new THREE.BufferAttribute(
-    particlePositions,
-    3
-  )
-);
-
-
-const particleMaterial =
-  new THREE.PointsMaterial({
-
-    color:0x00f6ff,
-
-    size:0.025,
-
-    transparent:true,
-
-    opacity:0.65
-
-  });
-
-
-const particles =
-  new THREE.Points(
-    particleGeometry,
-    particleMaterial
-  );
-
-
-scene.add(particles);
-
-
-/* =========================================================
-   VECTOR
-========================================================= */
-
-let arrow = null;
-
-
-function drawVector(v){
-
-  if(arrow){
-
-    scene.remove(arrow);
-
-  }
-
-
-  const dir =
-    new THREE.Vector3(
-      v[0] || 0,
-      v[1] || 0,
-      v[2] || 0
-    );
-
-
-  const len =
-    Math.max(
-      dir.length() * 5,
-      0.15
-    );
-
-
-  arrow =
-    new THREE.ArrowHelper(
-
-      dir.clone().normalize(),
-
-      new THREE.Vector3(
-        0,
-        -1,
-        0
-      ),
-
-      len,
-
-      0x00f6ff,
-
-      0.15,
-      0.07
-
-    );
-
-
-  scene.add(arrow);
-
-}
-
-
-/* =========================================================
-   MEMORY POINTS
-========================================================= */
-
-const memoryObjects = [];
-
-
-function createMemoryPoint(
-  vector,
-  index
-){
-
-  const geometry =
-    new THREE.SphereGeometry(
-      0.09,
-      16,
-      16
-    );
-
-
-  const material =
-    new THREE.MeshBasicMaterial({
-      color:0xff2bd6
-    });
-
-
-  const point =
-    new THREE.Mesh(
-      geometry,
-      material
-    );
-
-
-  const scale = 5;
-
-
-  point.position.set(
-
-    vector[0] * scale,
-
-    vector[1] * scale,
-
-    vector[2] * scale
-
-  );
-
-
-  scene.add(point);
-
-  memoryObjects.push(point);
-
-}
-
-
-/* =========================================================
-   ANIMATION
-========================================================= */
-
-function animate(){
-
-  requestAnimationFrame(
-    animate
-  );
-
-
-  particles.rotation.y +=
-    0.00012;
-
-
-  memoryObjects.forEach(
-    (point,index)=>{
-
-      point.scale.setScalar(
-        1 +
-        Math.sin(
-          Date.now()*0.003 +
-          index
-        ) * 0.25
+  const line =
+    document.createElement("div");
+
+  line.className =
+    "logLine " + type;
+
+  const time =
+    new Date()
+      .toLocaleTimeString(
+        "de-DE",
+        {
+          hour12:false
+        }
       );
+
+  line.textContent =
+    `[${time}] ${message}`;
+
+  log.appendChild(line);
+
+  log.scrollTop =
+    log.scrollHeight;
+}
+
+
+/* =====================================================
+   ERROR
+===================================================== */
+
+function showError(error){
+
+  errorBox.classList.add("show");
+
+  errorBox.innerHTML = `
+    <strong>MODEL LOAD / EMBEDDING ERROR</strong><br><br>
+    ${escapeHtml(
+      error?.message ||
+      String(error)
+    )}
+    <br><br>
+    Prüfe, ob diese HTML-Datei über einen
+    Browser/Webserver ausgeführt wird und
+    ob eine Internetverbindung für den ersten
+    Modell-Download vorhanden ist.
+  `;
+
+  addLog(
+    error?.message ||
+    String(error),
+    "error"
+  );
+}
+
+
+function clearError(){
+
+  errorBox.classList.remove("show");
+
+  errorBox.innerHTML = "";
+}
+
+
+/* =====================================================
+   ESCAPE
+===================================================== */
+
+function escapeHtml(value){
+
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+
+/* =====================================================
+   PIPELINE UI
+===================================================== */
+
+function activateStage(id){
+
+  const stages =
+    [
+      "stageText",
+      "stageToken",
+      "stageModel",
+      "stageVector",
+      "stageStore",
+      "stageSearch"
+    ];
+
+  const index =
+    stages.indexOf(id);
+
+  stages.forEach(
+    (stageId,i)=>{
+
+      const el =
+        $(stageId);
+
+      el.classList.remove(
+        "active",
+        "done"
+      );
+
+      if(i < index){
+        el.classList.add("done");
+      }
+
+      if(i === index){
+        el.classList.add("active");
+      }
 
     }
   );
 
-
-  cyanLight.position.x =
-    Math.sin(
-      Date.now()*0.0004
-    ) * 4;
+}
 
 
-  magentaLight.position.z =
-    Math.cos(
-      Date.now()*0.0004
-    ) * 4;
+function completeStage(id){
 
+  $(id)
+    .classList
+    .remove("active");
 
-  controls.update();
-
-
-  renderer.render(
-    scene,
-    camera
-  );
+  $(id)
+    .classList
+    .add("done");
 
 }
 
 
-animate();
+/* =====================================================
+   STATUS
+===================================================== */
+
+function setOffline(){
+
+  statusDot
+    .classList
+    .remove("online");
+
+  statusText.textContent =
+    "EMBEDDING CORE OFFLINE";
+}
 
 
-/* =========================================================
-   PIPELINE
-========================================================= */
+function setOnline(){
 
-function activatePipeline(id){
+  statusDot
+    .classList
+    .add("online");
 
-  document
-    .querySelectorAll(
-      ".pipeline-node"
-    )
-    .forEach(
-      node =>
-        node.classList.remove(
-          "active"
-        )
-    );
+  statusText.textContent =
+    "EMBEDDING CORE ONLINE";
+}
 
 
-  const element =
-    $(id);
+/* =====================================================
+   MODEL LOADING
+===================================================== */
 
+async function loadModel(){
 
-  if(element){
-
-    element.classList.add(
-      "active"
-    );
-
+  if(modelReady){
+    return;
   }
 
-}
+  if(modelLoading){
+    return;
+  }
 
+  modelLoading = true;
 
-/* =========================================================
-   BOOT
-========================================================= */
+  clearError();
 
-async function bootStep(
-  id,
-  delay,
-  progress
-){
+  embedBtn.disabled =
+    true;
 
-  await new Promise(
-    resolve =>
-      setTimeout(
-        resolve,
-        delay
-      )
+  embedBtn.textContent =
+    "LOADING EMBEDDING CORE...";
+
+  activateStage(
+    "stageModel"
   );
 
+  addLog(
+    "Embedding Core wird gestartet.",
+    "info"
+  );
 
-  $(id)
-    .classList.remove(
-      "boot-line"
-    );
+  addLog(
+    `Modell: ${MODEL}`,
+    "info"
+  );
 
-  $(id)
-    .classList.add(
-      "boot-ok"
-    );
-
-
-  $("bootProgress")
-    .style.width =
-      progress + "%";
-
-}
-
-
-/* =========================================================
-   MODEL INITIALIZATION
-========================================================= */
-
-async function initialize(){
+  addLog(
+    "Erster Start kann deutlich länger dauern.",
+    "warn"
+  );
 
   try{
-
-    $("status")
-      .textContent =
-      "LOADING";
-
-
-    $("headerStatus")
-      .textContent =
-      "MODEL INITIALIZING";
-
-
-    await bootStep(
-      "boot1",
-      250,
-      15
-    );
-
-
-    $("boot2")
-      .textContent =
-      "[ LOAD ] Tokenizer...";
-
-
-    tokenizer =
-      await AutoTokenizer
-        .from_pretrained(
-          MODEL
-        );
-
-
-    $("boot2")
-      .textContent =
-      "[ OK ] Tokenizer online";
-
-
-    $("boot2")
-      .classList.add(
-        "boot-ok"
-      );
-
-
-    $("bootProgress")
-      .style.width =
-      "35%";
-
-
-    $("boot3")
-      .textContent =
-      "[ LOAD ] Embedding model...";
-
 
     extractor =
       await pipeline(
         "feature-extraction",
-        MODEL
-      );
-
-
-    $("boot3")
-      .textContent =
-      "[ OK ] Embedding model online";
-
-
-    $("boot3")
-      .classList.add(
-        "boot-ok"
-      );
-
-
-    $("bootProgress")
-      .style.width =
-      "65%";
-
-
-    await bootStep(
-      "boot4",
-      250,
-      82
-    );
-
-
-    $("boot4")
-      .textContent =
-      "[ OK ] Vector engine initialized";
-
-
-    await bootStep(
-      "boot5",
-      250,
-      100
-    );
-
-
-    $("boot5")
-      .textContent =
-      "[ OK ] Memory bank connected";
-
-
-    $("modelShort")
-      .textContent =
-      "E5-SMALL";
-
-
-    $("dim")
-      .textContent =
-      "384";
-
-
-    $("status")
-      .textContent =
-      "ONLINE";
-
-
-    $("headerStatus")
-      .textContent =
-      "EMBEDDING CORE ONLINE";
-
-
-    activatePipeline(
-      "pipeEmbedding"
-    );
-
-
-    await new Promise(
-      resolve =>
-        setTimeout(
-          resolve,
-          500
-        )
-    );
-
-
-    $("boot")
-      .style.opacity =
-      "0";
-
-
-    setTimeout(
-      ()=>{
-        $("boot")
-          .style.display =
-          "none";
-      },
-      800
-    );
-
-  }
-  catch(error){
-
-    console.error(
-      "MODEL INITIALIZATION ERROR:",
-      error
-    );
-
-
-    $("status")
-      .textContent =
-      "ERROR";
-
-
-    $("headerStatus")
-      .textContent =
-      "MODEL LOAD FAILURE";
-
-
-    $("boot3")
-      .textContent =
-      "[ ERROR ] Embedding model failed";
-
-
-    $("boot3")
-      .classList.add(
-        "boot-error"
-      );
-
-
-    $("boot4")
-      .textContent =
-      "[ ERROR ] Vector engine offline";
-
-
-    $("boot4")
-      .classList.add(
-        "boot-error"
-      );
-
-  }
-
-}
-
-
-/* =========================================================
-   CREATE EMBEDDING
-========================================================= */
-
-$("embedBtn")
-  .onclick =
-  async()=>{
-
-    if(!extractor){
-
-      $("status")
-        .textContent =
-        "MODEL OFFLINE";
-
-      return;
-
-    }
-
-
-    const text =
-      $("text")
-        .value
-        .trim();
-
-
-    if(!text)
-      return;
-
-
-    activatePipeline(
-      "pipeText"
-    );
-
-
-    $("status")
-      .textContent =
-      "TOKENIZING";
-
-
-    const tokens =
-      await tokenizer(
-        "passage: " + text
-      );
-
-
-    $("tok")
-      .textContent =
-      tokens.input_ids.length;
-
-
-    activatePipeline(
-      "pipeTokenizer"
-    );
-
-
-    await new Promise(
-      resolve =>
-        setTimeout(
-          resolve,
-          150
-        )
-    );
-
-
-    $("status")
-      .textContent =
-      "EMBEDDING";
-
-
-    activatePipeline(
-      "pipeEmbedding"
-    );
-
-
-    const output =
-      await extractor(
-        "passage: " + text,
+        MODEL,
         {
-          pooling:"mean",
-          normalize:true
+
+          /*
+           * Browser verwendet standardmäßig
+           * eine quantisierte Modellvariante,
+           * wenn verfügbar.
+           */
+
+          progress_callback:
+            progress => {
+
+              if(
+                progress &&
+                progress.status === "progress"
+              ){
+
+                const percent =
+                  Math.round(
+                    progress.progress || 0
+                  );
+
+                embedBtn.textContent =
+                  `MODEL DOWNLOAD ${percent}%`;
+
+              }
+
+              if(
+                progress &&
+                progress.status === "done"
+              ){
+
+                addLog(
+                  `Modelldatei geladen: ${
+                    progress.file || ""
+                  }`,
+                  "ok"
+                );
+
+              }
+
+            }
+
         }
       );
 
+    modelReady = true;
 
-    currentVector =
-      Array.from(
-        output.data
-      );
-
-
-    $("dim")
-      .textContent =
-      currentVector.length;
-
-
-    $("status")
-      .textContent =
-      "VECTOR READY";
-
-
-    activatePipeline(
-      "pipeVector"
+    completeStage(
+      "stageModel"
     );
 
+    setOnline();
 
-    $("vec")
-      .textContent =
-      JSON.stringify(
-        currentVector.slice(
-          0,
-          64
-        ),
-        null,
-        2
-      );
-
-
-    drawVector(
-      currentVector
+    addLog(
+      "Embedding Core ONLINE.",
+      "ok"
     );
 
-  };
-
-
-/* =========================================================
-   STORE VECTOR
-========================================================= */
-
-$("storeBtn")
-  .onclick =
-  ()=>{
-
-    if(!currentVector){
-
-      $("status")
-        .textContent =
-        "NO VECTOR";
-
-      return;
-
-    }
-
-
-    const text =
-      $("text")
-        .value
-        .trim();
-
-
-    if(!text)
-      return;
-
-
-    const node = {
-
-      id:
-        "NODE_" +
-        String(
-          memory.length + 1
-        ).padStart(
-          3,
-          "0"
-        ),
-
-      text,
-
-      vector:[
-        ...currentVector
-      ]
-
-    };
-
-
-    memory.push(
-      node
+    addLog(
+      "384-dimensionale Vektoren verfügbar.",
+      "ok"
     );
 
+    dimension.textContent =
+      EMBEDDING_DIM;
 
-    createMemoryPoint(
-      node.vector,
-      memory.length
-    );
+    embedBtn.textContent =
+      "GENERATE EMBEDDING";
 
+    embedBtn.disabled =
+      false;
 
-    activatePipeline(
-      "pipeMemory"
-    );
-
-
-    renderStore();
-
-
-    $("status")
-      .textContent =
-      "MEMORY NODE STORED";
-
-  };
-
-
-/* =========================================================
-   MEMORY RENDER
-========================================================= */
-
-function renderStore(){
-
-  const container =
-    $("store");
-
-
-  if(!memory.length){
-
-    container.innerHTML =
-      "MEMORY BANK EMPTY";
-
-    return;
+    searchBtn.disabled =
+      memory.length === 0;
 
   }
 
+  catch(error){
 
-  container.innerHTML =
-    memory
-      .map(
-        memoryNode => `
+    console.error(error);
 
-        <div class="memory-node">
+    setOffline();
 
-          <div class="node-dot"></div>
+    showError(error);
 
-          <div>
+    embedBtn.textContent =
+      "RETRY MODEL LOAD";
 
-            <div class="node-id">
-              ${escapeHtml(
-                memoryNode.id
-              )}
-            </div>
+    embedBtn.disabled =
+      false;
 
-            <div class="node-text">
-              ${escapeHtml(
-                memoryNode.text
-              )}
-            </div>
+  }
 
-          </div>
+  finally{
 
-        </div>
+    modelLoading =
+      false;
 
-        `
-      )
-      .join("");
+  }
 
 }
 
 
-/* =========================================================
+/* =====================================================
+   EMBEDDING
+===================================================== */
+
+async function createEmbedding(
+  text,
+  mode = "passage"
+){
+
+  if(!text.trim()){
+    throw new Error(
+      "Kein Text vorhanden."
+    );
+  }
+
+  await loadModel();
+
+  if(!extractor){
+
+    throw new Error(
+      "Embedding-Modell ist nicht verfügbar."
+    );
+
+  }
+
+
+  /*
+   * E5 verwendet unterschiedliche Präfixe
+   * für Dokumente und Suchanfragen.
+   *
+   * passage: -> gespeicherter Text
+   * query:   -> Suchanfrage
+   */
+
+  const prepared =
+    `${mode}: ${text.trim()}`;
+
+
+  const output =
+    await extractor(
+      prepared,
+      {
+        pooling:"mean",
+        normalize:true
+      }
+    );
+
+
+  /*
+   * Transformers.js liefert hier
+   * einen Tensor zurück.
+   */
+
+  const vector =
+    Array.from(
+      output.data
+    );
+
+
+  if(vector.length !== EMBEDDING_DIM){
+
+    throw new Error(
+      `Unerwartete Vektordimension: ${
+        vector.length
+      } statt ${EMBEDDING_DIM}.`
+    );
+
+  }
+
+  return vector;
+
+}
+
+
+/* =====================================================
+   VECTOR GENERATION
+===================================================== */
+
+async function generateEmbedding(){
+
+  const text =
+    textInput.value.trim();
+
+  if(!text){
+
+    showError({
+      message:
+        "Bitte zuerst einen Satz eingeben."
+    });
+
+    return;
+  }
+
+  clearError();
+
+  embedBtn.disabled =
+    true;
+
+  storeBtn.disabled =
+    true;
+
+  activateStage(
+    "stageText"
+  );
+
+  addLog(
+    "Text empfangen.",
+    "info"
+  );
+
+  await sleep(200);
+
+  completeStage(
+    "stageText"
+  );
+
+  activateStage(
+    "stageToken"
+  );
+
+  addLog(
+    "Text → Tokenisierung → Modellinput.",
+    "info"
+  );
+
+  await sleep(250);
+
+  completeStage(
+    "stageToken"
+  );
+
+  activateStage(
+    "stageModel"
+  );
+
+  try{
+
+    currentVector =
+      await createEmbedding(
+        text,
+        "passage"
+      );
+
+    completeStage(
+      "stageModel"
+    );
+
+    activateStage(
+      "stageVector"
+    );
+
+    await sleep(250);
+
+    completeStage(
+      "stageVector"
+    );
+
+    showVector(
+      currentVector
+    );
+
+    renderPoint(
+      currentVector,
+      true
+    );
+
+    storeBtn.disabled =
+      false;
+
+    embedBtn.disabled =
+      false;
+
+    embedBtn.textContent =
+      "GENERATE EMBEDDING";
+
+    hudStatus.textContent =
+      "VECTOR READY";
+
+    addLog(
+      `Embedding erzeugt: d=${currentVector.length}`,
+      "ok"
+    );
+
+  }
+
+  catch(error){
+
+    console.error(error);
+
+    showError(error);
+
+    embedBtn.disabled =
+      false;
+
+    embedBtn.textContent =
+      modelReady
+        ? "GENERATE EMBEDDING"
+        : "RETRY MODEL LOAD";
+
+  }
+
+}
+
+
+/* =====================================================
+   VECTOR DISPLAY
+===================================================== */
+
+function showVector(vector){
+
+  vectorDim.textContent =
+    `d = ${vector.length}`;
+
+  dimension.textContent =
+    vector.length;
+
+  /*
+   * Nicht alle 384 Werte direkt in eine
+   * riesige Textwand schreiben.
+   *
+   * Wir zeigen die ersten Werte und
+   * die Dimension vollständig an.
+   */
+
+  const preview =
+    vector
+      .slice(0,60)
+      .map(
+        (v,i)=>
+          `v${i+1}=${v.toFixed(6)}`
+      )
+      .join("\n");
+
+  vectorBox.textContent =
+`${preview}
+
+...
+
+[ ${vector.length} DIMENSIONS ]
+
+L2-NORM:
+${vectorNorm(vector).toFixed(8)}`;
+
+}
+
+
+/* =====================================================
+   STORE
+===================================================== */
+
+function storeCurrentVector(){
+
+  if(!currentVector){
+    return;
+  }
+
+  const text =
+    textInput.value.trim();
+
+  if(!text){
+    return;
+  }
+
+  memoryCounter++;
+
+  const record = {
+
+    id:
+      `MEM-${String(
+        memoryCounter
+      ).padStart(4,"0")}`,
+
+    text,
+
+    vector:
+      [...currentVector],
+
+    created:
+      new Date().toISOString()
+
+  };
+
+  memory.push(record);
+
+  activateStage(
+    "stageStore"
+  );
+
+  completeStage(
+    "stageStore"
+  );
+
+  renderMemory();
+
+  searchBtn.disabled =
+    false;
+
+  memoryCount.textContent =
+    memory.length;
+
+  addLog(
+    `${record.id} im Vector Store gespeichert.`,
+    "ok"
+  );
+
+  storeBtn.disabled =
+    true;
+
+}
+
+
+/* =====================================================
+   MEMORY UI
+===================================================== */
+
+function renderMemory(){
+
+  memoryList.innerHTML = "";
+
+  if(memory.length === 0){
+
+    memoryList.innerHTML =
+      `<div style="color:#405861;font-size:10px">
+        VECTOR STORE EMPTY
+       </div>`;
+
+    return;
+  }
+
+  memory.forEach(
+    record => {
+
+      const el =
+        document.createElement("div");
+
+      el.className =
+        "memory";
+
+      el.innerHTML = `
+
+        <div class="memoryId">
+          ${record.id}
+        </div>
+
+        <div class="memoryText">
+          ${escapeHtml(record.text)}
+        </div>
+
+      `;
+
+      el.onclick = () => {
+
+        textInput.value =
+          record.text;
+
+        currentVector =
+          [...record.vector];
+
+        showVector(
+          currentVector
+        );
+
+        renderPoint(
+          currentVector,
+          true
+        );
+
+        hudStatus.textContent =
+          record.id;
+
+      };
+
+      memoryList.appendChild(
+        el
+      );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
    COSINE SIMILARITY
-========================================================= */
+===================================================== */
 
-function cosine(a,b){
+function dot(a,b){
 
-  let dot = 0;
-
-  let normA = 0;
-
-  let normB = 0;
-
+  let sum = 0;
 
   for(
     let i=0;
@@ -2281,233 +2007,268 @@ function cosine(a,b){
     i++
   ){
 
-    dot +=
+    sum +=
       a[i] * b[i];
-
-    normA +=
-      a[i] * a[i];
-
-    normB +=
-      b[i] * b[i];
 
   }
 
-
-  return dot /
-    (
-      Math.sqrt(normA) *
-      Math.sqrt(normB)
-    );
+  return sum;
 
 }
 
 
-/* =========================================================
-   QUERY
-========================================================= */
+function vectorNorm(v){
 
-$("queryBtn")
-  .onclick =
-  async()=>{
+  let sum = 0;
 
-    if(!extractor){
+  for(
+    let i=0;
+    i<v.length;
+    i++
+  ){
 
-      $("status")
-        .textContent =
-        "MODEL OFFLINE";
+    sum +=
+      v[i] * v[i];
 
-      return;
+  }
 
-    }
+  return Math.sqrt(sum);
 
-
-    if(!memory.length){
-
-      $("ranking")
-        .innerHTML = `
-
-          <div class="rank-text">
-            MEMORY BANK EMPTY
-          </div>
-
-        `;
-
-      return;
-
-    }
+}
 
 
-    const query =
-      $("query")
-        .value
-        .trim();
+function cosineSimilarity(a,b){
+
+  const numerator =
+    dot(a,b);
+
+  const denominator =
+    vectorNorm(a) *
+    vectorNorm(b);
+
+  if(
+    denominator === 0
+  ){
+
+    return 0;
+
+  }
+
+  return (
+    numerator /
+    denominator
+  );
+
+}
 
 
-    if(!query)
-      return;
+/* =====================================================
+   SEARCH
+===================================================== */
 
+async function runSearch(){
 
-    $("status")
-      .textContent =
-      "QUERY EMBEDDING";
+  const query =
+    queryInput.value.trim();
 
+  if(!query){
 
-    activatePipeline(
-      "pipeSimilarity"
-    );
+    showError({
+      message:
+        "Bitte eine Suchanfrage eingeben."
+    });
 
+    return;
+  }
 
-    const output =
-      await extractor(
-        "query: " + query,
-        {
-          pooling:"mean",
-          normalize:true
-        }
-      );
+  if(memory.length === 0){
 
+    showError({
+      message:
+        "Der Vector Store ist leer."
+    });
+
+    return;
+  }
+
+  clearError();
+
+  searchBtn.disabled =
+    true;
+
+  activateStage(
+    "stageSearch"
+  );
+
+  addLog(
+    `Query: "${query}"`,
+    "info"
+  );
+
+  try{
 
     const queryVector =
-      Array.from(
-        output.data
+      await createEmbedding(
+        query,
+        "query"
       );
-
-
-    $("status")
-      .textContent =
-      "SCANNING MEMORY";
-
 
     const results =
       memory
         .map(
-          node => ({
+          record => ({
 
-            ...node,
+            ...record,
 
             score:
-              cosine(
+              cosineSimilarity(
                 queryVector,
-                node.vector
+                record.vector
               )
 
           })
         )
         .sort(
           (a,b)=>
-            b.score -
-            a.score
+            b.score - a.score
         );
-
-
-    activatePipeline(
-      "pipeRanking"
-    );
-
-
-    $("status")
-      .textContent =
-      "RANKING READY";
-
 
     renderRanking(
       results
     );
 
-  };
+    completeStage(
+      "stageSearch"
+    );
+
+    addLog(
+      `${results.length} Vektoren verglichen.`,
+      "ok"
+    );
+
+    addLog(
+      `Top-1 Cosine: ${results[0].score.toFixed(6)}`,
+      "ok"
+    );
+
+    hudStatus.textContent =
+      "SEARCH COMPLETE";
+
+  }
+
+  catch(error){
+
+    console.error(error);
+
+    showError(error);
+
+  }
+
+  finally{
+
+    searchBtn.disabled =
+      false;
+
+  }
+
+}
 
 
-/* =========================================================
+/* =====================================================
    RANKING
-========================================================= */
+===================================================== */
 
-function renderRanking(
-  results
-){
+function renderRanking(results){
 
-  const container =
-    $("ranking");
+  ranking.innerHTML = "";
+
+  if(!results.length){
+
+    ranking.innerHTML =
+      `<div style="color:#405861;font-size:10px">
+        NO RESULT
+       </div>`;
+
+    return;
+  }
 
 
-  container.innerHTML = `
-
-    <div class="rank-header">
-
-      <span>
-        TARGET MATCHES
-      </span>
-
-      <span>
-        COSINE
-      </span>
-
-    </div>
-
-  `;
+  const maxScore =
+    Math.max(
+      ...results.map(
+        r => r.score
+      )
+    );
 
 
   results.forEach(
-    (result,index)=>{
+    (record,index)=>{
 
-      const percentage =
-        Math.max(
-          0,
-          Math.min(
-            100,
-            result.score * 100
-          )
-        );
+      const item =
+        document.createElement("div");
 
-
-      const div =
-        document.createElement(
-          "div"
-        );
-
-
-      div.className =
+      item.className =
         "rank";
 
 
-      div.innerHTML = `
+      /*
+       * Balken ist reine Visualisierung.
+       *
+       * Der eigentliche Wert bleibt
+       * der Cosinuswert.
+       */
 
-        <div class="rank-header">
+      const visualWidth =
+        maxScore > 0
+          ? (
+              record.score /
+              maxScore
+            ) * 100
+          : 0;
+
+
+      item.innerHTML = `
+
+        <div class="rankTop">
 
           <span>
-            #${index + 1}
-            ${escapeHtml(
-              result.id
-            )}
+            #${index+1}
+            ${record.id}
           </span>
 
-          <span>
-            ${result.score.toFixed(4)}
+          <span class="rankScore">
+            COSINE
+            ${record.score.toFixed(6)}
           </span>
 
         </div>
 
-        <div class="rank-bar">
+        <div class="bar">
 
           <div
-            class="rank-fill"
-            style="
-              width:${percentage}%
-            "
-          ></div>
+            class="barFill"
+            style="width:${visualWidth}%">
+          </div>
 
         </div>
 
-        <div class="rank-text">
+        <div
+          style="
+          margin-top:7px;
+          color:#718b92;
+          font-size:9px;
+          line-height:1.4">
+
           ${escapeHtml(
-            result.text
+            record.text
           )}
+
         </div>
 
       `;
 
-
-      container.appendChild(
-        div
+      ranking.appendChild(
+        item
       );
 
     }
@@ -2516,74 +2277,205 @@ function renderRanking(
 }
 
 
-/* =========================================================
-   HTML ESCAPE
-========================================================= */
+/* =====================================================
+   3D VECTOR VISUALIZATION
+===================================================== */
 
-function escapeHtml(
-  value
+function renderPoint(
+  vector,
+  current = false
 ){
 
-  return String(value)
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-    .replaceAll(
-      "'",
-      "&#039;"
+  if(!vector ||
+     vector.length < 3){
+    return;
+  }
+
+
+  /*
+   * WICHTIG:
+   *
+   * Das ist keine PCA/t-SNE/UMAP-
+   * Projektion.
+   *
+   * Wir zeigen hier absichtlich
+   * direkt v1, v2, v3.
+   *
+   * Das dient dem mathematischen
+   * Verständnis des Vektors.
+   */
+
+
+  const x =
+    vector[0];
+
+  const y =
+    vector[1];
+
+  const z =
+    vector[2];
+
+
+  /*
+   * Nur visuelle Skalierung.
+   */
+
+  const sx =
+    50 + x * 35;
+
+  const sy =
+    50 - y * 35;
+
+
+  const depth =
+    Math.max(
+      .5,
+      Math.min(
+        1.5,
+        1 + z
+      )
     );
+
+
+  const point =
+    document.createElement("div");
+
+  point.className =
+    "point";
+
+  point.style.left =
+    `${sx}%`;
+
+  point.style.top =
+    `${sy}%`;
+
+  point.style.transform =
+    `translate(-50%,-50%)
+     scale(${depth})`;
+
+  point.title =
+    `v1=${x.toFixed(5)}
+v2=${y.toFixed(5)}
+v3=${z.toFixed(5)}`;
+
+
+  $("scene")
+    .appendChild(
+      point
+    );
+
+
+  /*
+   * Nach einigen Punkten nicht
+   * unendlich viele DOM-Punkte sammeln.
+   */
+
+  const points =
+    $("scene")
+      .querySelectorAll(
+        ".point"
+      );
+
+  if(points.length > 25){
+
+    points[0].remove();
+
+  }
 
 }
 
 
-/* =========================================================
-   RESIZE
-========================================================= */
+/* =====================================================
+   UTIL
+===================================================== */
 
-window.addEventListener(
-  "resize",
-  ()=>{
+function sleep(ms){
 
-    const width =
-      sceneContainer.clientWidth;
+  return new Promise(
+    resolve =>
+      setTimeout(
+        resolve,
+        ms
+      )
+  );
 
-    const height =
-      sceneContainer.clientHeight;
-
-
-    camera.aspect =
-      width / height;
-
-    camera.updateProjectionMatrix();
+}
 
 
-    renderer.setSize(
-      width,
-      height
-    );
+/* =====================================================
+   INITIAL BOOT
+===================================================== */
 
-  }
+addLog(
+  "NEURAL MEMORY Interface gestartet.",
+  "ok"
+);
+
+addLog(
+  "UI bereit.",
+  "ok"
+);
+
+addLog(
+  "Embedding Core wartet auf Benutzeraktion.",
+  "info"
+);
+
+addLog(
+  `Target Model: ${MODEL}`,
+  "info"
+);
+
+addLog(
+  "Dimension: 384",
+  "info"
+);
+
+addLog(
+  "Vector Store: IN-MEMORY",
+  "info"
+);
+
+addLog(
+  "Cosine Similarity: ACTIVE",
+  "info"
 );
 
 
-/* =========================================================
-   START
-========================================================= */
+/* =====================================================
+   EVENTS
+===================================================== */
 
-initialize();
+embedBtn.addEventListener(
+  "click",
+  generateEmbedding
+);
+
+storeBtn.addEventListener(
+  "click",
+  storeCurrentVector
+);
+
+searchBtn.addEventListener(
+  "click",
+  runSearch
+);
+
+
+queryInput.addEventListener(
+  "keydown",
+  event => {
+
+    if(
+      event.key === "Enter"
+    ){
+
+      runSearch();
+
+    }
+
+  }
+);
 
 </script>
 
