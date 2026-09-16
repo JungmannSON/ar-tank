@@ -5168,33 +5168,80 @@ function rebuildPoints(){
   );
 
 
-  pointMaterial =
-    new THREE.PointsMaterial({
+  pointMaterial = new THREE.ShaderMaterial({
 
-      /*
-       * Kleine, präzise Nodes
-       */
+  vertexColors: true,
 
-      size:
-        window.innerWidth < 800
-          ? 3.0
-          : 2.8,
+  transparent: true,
 
-      sizeAttenuation:
-        true,
+  depthWrite: false,
 
-      vertexColors:
-        true,
+  blending: THREE.AdditiveBlending,
 
-      transparent:
-        true,
+  vertexShader: `
 
-      opacity:
-        .92,
+    varying vec3 vColor;
 
-      depthWrite:
-        false
-    });
+    void main(){
+
+      vColor = color;
+
+      vec4 mvPosition =
+        modelViewMatrix *
+        vec4(position, 1.0);
+
+      gl_PointSize =
+        5.0 *
+        (300.0 / -mvPosition.z);
+
+      gl_PointSize =
+        clamp(
+          gl_PointSize,
+          2.0,
+          7.0
+        );
+
+      gl_Position =
+        projectionMatrix *
+        mvPosition;
+    }
+
+  `,
+
+  fragmentShader: `
+
+    varying vec3 vColor;
+
+    void main(){
+
+      vec2 uv =
+        gl_PointCoord -
+        vec2(0.5);
+
+      float distanceFromCenter =
+        length(uv);
+
+      if(distanceFromCenter > 0.5){
+        discard;
+      }
+
+      float glow =
+        1.0 -
+        smoothstep(
+          0.15,
+          0.5,
+          distanceFromCenter
+        );
+
+      gl_FragColor =
+        vec4(
+          vColor,
+          glow
+        );
+    }
+
+  `
+});
 
 
   points =
