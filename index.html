@@ -198,6 +198,8 @@ header::after{
 
   font-size:16px;
   letter-spacing:0;
+
+  position:relative;
 }
 
 .logo::after{
@@ -1763,6 +1765,7 @@ function clamp(
   min,
   max
 ){
+
   return Math.max(
     min,
     Math.min(max,value)
@@ -1771,6 +1774,7 @@ function clamp(
 
 
 function safeText(value){
+
   return String(
     value ?? ''
   );
@@ -1888,7 +1892,8 @@ function hashString(str){
 
   for(let i=0;i<str.length;i++){
 
-    h ^= str.charCodeAt(i);
+    h ^=
+      str.charCodeAt(i);
 
     h =
       Math.imul(
@@ -1957,6 +1962,16 @@ function vectorNorm(a){
   );
 }
 
+
+/*
+ * COSINE SIMILARITY
+ *
+ * sim(a,b) =
+ * (a · b) / (||a|| ||b||)
+ *
+ * Die Berechnung erfolgt vollständig
+ * im ursprünglichen 384D-Raum.
+ */
 
 function cosine(a,b){
 
@@ -4038,7 +4053,6 @@ async function createManualHyperedge(){
       'hyperedgeLabel'
     ).value = '';
 
-
     document.getElementById(
       'hyperedgeMembers'
     ).value = '';
@@ -4846,6 +4860,15 @@ function initThree(){
   );
 
 
+  /*
+   * WICHTIG:
+   *
+   * Keine GridHelper-Fläche.
+   * Keine RingGeometry-Flächen.
+   *
+   * Der Raum bleibt frei.
+   */
+
   createGrid();
 
 
@@ -4874,35 +4897,22 @@ function initThree(){
 
 
 /* =========================================================
-   OBSERVATORY GRID
+   OBSERVATORY AXES
 ========================================================= */
 
 function createGrid(){
 
-  const grid =
-    new THREE.GridHelper(
-      120,
-      48,
-      0x16434b,
-      0x09161c
-    );
-
-
-  grid.position.y =
-    -8;
-
-
-  grid.material.transparent =
-    true;
-
-  grid.material.opacity =
-    .32;
-
-
-  scene.add(
-    grid
-  );
-
+  /*
+   * Es wird absichtlich KEIN
+   * THREE.GridHelper erzeugt.
+   *
+   * Es wird auch keine RingGeometry
+   * erzeugt.
+   *
+   * Dadurch gibt es keine quadratische
+   * Bodenfläche und keine visuellen Ebenen
+   * im semantischen Raum.
+   */
 
   const axes =
     new THREE.AxesHelper(
@@ -4914,59 +4924,12 @@ function createGrid(){
     true;
 
   axes.material.opacity =
-    .08;
+    .035;
 
 
   scene.add(
     axes
   );
-
-
-  /*
-   * Inner observation rings
-   */
-
-  for(
-    const radius
-    of [6,12,20,30]
-  ){
-
-    const geometry =
-      new THREE.RingGeometry(
-        radius-.008,
-        radius+.008,
-        18
-      );
-
-
-    const material =
-      new THREE.MeshBasicMaterial({
-        color:0x07343b,
-        transparent:true,
-        opacity:.11,
-        side:THREE.DoubleSide
-      });
-
-
-    const ring =
-      new THREE.Mesh(
-        geometry,
-        material
-      );
-
-
-    ring.rotation.x =
-      Math.PI/2;
-
-
-    ring.position.y =
-      -7.95;
-
-
-    scene.add(
-      ring
-    );
-  }
 }
 
 
@@ -5114,8 +5077,7 @@ function rebuildPoints(){
       )
     ){
 
-      intensity =
-        .12;
+      intensity = .12;
     }
 
 
@@ -5128,8 +5090,7 @@ function rebuildPoints(){
         '#ff187f'
       );
 
-      intensity =
-        1.45;
+      intensity = 1.45;
     }
 
 
@@ -5168,17 +5129,29 @@ function rebuildPoints(){
   );
 
 
+  /*
+   * KLEINE NODE-PUNKTE
+   *
+   * Vorher:
+   *   Desktop 2.8
+   *   Mobile 3.0
+   *
+   * Jetzt:
+   *   Desktop 0.75
+   *   Mobile 0.9
+   *
+   * Dadurch erscheinen die Nodes
+   * als kleine Punkte statt als große
+   * quadratische/flächenartige Elemente.
+   */
+
   pointMaterial =
     new THREE.PointsMaterial({
 
-      /*
-       * Kleine, präzise Nodes
-       */
-
       size:
         window.innerWidth < 800
-          ? 3.0
-          : 2.8,
+          ? .9
+          : .75,
 
       sizeAttenuation:
         true,
@@ -5190,7 +5163,7 @@ function rebuildPoints(){
         true,
 
       opacity:
-        .92,
+        .95,
 
       depthWrite:
         false
@@ -5708,8 +5681,17 @@ function findPointIntersection(){
   }
 
 
+  /*
+   * Kleine Nodes benötigen eine
+   * etwas größere unsichtbare
+   * Interaktionsfläche.
+   *
+   * Der sichtbare Punkt bleibt
+   * trotzdem klein.
+   */
+
   raycaster.params.Points.threshold =
-    .35;
+    .28;
 
 
   raycaster.setFromCamera(
@@ -6124,7 +6106,3 @@ init();
 
 </body>
 </html>
-
-
-PASSE HIER DIE VISUELLE DARSTELLUNG AN.
-3D visualisierung soll kleinere knoten enthalten(keine dieser quadratischen flächen)
