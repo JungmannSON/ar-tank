@@ -4925,7 +4925,31 @@ async function runQuery(){
               r.memory.id
           )
       );
+      currentQueryContext = {
+  schema: 'NEURAL_MEMORY_CONTEXT',
+  version: '1.0',
 
+  query: {
+    text
+  },
+
+  retrieval: {
+    model: MODEL,
+    dimension: DIM,
+    resultCount: results.length
+  },
+
+  memories: results
+    .slice(0, 8)
+    .map(result => ({
+      id: result.memory.id,
+      type: result.memory.type,
+      text: result.memory.text,
+      similarity: Number(
+        result.score.toFixed(6)
+      )
+    }))
+};
 
     refreshAll();
 
