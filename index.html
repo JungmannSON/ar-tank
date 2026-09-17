@@ -1,5373 +1,4334 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
 <meta charset="UTF-8">
 
-<meta
-  name="viewport"
-  content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
->
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1.0,
+               maximum-scale=1.0,
+               user-scalable=no">
 
-<title>NEURAL MEMORY — Semantic Memory Core</title>
+<title>NEURAL MEMORY — CORE</title>
 
 <script type="importmap">
 {
   "imports": {
-    "three":
-      "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-
-    "three/addons/":
-      "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
   }
 }
 </script>
 
 <style>
-
-:root{
-  --bg:#05080c;
-  --panel:#0a1016;
-  --panel2:#070d12;
-  --border:#1a2a36;
-
-  --cyan:#00e5ff;
-  --pink:#ff2d95;
-  --green:#00ff9d;
-  --yellow:#ffe600;
-  --danger:#ff4d6a;
-
-  --text:#b8d4e3;
-  --muted:#405861;
-
-  --header-height:52px;
+:root {
+    --bg: #090b0d;
+    --panel: #111519;
+    --panel2: #161c20;
+    --border: #273137;
+    --green: #00e5a0;
+    --cyan: #00c8ff;
+    --pink: #e20074;
+    --text: #e8f1f4;
+    --muted: #718087;
+    --danger: #ff426d;
+    --yellow: #e9d66b;
 }
 
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
+* {
+    box-sizing: border-box;
 }
 
 html,
-body{
-  width:100%;
-  height:100%;
-  overflow:hidden;
-
-  background:var(--bg);
-  color:var(--text);
-
-  font-family:
-    "JetBrains Mono",
-    "SF Mono",
-    "Fira Code",
-    ui-monospace,
-    monospace;
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
 }
 
-body{
-  display:grid;
-  grid-template-rows:var(--header-height) 1fr;
+body {
+    display: flex;
+    flex-direction: column;
 }
 
-/* =========================================================
-   HEADER
-========================================================= */
-
-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-
-  padding:0 20px;
-
-  background:
-    linear-gradient(
-      90deg,
-      #060b10,
-      #0a121a
-    );
-
-  border-bottom:1px solid var(--border);
-}
-
-.logo{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-
-.logoMark{
-  width:34px;
-  height:34px;
-
-  display:grid;
-  place-items:center;
-
-  border:1px solid var(--cyan);
-
-  color:var(--cyan);
-
-  box-shadow:
-    0 0 12px rgba(0,229,255,.25);
-
-  font-size:16px;
-}
-
-.logoText{
-  font-size:14px;
-  font-weight:600;
-  letter-spacing:3px;
-}
-
-.logoText span{
-  color:var(--cyan);
-}
-
-.status{
-  display:flex;
-  align-items:center;
-  gap:10px;
-
-  font-size:11px;
-  letter-spacing:1px;
-}
-
-.statusDot{
-  width:8px;
-  height:8px;
-
-  border-radius:50%;
-
-  background:var(--danger);
-
-  box-shadow:
-    0 0 8px var(--danger);
-}
-
-.statusDot.online{
-  background:var(--green);
-
-  box-shadow:
-    0 0 10px var(--green);
-}
-
-/* =========================================================
-   LAYOUT
-========================================================= */
-
-main{
-  height:calc(100vh - var(--header-height));
-
-  display:grid;
-  grid-template-columns:
-    320px
-    minmax(0,1fr)
-    340px;
-
-  overflow:hidden;
-}
-
-.col{
-  display:flex;
-  flex-direction:column;
-
-  min-width:0;
-
-  overflow-y:auto;
-  overflow-x:hidden;
-
-  border-right:1px solid var(--border);
-}
-
-.col:last-child{
-  border-right:none;
-}
-
-/* =========================================================
-   PANELS
-========================================================= */
-
-.panel{
-  border-bottom:1px solid var(--border);
-}
-
-.panelTitle{
-  padding:10px 14px;
-
-  background:var(--panel2);
-
-  border-bottom:1px solid var(--border);
-
-  color:var(--cyan);
-
-  font-size:10px;
-  letter-spacing:2px;
-}
-
-.panelBody{
-  padding:12px 14px;
-}
-
-/* =========================================================
-   INPUT
-========================================================= */
-
+button,
+input,
 textarea,
-input{
-  width:100%;
-
-  background:#060b10;
-
-  border:1px solid var(--border);
-
-  color:var(--text);
-
-  padding:10px;
-
-  outline:none;
-
-  font:inherit;
-  font-size:12px;
+select {
+    font: inherit;
 }
 
-textarea{
-  min-height:90px;
-  resize:vertical;
+button {
+    cursor: pointer;
 }
 
-textarea:focus,
-input:focus{
-  border-color:var(--cyan);
-
-  box-shadow:
-    0 0 8px rgba(0,229,255,.08);
-}
-
-/* =========================================================
-   BUTTONS
-========================================================= */
-
-button{
-  width:100%;
-
-  margin-top:8px;
-
-  padding:10px;
-
-  background:transparent;
-
-  border:1px solid var(--cyan);
-
-  color:var(--cyan);
-
-  font:inherit;
-  font-size:11px;
-
-  letter-spacing:1.5px;
-
-  cursor:pointer;
-
-  transition:
-    background .15s,
-    box-shadow .15s,
-    transform .05s;
-}
-
-button:hover:not(:disabled){
-  background:rgba(0,229,255,.12);
-
-  box-shadow:
-    0 0 12px rgba(0,229,255,.2);
-}
-
-button:active:not(:disabled){
-  transform:translateY(1px);
-}
-
-button:disabled{
-  opacity:.35;
-  cursor:not-allowed;
-}
-
-button.green{
-  border-color:var(--green);
-  color:var(--green);
-}
-
-button.pink{
-  border-color:var(--pink);
-  color:var(--pink);
-}
-
-button.yellow{
-  border-color:var(--yellow);
-  color:var(--yellow);
-}
-
-/* =========================================================
-   ERROR
-========================================================= */
-
-.errorBox{
-  min-height:16px;
-
-  margin-top:8px;
-
-  color:var(--danger);
-
-  font-size:10px;
-  line-height:1.5;
-
-  white-space:pre-wrap;
-}
-
-/* =========================================================
-   PIPELINE
-========================================================= */
-
-.pipeline{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-}
-
-.stage{
-  padding:5px 8px;
-
-  border:1px solid var(--border);
-
-  color:var(--muted);
-
-  font-size:9px;
-
-  letter-spacing:1px;
-}
-
-.stage.active{
-  border-color:var(--cyan);
-  color:var(--cyan);
-
-  box-shadow:
-    0 0 8px rgba(0,229,255,.3);
-}
-
-.stage.done{
-  border-color:var(--green);
-  color:var(--green);
-}
-
-/* =========================================================
-   LOG
-========================================================= */
-
-.log{
-  max-height:170px;
-
-  overflow-y:auto;
-
-  color:var(--muted);
-
-  font-size:10px;
-  line-height:1.55;
-}
-
-.log .ok{
-  color:var(--green);
-}
-
-.log .info{
-  color:var(--cyan);
-}
-
-.log .warn{
-  color:#ffb347;
-}
-
-.log .err{
-  color:var(--danger);
-}
-
-/* =========================================================
-   VECTOR
-========================================================= */
-
-.vectorDim{
-  margin-bottom:6px;
-
-  color:var(--cyan);
-
-  font-size:11px;
-}
-
-.vectorBox{
-  max-height:120px;
-
-  overflow-y:auto;
-
-  padding:8px;
-
-  background:#060b10;
-
-  border:1px solid var(--border);
-
-  color:var(--muted);
-
-  font-size:10px;
-  line-height:1.4;
-
-  word-break:break-all;
-}
-
-/* =========================================================
-   3D SCENE
-========================================================= */
-
-.sceneColumn{
-  position:relative;
-
-  overflow:hidden;
-}
-
-.scenePanel{
-  height:100%;
-
-  display:flex;
-  flex-direction:column;
-
-  border-bottom:none;
-}
-
-.sceneBody{
-  flex:1;
-
-  min-height:0;
-
-  padding:0;
-
-  position:relative;
-}
-
-#scene{
-  position:relative;
-
-  width:100%;
-  height:100%;
-
-  min-height:420px;
-
-  overflow:hidden;
-
-  background:
-    radial-gradient(
-      ellipse at center,
-      #0a1520 0%,
-      #05080c 70%
-    );
-}
-
-#canvas3d{
-  display:block;
-
-  width:100%;
-  height:100%;
-}
-
-.hud{
-  position:absolute;
-
-  top:10px;
-  left:12px;
-  right:12px;
-
-  display:flex;
-  justify-content:space-between;
-
-  z-index:10;
-
-  pointer-events:none;
-
-  color:var(--muted);
-
-  font-size:10px;
-  letter-spacing:1.5px;
-}
-
-.hudRight{
-  color:var(--cyan);
-}
-
-.controlsHint{
-  position:absolute;
-
-  left:12px;
-  bottom:10px;
-
-  z-index:10;
-
-  pointer-events:none;
-
-  color:var(--muted);
-
-  font-size:9px;
-}
-
-.toolbar3d{
-  position:absolute;
-
-  right:12px;
-  bottom:8px;
-
-  z-index:10;
-
-  display:flex;
-  gap:6px;
-}
-
-.toolbar3d button{
-  width:auto;
-
-  margin:0;
-
-  padding:6px 9px;
-
-  font-size:9px;
-}
-
-/* =========================================================
-   INSPECTOR
-========================================================= */
-
-.inspector{
-  position:absolute;
-
-  top:40px;
-  right:12px;
-
-  width:280px;
-
-  max-height:
-    calc(100% - 60px);
-
-  overflow-y:auto;
-
-  padding:12px;
-
-  background:
-    rgba(8,14,20,.95);
-
-  border:1px solid var(--border);
-
-  z-index:20;
-
-  display:none;
-
-  font-size:11px;
-
-  backdrop-filter:blur(6px);
-}
-
-.inspector.visible{
-  display:block;
-}
-
-.inspector h3{
-  margin-bottom:8px;
-
-  color:var(--cyan);
-
-  font-size:10px;
-  letter-spacing:2px;
-}
-
-.inspector .id{
-  margin-bottom:6px;
-
-  color:var(--green);
-}
-
-.inspector .txt{
-  margin-bottom:8px;
-
-  line-height:1.45;
-
-  white-space:pre-wrap;
-  word-break:break-word;
-}
-
-.inspector .meta{
-  color:var(--muted);
-
-  font-size:10px;
-
-  line-height:1.5;
-}
-
-.tag{
-  display:inline-block;
-
-  margin:
-    2px
-    2px
-    0
-    0;
-
-  padding:3px 5px;
-
-  border:1px solid var(--border);
-
-  color:var(--muted);
-
-  font-size:9px;
-}
-
-/* =========================================================
-   MEMORY BANK
-========================================================= */
-
-.memoryList{
-  max-height:250px;
-
-  overflow-y:auto;
-
-  font-size:11px;
-}
-
-.memItem{
-  padding:8px 6px;
-
-  border-bottom:1px solid var(--border);
-
-  cursor:pointer;
-}
-
-.memItem:hover{
-  background:
-    rgba(0,229,255,.06);
-}
-
-.memItem.selected{
-  background:
-    rgba(0,229,255,.10);
-}
-
-.memId{
-  color:var(--cyan);
-
-  font-size:10px;
-}
-
-.memText{
-  margin-top:2px;
-
-  color:var(--text);
-
-  white-space:nowrap;
-
-  overflow:hidden;
-
-  text-overflow:ellipsis;
-}
-
-.memMeta{
-  margin-top:2px;
-
-  color:var(--muted);
-
-  font-size:9px;
-}
-
-/* =========================================================
-   METRICS
-========================================================= */
-
-.metrics{
-  display:grid;
-
-  grid-template-columns:
-    1fr
-    1fr;
-
-  gap:10px;
-
-  margin-top:12px;
-}
-
-.metric{
-  padding:10px;
-
-  background:#060b10;
-
-  border:1px solid var(--border);
-
-  text-align:center;
-}
-
-.metricLabel{
-  color:var(--muted);
-
-  font-size:9px;
-
-  letter-spacing:1px;
-}
-
-.metricValue{
-  margin-top:4px;
-
-  color:var(--cyan);
-
-  font-size:18px;
-}
-
-/* =========================================================
-   SEARCH RANKING
-========================================================= */
-
-.rankItem{
-  padding:8px 6px;
-
-  border-bottom:1px solid var(--border);
-
-  cursor:pointer;
-}
-
-.rankItem:hover{
-  background:
-    rgba(0,229,255,.06);
-}
-
-.rankScore{
-  color:var(--pink);
-
-  font-size:10px;
-}
-
-.rankText{
-  margin-top:2px;
-
-  line-height:1.4;
-}
-
-.bar{
-  height:3px;
-
-  margin-top:5px;
-
-  background:#0c171e;
-}
-
-.barFill{
-  height:100%;
-
-  background:
-    linear-gradient(
-      90deg,
-      var(--cyan),
-      var(--pink)
-    );
-}
-
-/* =========================================================
-   METHOD
-========================================================= */
-
-.arch{
-  color:var(--muted);
-
-  font-size:9px;
-  line-height:1.7;
-}
-
-.arch b{
-  color:var(--text);
-}
-
-/* =========================================================
-   MOBILE / TABLET
-========================================================= */
-
-@media(max-width:1100px){
-
-  main{
-    grid-template-columns:
-      280px
-      minmax(0,1fr);
-  }
-
-  .col:last-child{
-    position:absolute;
-
-    top:var(--header-height);
-    right:0;
-    bottom:0;
-
-    width:320px;
-
+.topbar {
+    height: 64px;
+    flex: 0 0 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    border-bottom: 1px solid var(--border);
     background:
-      rgba(5,8,12,.97);
+        linear-gradient(
+            90deg,
+            rgba(0,229,160,.07),
+            transparent 45%,
+            rgba(0,200,255,.05)
+        ),
+        #0c1013;
+}
 
-    transform:translateX(100%);
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
+.logo {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--green);
+    color: var(--green);
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+    box-shadow:
+        0 0 12px rgba(0,229,160,.18),
+        inset 0 0 12px rgba(0,229,160,.05);
+}
+
+.brand-title {
+    font-size: 15px;
+    letter-spacing: .18em;
+    font-weight: 700;
+}
+
+.brand-sub {
+    color: var(--muted);
+    font-size: 9px;
+    letter-spacing: .15em;
+    margin-top: 3px;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    letter-spacing: .12em;
+    color: var(--muted);
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 10px var(--green);
+}
+
+.layout {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 360px minmax(0,1fr) 320px;
+}
+
+.panel {
+    min-width: 0;
+    min-height: 0;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+}
+
+.panel:last-child {
+    border-right: 0;
+    border-left: 1px solid var(--border);
+}
+
+.panel-header {
+    padding: 15px 16px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.panel-title {
+    color: var(--green);
+    font-size: 10px;
+    letter-spacing: .18em;
+    font-weight: 700;
+}
+
+.panel-description {
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.panel-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+.section {
+    margin-bottom: 18px;
+}
+
+.section-label {
+    color: var(--cyan);
+    font-size: 9px;
+    letter-spacing: .16em;
+    margin-bottom: 8px;
+}
+
+label {
+    display: block;
+    color: var(--muted);
+    font-size: 9px;
+    letter-spacing: .1em;
+    margin-bottom: 5px;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    color: var(--text);
+    background: #0b0f11;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 9px 10px;
+    outline: none;
     transition:
-      transform .2s ease;
-
-    z-index:50;
-  }
-
-  .col:last-child.open{
-    transform:translateX(0);
-  }
-
+        border-color .15s,
+        box-shadow .15s;
 }
 
-@media(max-width:700px){
-
-  body{
-    grid-template-rows:
-      48px
-      1fr;
-  }
-
-  header{
-    padding:0 12px;
-  }
-
-  .logoText{
-    font-size:11px;
-    letter-spacing:2px;
-  }
-
-  .logoMark{
-    width:30px;
-    height:30px;
-  }
-
-  main{
-    grid-template-columns:
-      1fr;
-
-    grid-template-rows:
-      40vh
-      60vh;
-  }
-
-  .col:first-child{
-    display:none;
-  }
-
-  .sceneColumn{
-    grid-row:1;
-  }
-
-  .col:last-child{
-    position:static;
-
-    width:auto;
-
-    transform:none;
-
-    grid-row:2;
-
-    display:flex;
-  }
-
-  .inspector{
-    width:
-      calc(100% - 24px);
-  }
-
-  .hud{
-    font-size:8px;
-  }
-
-  .hudRight{
-    display:none;
-  }
-
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 1px rgba(0,229,160,.1);
 }
 
+textarea {
+    min-height: 105px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+select {
+    appearance: auto;
+}
+
+.field {
+    margin-bottom: 10px;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.btn {
+    width: 100%;
+    border: 1px solid var(--green);
+    background: rgba(0,229,160,.06);
+    color: var(--green);
+    padding: 11px 12px;
+    border-radius: 3px;
+    letter-spacing: .12em;
+    font-size: 10px;
+    font-weight: 700;
+    transition: .15s;
+}
+
+.btn:hover {
+    background: rgba(0,229,160,.13);
+    box-shadow: 0 0 18px rgba(0,229,160,.12);
+}
+
+.btn.secondary {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    background: rgba(0,200,255,.05);
+}
+
+.btn.danger {
+    border-color: var(--danger);
+    color: var(--danger);
+    background: rgba(255,66,109,.05);
+}
+
+.btn.small {
+    padding: 8px 9px;
+    font-size: 9px;
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.checkbox-row input {
+    width: auto;
+}
+
+#projectMetadata {
+    display: none;
+    padding: 12px;
+    border: 1px solid rgba(0,200,255,.25);
+    background: rgba(0,200,255,.025);
+    margin-top: 10px;
+}
+
+.project-title {
+    color: var(--cyan);
+    font-size: 9px;
+    letter-spacing: .16em;
+    margin-bottom: 10px;
+}
+
+.git-patch {
+    min-height: 150px;
+    font-family:
+        "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        monospace;
+    font-size: 10px;
+}
+
+#space {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(0,200,255,.035),
+            transparent 45%
+        ),
+        #050708;
+}
+
+#canvas {
+    position: absolute;
+    inset: 0;
+}
+
+.space-overlay {
+    position: absolute;
+    left: 16px;
+    top: 14px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.space-title {
+    color: var(--green);
+    font-size: 10px;
+    letter-spacing: .18em;
+}
+
+.space-sub {
+    color: var(--muted);
+    font-size: 9px;
+    margin-top: 4px;
+}
+
+.space-controls {
+    position: absolute;
+    right: 14px;
+    top: 14px;
+    z-index: 5;
+    display: flex;
+    gap: 6px;
+}
+
+.space-controls button {
+    border: 1px solid var(--border);
+    background: rgba(8,11,13,.85);
+    color: var(--muted);
+    padding: 7px 9px;
+    font-size: 9px;
+    letter-spacing: .08em;
+}
+
+.space-controls button:hover {
+    color: var(--green);
+    border-color: var(--green);
+}
+
+.bottom-info {
+    position: absolute;
+    left: 15px;
+    bottom: 14px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.metric {
+    font-family:
+        "SFMono-Regular",
+        Consolas,
+        monospace;
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 3px;
+}
+
+.metric span {
+    color: var(--green);
+}
+
+.log {
+    background: #080b0d;
+    border: 1px solid var(--border);
+    padding: 9px;
+    height: 160px;
+    overflow-y: auto;
+    font-family:
+        "SFMono-Regular",
+        Consolas,
+        monospace;
+    font-size: 9px;
+    line-height: 1.55;
+}
+
+.log-line {
+    color: var(--muted);
+}
+
+.log-line.ok {
+    color: var(--green);
+}
+
+.log-line.warn {
+    color: var(--yellow);
+}
+
+.log-line.error {
+    color: var(--danger);
+}
+
+.vector-box {
+    background: #080b0d;
+    border: 1px solid var(--border);
+    padding: 10px;
+    font-family:
+        "SFMono-Regular",
+        Consolas,
+        monospace;
+    font-size: 9px;
+    line-height: 1.6;
+    word-break: break-all;
+    color: var(--muted);
+    max-height: 130px;
+    overflow: auto;
+}
+
+.vector-value {
+    color: var(--cyan);
+}
+
+.inspector-empty {
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+.inspector-card {
+    border: 1px solid var(--border);
+    background: #0b0f11;
+    padding: 12px;
+}
+
+.inspector-id {
+    color: var(--green);
+    font-family:
+        "SFMono-Regular",
+        Consolas,
+        monospace;
+    font-size: 10px;
+}
+
+.inspector-type {
+    color: var(--cyan);
+    font-size: 9px;
+    letter-spacing: .14em;
+    margin-top: 4px;
+}
+
+.inspector-title {
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.inspector-text {
+    margin-top: 8px;
+    color: #aeb9bd;
+    font-size: 10px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.inspector-value {
+    color: var(--muted);
+    font-size: 9px;
+    line-height: 1.6;
+    margin-top: 5px;
+    word-break: break-word;
+}
+
+.inspector-value strong {
+    color: var(--text);
+}
+
+.tag {
+    display: inline-block;
+    margin: 4px 4px 0 0;
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 8px;
+}
+
+.search-results {
+    margin-top: 10px;
+}
+
+.search-result {
+    padding: 9px;
+    border: 1px solid var(--border);
+    margin-bottom: 5px;
+    background: #0a0d0f;
+    cursor: pointer;
+}
+
+.search-result:hover {
+    border-color: var(--cyan);
+}
+
+.search-result-id {
+    color: var(--green);
+    font-size: 9px;
+}
+
+.search-result-text {
+    margin-top: 4px;
+    color: #aeb9bd;
+    font-size: 9px;
+    line-height: 1.4;
+}
+
+.search-score {
+    margin-top: 4px;
+    color: var(--cyan);
+    font-family: monospace;
+    font-size: 9px;
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 12px 0;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media (max-width: 1050px) {
+    .layout {
+        grid-template-columns: 310px minmax(0,1fr);
+    }
+
+    .panel-right {
+        display: none;
+    }
+}
+
+@media (max-width: 760px) {
+    body {
+        overflow: auto;
+    }
+
+    .topbar {
+        height: 56px;
+        flex-basis: 56px;
+    }
+
+    .layout {
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100vh - 56px);
+    }
+
+    .panel-left {
+        height: auto;
+        max-height: none;
+    }
+
+    #space {
+        height: 60vh;
+        min-height: 420px;
+        order: 1;
+    }
+
+    .panel-left {
+        order: 2;
+    }
+
+    .panel-right {
+        display: flex;
+        order: 3;
+        border-left: 0;
+        border-top: 1px solid var(--border);
+    }
+}
 </style>
 </head>
 
-
 <body>
 
-<!-- =======================================================
-     HEADER
-======================================================= -->
+<header class="topbar">
 
-<header>
+    <div class="brand">
+        <div class="logo">Σ</div>
 
-  <div class="logo">
+        <div>
+            <div class="brand-title">
+                NEURAL MEMORY
+            </div>
 
-    <div class="logoMark">
-      Σ
+            <div class="brand-sub">
+                SEMANTIC MEMORY CORE / HYPERGRAPH OBSERVATORY
+            </div>
+        </div>
     </div>
 
-    <div class="logoText">
-      NEURAL <span>MEMORY</span>
+    <div class="status">
+        <span class="status-dot"></span>
+        <span id="coreStatus">
+            EMBEDDING CORE INITIALIZING
+        </span>
     </div>
-
-  </div>
-
-  <div class="status">
-
-    <div
-      id="statusDot"
-      class="statusDot">
-    </div>
-
-    <span id="statusText">
-      EMBEDDING CORE OFFLINE
-    </span>
-
-  </div>
 
 </header>
 
+<main class="layout">
 
-<main>
+<!-- ========================================================= -->
+<!-- LEFT -->
+<!-- ========================================================= -->
 
-<!-- =======================================================
-     LEFT COLUMN
-======================================================= -->
+<section class="panel panel-left">
 
-<div class="col">
+    <div class="panel-header">
 
-  <!-- INPUT -->
-
-  <div class="panel">
-
-    <div class="panelTitle">
-      01 / MEMORY INPUT
-    </div>
-
-    <div class="panelBody">
-
-      <textarea
-        id="textInput"
-        placeholder="Eine neue Memory eingeben ..."
-      ></textarea>
-
-      <button id="embedBtn">
-        GENERATE EMBEDDING
-      </button>
-
-      <button
-        id="storeBtn"
-        class="green"
-        disabled
-      >
-        STORE MEMORY IN SPACE
-      </button>
-
-      <div
-        id="errorBox"
-        class="errorBox"
-      ></div>
-
-    </div>
-
-  </div>
-
-
-  <!-- PIPELINE -->
-
-  <div class="panel">
-
-    <div class="panelTitle">
-      PIPELINE
-    </div>
-
-    <div class="panelBody">
-
-      <div class="pipeline">
-
-        <div
-          id="stageText"
-          class="stage"
-        >
-          TEXT
+        <div class="panel-title">
+            01 / MEMORY INPUT
         </div>
 
-        <div
-          id="stageToken"
-          class="stage"
-        >
-          TOKENIZATION
+        <div class="panel-description">
+            GENERATE EMBEDDING · STORE MEMORY IN SPACE
         </div>
-
-        <div
-          id="stageModel"
-          class="stage"
-        >
-          E5 EMBEDDING
-        </div>
-
-        <div
-          id="stageVector"
-          class="stage"
-        >
-          VECTOR 384D
-        </div>
-
-        <div
-          id="stageStore"
-          class="stage"
-        >
-          ANCHORED INSERT
-        </div>
-
-        <div
-          id="stageSearch"
-          class="stage"
-        >
-          COSINE SEARCH
-        </div>
-
-      </div>
 
     </div>
 
-  </div>
+    <div class="panel-body">
 
+        <div class="section">
 
-  <!-- SYSTEM LOG -->
+            <div class="section-label">
+                MEMORY
+            </div>
 
-  <div class="panel">
+            <div class="field">
 
-    <div class="panelTitle">
-      SYSTEM LOG
-    </div>
+                <label for="memoryTitle">
+                    TITLE
+                </label>
 
-    <div class="panelBody">
+                <input
+                    id="memoryTitle"
+                    type="text"
+                    placeholder="z. B. 384D Embedding"
+                >
 
-      <div
-        id="log"
-        class="log"
-      ></div>
+            </div>
 
-    </div>
+            <div class="field">
 
-  </div>
+                <label for="memoryText">
+                    TEXT
+                </label>
 
+                <textarea
+                    id="memoryText"
+                    placeholder="Text der gespeichert und eingebettet werden soll..."
+                ></textarea>
 
-  <!-- VECTOR -->
+            </div>
 
-  <div class="panel">
+            <div class="field">
 
-    <div class="panelTitle">
-      CURRENT VECTOR
-    </div>
+                <label for="memoryType">
+                    MEMORY TYPE
+                </label>
 
-    <div class="panelBody">
+                <select id="memoryType">
 
-      <div
-        id="vectorDim"
-        class="vectorDim"
-      >
-        d = —
-      </div>
+                    <option value="memory">
+                        memory
+                    </option>
 
-      <div
-        id="vectorBox"
-        class="vectorBox"
-      >
-        Noch kein Embedding berechnet.
-      </div>
+                    <option value="concept">
+                        concept
+                    </option>
 
-    </div>
+                    <option value="claim">
+                        claim
+                    </option>
 
-  </div>
+                    <option value="evidence">
+                        evidence
+                    </option>
 
+                    <option value="hypothesis">
+                        hypothesis
+                    </option>
 
-  <!-- METHOD -->
+                    <option value="git_commit">
+                        git_commit
+                    </option>
 
-  <div class="panel">
+                    <option value="git_diff">
+                        git_diff
+                    </option>
 
-    <div class="panelTitle">
-      METHOD
-    </div>
+                    <option value="code_state">
+                        code_state
+                    </option>
 
-    <div class="panelBody">
+                    <option value="project_state">
+                        project_state
+                    </option>
 
-      <div class="arch">
+                </select>
 
-        <b>HIGH-D → 3D</b><br>
+            </div>
 
-        384D cosine neighborhood →
-        anchor selection →
-        local distance fitting →
-        local relaxation →
-        fixed 3D position.
+            <div class="field">
 
-        <br><br>
+                <label for="memoryTags">
+                    TAGS
+                </label>
 
-        <b>SEMANTIC SPACE</b><br>
+                <input
+                    id="memoryTags"
+                    type="text"
+                    placeholder="embedding, RAG, architecture"
+                >
 
-        Die vollständige 384D-Repräsentation
-        bleibt die semantische Wahrheit
-        für Retrieval und Similarity.
+            </div>
 
-        <br><br>
+            <!-- ================================================= -->
+            <!-- PROJECT / GIT METADATA -->
+            <!-- ================================================= -->
 
-        <b>3D POSITION</b><br>
+            <div id="projectMetadata">
 
-        <code>pos3d</code> ist ausschließlich
-        die visuelle Darstellung.
+                <div class="project-title">
+                    PROJECT / GIT METADATA
+                </div>
 
-        <br><br>
+                <div class="field">
 
-        <b>ANCHORS</b><br>
+                    <label for="gitProject">
+                        PROJECT
+                    </label>
 
-        Bereits platzierte Erinnerungen
-        werden bei späteren Inserts
-        nicht verschoben.
+                    <input
+                        id="gitProject"
+                        type="text"
+                        placeholder="NEURAL MEMORY"
+                    >
 
-        <br><br>
+                </div>
 
-        <b>EDGES</b><br>
+                <div class="field">
 
-        Sichtbarkeit einer Brücke basiert
-        ausschließlich auf 384D-Cosine.
+                    <label for="gitRepository">
+                        REPOSITORY
+                    </label>
 
-        <br><br>
+                    <input
+                        id="gitRepository"
+                        type="text"
+                        placeholder="JungmannSON/ar-tank"
+                    >
 
-        <b>PROJECT MEMORY</b><br>
+                </div>
 
-        Git-Commit, Diff, Code-State und
-        Project-State können später als
-        eigene deterministische Node-Typen
-        in denselben Graph integriert werden.
+                <div class="row">
 
-      </div>
+                    <div class="field">
 
-    </div>
+                        <label for="gitBranch">
+                            BRANCH
+                        </label>
 
-  </div>
+                        <input
+                            id="gitBranch"
+                            type="text"
+                            placeholder="main"
+                        >
 
-</div>
+                    </div>
 
+                    <div class="field">
 
-<!-- =======================================================
-     3D SPACE
-======================================================= -->
+                        <label for="gitFile">
+                            FILE
+                        </label>
 
-<div
-  class="col sceneColumn"
->
+                        <input
+                            id="gitFile"
+                            type="text"
+                            placeholder="index.html"
+                        >
 
-  <div class="panel scenePanel">
+                    </div>
 
-    <div class="panelTitle">
-      EMBEDDING SPACE / 3D MEMORY SPACE
-    </div>
+                </div>
 
-    <div class="panelBody sceneBody">
+                <div class="field">
 
-      <div id="scene">
+                    <label for="gitCommit">
+                        COMMIT HASH
+                    </label>
 
-        <div class="hud">
+                    <input
+                        id="gitCommit"
+                        type="text"
+                        placeholder="1abb8b76..."
+                    >
 
-          <div>
-            384D EMBEDDINGS → ANCHORED R³
-          </div>
+                </div>
 
-          <div
-            id="hudStatus"
-            class="hudRight"
-          >
-            MEMORY SPACE EMPTY
-          </div>
+                <div class="field">
 
-        </div>
+                    <label for="gitParent">
+                        PARENT HASH
+                    </label>
 
+                    <input
+                        id="gitParent"
+                        type="text"
+                        placeholder="73c67b5"
+                    >
 
-        <canvas id="canvas3d"></canvas>
+                </div>
 
+                <div class="row">
 
-        <div class="controlsHint">
+                    <div class="field">
 
-          DRAG · ROTATE
-          &nbsp;|&nbsp;
-          WHEEL · ZOOM
-          &nbsp;|&nbsp;
-          CLICK · SELECT
-          &nbsp;|&nbsp;
-          DBLCLICK · FOCUS
+                        <label for="gitAdditions">
+                            ADDITIONS
+                        </label>
 
-        </div>
+                        <input
+                            id="gitAdditions"
+                            type="number"
+                            min="0"
+                            value="0"
+                        >
 
+                    </div>
 
-        <div class="toolbar3d">
+                    <div class="field">
 
-          <button id="resetCamBtn">
-            RESET
-          </button>
+                        <label for="gitDeletions">
+                            DELETIONS
+                        </label>
 
-          <button id="toggleLinksBtn">
-            LINKS ON
-          </button>
+                        <input
+                            id="gitDeletions"
+                            type="number"
+                            min="0"
+                            value="0"
+                        >
 
-        </div>
+                    </div>
 
+                </div>
 
-        <div
-          id="inspector"
-          class="inspector"
-        >
+                <div class="field">
 
-          <h3>
-            MEMORY INSPECTOR
-          </h3>
+                    <label for="gitPatch">
+                        UNIFIED DIFF / PATCH
+                    </label>
 
-          <div
-            id="inspId"
-            class="id"
-          >
-            —
-          </div>
+                    <textarea
+                        id="gitPatch"
+                        class="git-patch"
+                        placeholder="diff --git a/index.html b/index.html
+..."
+                    ></textarea>
 
-          <div
-            id="inspText"
-            class="txt"
-          >
-            —
-          </div>
+                </div>
 
-          <div
-            id="inspMeta"
-            class="meta"
-          >
-            —
-          </div>
+                <div class="field">
 
-          <div
-            id="inspAnchors"
-            class="meta"
-            style="margin-top:8px"
-          ></div>
+                    <label for="codeLanguage">
+                        LANGUAGE
+                    </label>
+
+                    <input
+                        id="codeLanguage"
+                        type="text"
+                        placeholder="html / javascript / python"
+                    >
+
+                </div>
+
+                <div class="field">
+
+                    <label for="codeHash">
+                        CODE HASH
+                    </label>
+
+                    <input
+                        id="codeHash"
+                        type="text"
+                        placeholder="SHA256..."
+                    >
+
+                </div>
+
+            </div>
 
         </div>
 
-      </div>
+        <div class="section">
 
-    </div>
+            <button
+                id="storeButton"
+                class="btn"
+            >
+                GENERATE EMBEDDING / STORE MEMORY
+            </button>
 
-  </div>
-
-</div>
-
-
-<!-- =======================================================
-     RIGHT COLUMN
-======================================================= -->
-
-<div class="col">
-
-  <!-- MEMORY BANK -->
-
-  <div class="panel">
-
-    <div class="panelTitle">
-      MEMORY BANK
-    </div>
-
-    <div class="panelBody">
-
-      <div
-        id="memoryList"
-        class="memoryList"
-      >
-
-        <div
-          style="
-            color:#405861;
-            font-size:10px
-          "
-        >
-          VECTOR STORE EMPTY
         </div>
 
-      </div>
+        <div class="section">
+
+            <div class="section-label">
+                SEARCH
+            </div>
+
+            <div class="field">
+
+                <input
+                    id="searchInput"
+                    type="text"
+                    placeholder="Semantisch suchen..."
+                >
+
+            </div>
+
+            <button
+                id="searchButton"
+                class="btn secondary small"
+            >
+                COSINE SEARCH
+            </button>
+
+            <div
+                id="searchResults"
+                class="search-results"
+            ></div>
+
+        </div>
+
+        <div class="section">
+
+            <div class="section-label">
+                SYSTEM LOG
+            </div>
+
+            <div
+                id="systemLog"
+                class="log"
+            ></div>
+
+        </div>
 
     </div>
 
-  </div>
+</section>
 
 
-  <!-- SEARCH -->
+<!-- ========================================================= -->
+<!-- 3D SPACE -->
+<!-- ========================================================= -->
 
-  <div class="panel">
+<section id="space">
 
-    <div class="panelTitle">
-      SEMANTIC QUERY
+    <div class="space-overlay">
+
+        <div class="space-title">
+            SEMANTIC MEMORY SPACE
+        </div>
+
+        <div class="space-sub">
+            384D SEMANTIC VECTOR → FIXED 3D POSITION
+        </div>
+
     </div>
 
-    <div class="panelBody">
+    <div class="space-controls">
 
-      <input
-        id="queryInput"
-        placeholder="z.B. Stuttgart Termin"
-      >
+        <button id="resetCamera">
+            RESET VIEW
+        </button>
 
-      <button
-        id="searchBtn"
-        class="pink"
-        disabled
-      >
-        RUN COSINE SEARCH
-      </button>
+        <button id="toggleEdges">
+            EDGES ON
+        </button>
 
+        <button id="toggleAnchors">
+            ANCHORS OFF
+        </button>
 
-      <div class="metrics">
+    </div>
+
+    <div id="canvas"></div>
+
+    <div class="bottom-info">
 
         <div class="metric">
-
-          <div class="metricLabel">
-            MEMORY COUNT
-          </div>
-
-          <div
-            id="memoryCount"
-            class="metricValue"
-          >
-            0
-          </div>
-
+            MEMORIES:
+            <span id="memoryCount">0</span>
         </div>
-
 
         <div class="metric">
-
-          <div class="metricLabel">
-            VECTOR DIM
-          </div>
-
-          <div
-            id="dimension"
-            class="metricValue"
-          >
-            —
-          </div>
-
+            EDGES:
+            <span id="edgeCount">0</span>
         </div>
 
-      </div>
+        <div class="metric">
+            HYPEREDGES:
+            <span id="hyperedgeCount">0</span>
+        </div>
 
     </div>
 
-  </div>
+</section>
 
 
-  <!-- SEARCH RESULTS -->
+<!-- ========================================================= -->
+<!-- RIGHT -->
+<!-- ========================================================= -->
 
-  <div class="panel">
+<section class="panel panel-right">
 
-    <div class="panelTitle">
-      RELEVANCE SCANNER
+    <div class="panel-header">
+
+        <div class="panel-title">
+            02 / INSPECTOR
+        </div>
+
+        <div class="panel-description">
+            SELECTED MEMORY / VECTOR / PROJECT STATE
+        </div>
+
     </div>
 
-    <div class="panelBody">
-
-      <div id="ranking">
+    <div class="panel-body">
 
         <div
-          style="
-            color:#405861;
-            font-size:10px
-          "
+            id="inspector"
+            class="inspector-empty"
         >
-          NO SEARCH RESULT
+            Keine Memory ausgewählt.
+            <br><br>
+            Klicke einen Node im 3D-Raum an.
         </div>
 
-      </div>
+        <hr>
+
+        <div class="section">
+
+            <div class="section-label">
+                CURRENT VECTOR
+            </div>
+
+            <div
+                id="vectorDisplay"
+                class="vector-box"
+            >
+                d = —
+                <br>
+                Noch kein Embedding berechnet.
+            </div>
+
+        </div>
+
+        <div class="section">
+
+            <div class="section-label">
+                METHOD
+            </div>
+
+            <div class="panel-description">
+
+                <strong style="color:var(--green)">
+                    HIGH-D → 3D
+                </strong>
+
+                <br><br>
+
+                384D cosine neighborhood
+                → anchor selection
+                → local distance fitting
+                → local relaxation
+                → fixed 3D position.
+
+            </div>
+
+        </div>
+
+        <div class="section">
+
+            <div class="section-label">
+                SEMANTIC SPACE
+            </div>
+
+            <div class="panel-description">
+
+                Die vollständige
+                <strong style="color:var(--cyan)">
+                    384D-Repräsentation
+                </strong>
+                bleibt die semantische Wahrheit
+                für Retrieval und Similarity.
+
+            </div>
+
+        </div>
+
+        <div class="section">
+
+            <div class="section-label">
+                3D POSITION
+            </div>
+
+            <div class="panel-description">
+
+                <code>pos3d</code> ist ausschließlich
+                die visuelle Darstellung.
+
+                <br><br>
+
+                Bereits gespeicherte Positionen
+                werden nicht verändert.
+
+            </div>
+
+        </div>
+
+        <div class="section">
+
+            <div class="section-label">
+                PROJECT MEMORY
+            </div>
+
+            <div class="panel-description">
+
+                Git-Commit, Diff, Code-State und
+                Project-State können als eigene
+                deterministische Node-Typen im
+                selben Graphen gespeichert werden.
+
+            </div>
+
+        </div>
 
     </div>
 
-  </div>
-
-</div>
+</section>
 
 </main>
 
 
 <script type="module">
 
-/* =========================================================
+/* ============================================================
    IMPORTS
-========================================================= */
+============================================================ */
 
-import * as THREE from 'three';
-
-import {
-  OrbitControls
-} from 'three/addons/controls/OrbitControls.js';
+import * as THREE from "three";
 
 import {
-  pipeline
-} from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
-
-
-/* =========================================================
-   CONFIGURATION
-========================================================= */
-
-const CONFIG = Object.freeze({
-
-  MODEL:
-    'Xenova/multilingual-e5-small',
-
-  DIM:
-    384,
-
-  K_NEIGHBORS:
-    8,
-
-  ANCHOR_COUNT:
-    5,
-
-  RELAX_ITERATIONS:
-    120,
-
-  EDGE_THRESHOLD:
-    0.72,
-
-  DB_NAME:
-    'NEURAL_MEMORY_ANCHORED_V2',
-
-  DB_STORE:
-    'memories',
-
-  DB_VERSION:
-    1
-
-});
-
-
-/* =========================================================
-   APPLICATION STATE
-========================================================= */
-
-const state = {
-
-  extractor:
-    null,
-
-  modelPromise:
-    null,
-
-  modelReady:
-    false,
-
-  currentVector:
-    null,
-
-  currentText:
-    '',
-
-  memories:
-    [],
-
-  nextId:
-    1,
-
-  selectedId:
-    null,
-
-  showLinks:
-    true,
-
-  queryVector:
-    null,
-
-  db:
-    null
-
-};
-
-
-/* =========================================================
-   DOM CACHE
-========================================================= */
-
-const $ = id =>
-  document.getElementById(id);
-
-
-/* =========================================================
-   BASIC HELPERS
-========================================================= */
-
-function sleep(ms){
-
-  return new Promise(
-    resolve => setTimeout(resolve,ms)
-  );
-
+    OrbitControls
 }
+from "three/addons/controls/OrbitControls.js";
 
-
-function now(){
-
-  return new Date().toISOString();
-
+import {
+    pipeline,
+    env
 }
+from "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/+esm";
 
 
-function esc(value){
+/* ============================================================
+   TRANSFORMERS CONFIG
+============================================================ */
 
-  return String(value)
-
-    .replaceAll('&','&amp;')
-
-    .replaceAll('<','&lt;')
-
-    .replaceAll('>','&gt;')
-
-    .replaceAll('"','&quot;')
-
-    .replaceAll("'",'&#039;');
-
-}
+env.allowLocalModels = false;
+env.useBrowserCache = true;
 
 
-function log(message,type='info'){
+/* ============================================================
+   CONSTANTS
+============================================================ */
 
-  const entry =
-    document.createElement('div');
-
-  entry.className = type;
-
-  const time =
-    new Date().toLocaleTimeString(
-      'de-DE',
-      {hour12:false}
-    );
-
-  entry.textContent =
-    `[${time}] ${message}`;
-
-  $('log').prepend(entry);
-
-  while(
-    $('log').children.length > 60
-  ){
-
-    $('log').lastElementChild.remove();
-
-  }
-
-}
-
-
-function setStatus(online,text){
-
-  $('statusDot')
-    .classList
-    .toggle('online',online);
-
-  $('statusText').textContent =
-    text;
-
-}
-
-
-function stage(id,status){
-
-  const element = $(id);
-
-  if(!element)return;
-
-  element.classList.remove(
-    'active',
-    'done'
-  );
-
-  if(status){
-
-    element.classList.add(status);
-
-  }
-
-}
-
-
-function resetStages(){
-
-  [
-    'stageText',
-    'stageToken',
-    'stageModel',
-    'stageVector',
-    'stageStore',
-    'stageSearch'
-  ]
-  .forEach(
-    id => stage(id,null)
-  );
-
-}
-
-
-function error(message=''){
-
-  $('errorBox').textContent =
-    message;
-
-}
-
-
-/* =========================================================
-   VECTOR MATH
-========================================================= */
+const DB_NAME = "NEURAL_MEMORY_DB";
 
 /*
-   v ∈ R^384
+ * WICHTIG:
+ *
+ * Die bereits existierende Datenbank ist Version 2.
+ *
+ * Deshalb darf hier NICHT wieder 1 stehen.
+ */
+const DB_VERSION = 2;
 
-   Cosine similarity:
+const MEMORY_STORE = "memories";
+const EDGE_STORE = "edges";
+const HYPEREDGE_STORE = "hyperedges";
 
-   cos(a,b)
-     =
-   (a · b)
-   /
-   (||a|| ||b||)
+const EMBEDDING_MODEL =
+    "Xenova/multilingual-e5-small";
 
-   3D coordinates are NOT used here.
-*/
+const EMBEDDING_DIMENSIONS = 384;
 
-function dot(a,b){
 
-  let sum = 0;
+/* ============================================================
+   STATE
+============================================================ */
 
-  const n =
-    Math.min(
-      a.length,
-      b.length
-    );
+let db = null;
 
-  for(let i=0;i<n;i++){
+let embeddingExtractor = null;
 
-    sum +=
-      a[i] * b[i];
+let embeddingLoadingPromise = null;
 
-  }
+let embeddingReady = false;
 
-  return sum;
+let memories = [];
 
-}
+let edges = [];
 
+let hyperedges = [];
 
-function norm(v){
+let selectedMemoryId = null;
 
-  let sum = 0;
+let showEdges = true;
 
-  for(const x of v){
+let showAnchors = false;
 
-    sum += x*x;
+let isStoring = false;
 
-  }
 
-  return Math.sqrt(sum);
+/* ============================================================
+   THREE STATE
+============================================================ */
 
-}
+let scene;
 
+let camera;
 
-function cosine(a,b){
+let renderer;
 
-  const na =
-    norm(a);
+let controls;
 
-  const nb =
-    norm(b);
+let nodeGroup;
 
-  if(
-    na === 0 ||
-    nb === 0
-  ){
+let edgeGroup;
 
-    return 0;
+let anchorGroup;
 
-  }
+let raycaster;
 
-  return dot(a,b) /
-    (na * nb);
+let mouse;
 
-}
+let nodeMeshes = [];
 
+let nodePositions = new Map();
 
-function clamp(
-  value,
-  min,
-  max
-){
 
-  return Math.max(
-    min,
-    Math.min(max,value)
-  );
+/* ============================================================
+   DOM
+============================================================ */
 
-}
+const $ = id =>
+    document.getElementById(id);
 
 
-function angularDistance(a,b){
+/* ============================================================
+   LOG
+============================================================ */
 
-  return Math.sqrt(
-    Math.max(
-      0,
-      2 * (1 - cosine(a,b))
-    )
-  );
+function log(message, type = "") {
 
-}
+    const container = $("systemLog");
 
+    if (!container) return;
 
-function distance3(a,b){
-
-  return Math.hypot(
-    a[0]-b[0],
-    a[1]-b[1],
-    a[2]-b[2]
-  );
-
-}
-
-
-/* =========================================================
-   INDEXEDDB
-========================================================= */
-
-function openDB(){
-
-  if(state.db){
-
-    return Promise.resolve(
-      state.db
-    );
-
-  }
-
-  return new Promise(
-    (resolve,reject)=>{
-
-      const request =
-        indexedDB.open(
-          CONFIG.DB_NAME,
-          CONFIG.DB_VERSION
-        );
-
-
-      request.onupgradeneeded =
-        () => {
-
-          const db =
-            request.result;
-
-          if(
-            !db.objectStoreNames
-              .contains(CONFIG.DB_STORE)
-          ){
-
-            db.createObjectStore(
-              CONFIG.DB_STORE,
-              {
-                keyPath:'id'
-              }
-            );
-
-          }
-
-        };
-
-
-      request.onsuccess =
-        () => {
-
-          state.db =
-            request.result;
-
-          state.db.onclose =
-            () => {
-
-              state.db = null;
-
-            };
-
-          resolve(
-            state.db
-          );
-
-        };
-
-
-      request.onerror =
-        () => {
-
-          reject(
-            request.error
-          );
-
-        };
-
-    }
-  );
-
-}
-
-
-async function dbGetAll(){
-
-  try{
-
-    const db =
-      await openDB();
-
-    return await new Promise(
-      (resolve,reject)=>{
-
-        const tx =
-          db.transaction(
-            CONFIG.DB_STORE,
-            'readonly'
-          );
-
-        const request =
-          tx
-            .objectStore(CONFIG.DB_STORE)
-            .getAll();
-
-        request.onsuccess =
-          () => resolve(
-            request.result || []
-          );
-
-        request.onerror =
-          () => reject(
-            request.error
-          );
-
-      }
-    );
-
-  }catch(e){
-
-    log(
-      `IndexedDB nicht verfügbar: ${e.message}`,
-      'warn'
-    );
-
-    return [];
-
-  }
-
-}
-
-
-async function dbPut(record){
-
-  const db =
-    await openDB();
-
-  return await new Promise(
-    (resolve,reject)=>{
-
-      const tx =
-        db.transaction(
-          CONFIG.DB_STORE,
-          'readwrite'
-        );
-
-      tx
-        .objectStore(CONFIG.DB_STORE)
-        .put(record);
-
-      tx.oncomplete =
-        () => resolve();
-
-      tx.onerror =
-        () => reject(
-          tx.error
-        );
-
-    }
-  );
-
-}
-
-
-async function dbPutMany(records){
-
-  if(!records.length)return;
-
-  const db =
-    await openDB();
-
-  return await new Promise(
-    (resolve,reject)=>{
-
-      const tx =
-        db.transaction(
-          CONFIG.DB_STORE,
-          'readwrite'
-        );
-
-      const store =
-        tx.objectStore(
-          CONFIG.DB_STORE
-        );
-
-      for(
-        const record
-        of records
-      ){
-
-        store.put(record);
-
-      }
-
-      tx.oncomplete =
-        () => resolve();
-
-      tx.onerror =
-        () => reject(
-          tx.error
-        );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   EMBEDDING MODEL
-========================================================= */
-
-async function loadModel(){
-
-  if(state.modelReady){
-
-    return true;
-
-  }
-
-
-  if(state.modelPromise){
-
-    return state.modelPromise;
-
-  }
-
-
-  state.modelPromise =
-    (async()=>{
-
-      setStatus(
-        false,
-        'LOADING EMBEDDING CORE'
-      );
-
-      stage(
-        'stageModel',
-        'active'
-      );
-
-      error('');
-
-      log(
-        `Lade ${CONFIG.MODEL} …`,
-        'info'
-      );
-
-      log(
-        'Browser-Modus: WASM + quantisiertes Modell.',
-        'info'
-      );
-
-      try{
-
-        state.extractor =
-          await pipeline(
-            'feature-extraction',
-            CONFIG.MODEL,
+    const now =
+        new Date().toLocaleTimeString(
+            "de-DE",
             {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            }
+        );
 
-              dtype:'q8',
+    const line =
+        document.createElement("div");
 
-              device:'wasm',
+    line.className =
+        "log-line " + type;
 
-              progress_callback:
-                progress => {
+    line.textContent =
+        `[${now}] ${message}`;
 
-                  if(
-                    progress?.status ===
-                    'progress'
-                  ){
+    container.appendChild(line);
 
-                    const pct =
-                      Number.isFinite(
-                        progress.progress
-                      )
-                      ? ` ${Math.round(progress.progress)}%`
-                      : '';
+    container.scrollTop =
+        container.scrollHeight;
 
-                    const file =
-                      progress.file
-                      ? ` · ${progress.file}`
-                      : '';
+    while (container.children.length > 250) {
+        container.removeChild(
+            container.firstChild
+        );
+    }
+}
+
+
+/* ============================================================
+   HTML ESCAPE
+============================================================ */
+
+function escapeHtml(value) {
+
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+/* ============================================================
+   MEMORY TYPE UI
+============================================================ */
+
+function updateMemoryTypeUI() {
+
+    const type =
+        $("memoryType").value;
+
+    const projectTypes = [
+        "git_commit",
+        "git_diff",
+        "code_state",
+        "project_state"
+    ];
+
+    $("projectMetadata").style.display =
+        projectTypes.includes(type)
+            ? "block"
+            : "none";
+}
+
+$("memoryType")
+    .addEventListener(
+        "change",
+        updateMemoryTypeUI
+    );
+
+
+/* ============================================================
+   INDEXED DB
+============================================================ */
+
+function openDatabase() {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            /*
+             * ENTSCHEIDEND:
+             *
+             * DB_VERSION = 2
+             *
+             * Damit wird keine vorhandene
+             * Version 2 auf Version 1
+             * zurückgefordert.
+             */
+
+            const request =
+                indexedDB.open(
+                    DB_NAME,
+                    DB_VERSION
+                );
+
+            request.onupgradeneeded =
+                event => {
+
+                    const database =
+                        event.target.result;
+
+                    if (
+                        !database.objectStoreNames
+                            .contains(MEMORY_STORE)
+                    ) {
+
+                        database.createObjectStore(
+                            MEMORY_STORE,
+                            {
+                                keyPath: "id"
+                            }
+                        );
+                    }
+
+                    if (
+                        !database.objectStoreNames
+                            .contains(EDGE_STORE)
+                    ) {
+
+                        database.createObjectStore(
+                            EDGE_STORE,
+                            {
+                                keyPath: "id"
+                            }
+                        );
+                    }
+
+                    if (
+                        !database.objectStoreNames
+                            .contains(HYPEREDGE_STORE)
+                    ) {
+
+                        database.createObjectStore(
+                            HYPEREDGE_STORE,
+                            {
+                                keyPath: "id"
+                            }
+                        );
+                    }
 
                     log(
-                      `Modelldownload${pct}${file}`,
-                      'info'
+                        `IndexedDB Upgrade → Version ${database.version}`,
+                        "ok"
                     );
+                };
 
-                  }
+            request.onsuccess =
+                () => {
 
-                }
+                    db =
+                        request.result;
 
-            }
-          );
+                    db.onversionchange =
+                        () => {
+
+                            db.close();
+
+                            log(
+                                "IndexedDB wurde von einem anderen Tab aktualisiert.",
+                                "warn"
+                            );
+                        };
+
+                    resolve(db);
+                };
+
+            request.onerror =
+                () => {
+
+                    reject(
+                        request.error
+                    );
+                };
+        }
+    );
+}
 
 
-        /*
-           Echter Inferenztest.
+/* ============================================================
+   DB HELPERS
+============================================================ */
 
-           Erst danach gilt das Modell
-           als ONLINE.
-        */
+function dbPut(
+    storeName,
+    value
+) {
 
-        const smoke =
-          await state.extractor(
-            'passage: Modelltest',
+    return new Promise(
+        (resolve, reject) => {
+
+            const transaction =
+                db.transaction(
+                    storeName,
+                    "readwrite"
+                );
+
+            const store =
+                transaction.objectStore(
+                    storeName
+                );
+
+            const request =
+                store.put(value);
+
+            request.onsuccess =
+                () => resolve();
+
+            request.onerror =
+                () => reject(
+                    request.error
+                );
+        }
+    );
+}
+
+
+function dbGetAll(storeName) {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            const transaction =
+                db.transaction(
+                    storeName,
+                    "readonly"
+                );
+
+            const store =
+                transaction.objectStore(
+                    storeName
+                );
+
+            const request =
+                store.getAll();
+
+            request.onsuccess =
+                () => resolve(
+                    request.result
+                );
+
+            request.onerror =
+                () => reject(
+                    request.error
+                );
+        }
+    );
+}
+
+
+function dbDelete(
+    storeName,
+    id
+) {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            const transaction =
+                db.transaction(
+                    storeName,
+                    "readwrite"
+                );
+
+            const store =
+                transaction.objectStore(
+                    storeName
+                );
+
+            const request =
+                store.delete(id);
+
+            request.onsuccess =
+                () => resolve();
+
+            request.onerror =
+                () => reject(
+                    request.error
+                );
+        }
+    );
+}
+
+
+/* ============================================================
+   EMBEDDING LOADER
+============================================================ */
+
+let lastProgressLog = 0;
+
+async function getEmbeddingExtractor() {
+
+    if (embeddingExtractor) {
+        return embeddingExtractor;
+    }
+
+    if (embeddingLoadingPromise) {
+        return embeddingLoadingPromise;
+    }
+
+    log(
+        `Lade Embedding Model: ${EMBEDDING_MODEL}`,
+        "ok"
+    );
+
+    embeddingLoadingPromise =
+        pipeline(
+            "feature-extraction",
+            EMBEDDING_MODEL,
             {
-              pooling:'mean',
-              normalize:true
+                quantized: true,
+
+                progress_callback:
+                    progress => {
+
+                        const now =
+                            Date.now();
+
+                        if (
+                            now -
+                            lastProgressLog <
+                            500
+                        ) {
+                            return;
+                        }
+
+                        lastProgressLog =
+                            now;
+
+                        if (
+                            typeof progress.progress ===
+                            "number"
+                        ) {
+
+                            const percentage =
+                                Math.round(
+                                    progress.progress
+                                );
+
+                            log(
+                                `Modelldownload ${percentage}% · ${progress.file || ""}`
+                            );
+                        }
+                    }
             }
-          );
+        )
+        .then(
+            extractor => {
+
+                embeddingExtractor =
+                    extractor;
+
+                embeddingReady =
+                    true;
+
+                $("coreStatus")
+                    .textContent =
+                    "EMBEDDING CORE ONLINE · 384D";
+
+                log(
+                    "Embedding Core ONLINE · 384D",
+                    "ok"
+                );
+
+                return extractor;
+            }
+        )
+        .catch(
+            error => {
+
+                embeddingLoadingPromise =
+                    null;
+
+                embeddingExtractor =
+                    null;
+
+                embeddingReady =
+                    false;
+
+                $("coreStatus")
+                    .textContent =
+                    "EMBEDDING CORE ERROR";
+
+                log(
+                    "Embedding Core Fehler: " +
+                    error.message,
+                    "error"
+                );
+
+                throw error;
+            }
+        );
+
+    return embeddingLoadingPromise;
+}
+
+
+/* ============================================================
+   GENERATE EMBEDDING
+============================================================ */
+
+async function generateEmbedding(text) {
+
+    const cleanText =
+        String(text || "")
+            .trim();
+
+    if (!cleanText) {
+        throw new Error(
+            "Kein Text für Embedding vorhanden."
+        );
+    }
+
+    const extractor =
+        await getEmbeddingExtractor();
+
+    const output =
+        await extractor(
+            cleanText,
+            {
+                pooling: "mean",
+                normalize: true
+            }
+        );
+
+    const vector =
+        Array.from(
+            output.data
+        );
+
+    if (
+        vector.length !==
+        EMBEDDING_DIMENSIONS
+    ) {
+
+        throw new Error(
+            `Embedding-Dimension falsch: ${vector.length}, erwartet ${EMBEDDING_DIMENSIONS}.`
+        );
+    }
+
+    return vector;
+}
+
+
+/* ============================================================
+   VECTOR MATH
+============================================================ */
+
+function cosineSimilarity(a, b) {
+
+    if (
+        !Array.isArray(a) ||
+        !Array.isArray(b)
+    ) {
+        return 0;
+    }
+
+    if (
+        a.length !== b.length ||
+        a.length === 0
+    ) {
+        return 0;
+    }
+
+    let dot = 0;
+
+    let normA = 0;
+
+    let normB = 0;
+
+    for (
+        let i = 0;
+        i < a.length;
+        i++
+    ) {
+
+        dot +=
+            a[i] * b[i];
+
+        normA +=
+            a[i] * a[i];
+
+        normB +=
+            b[i] * b[i];
+    }
+
+    if (
+        normA === 0 ||
+        normB === 0
+    ) {
+        return 0;
+    }
+
+    return (
+        dot /
+        (
+            Math.sqrt(normA) *
+            Math.sqrt(normB)
+        )
+    );
+}
+
+
+/* ============================================================
+   MEMORY IDS
+============================================================ */
+
+function nextMemoryId() {
+
+    let max = 0;
+
+    for (const memory of memories) {
+
+        const match =
+            String(memory.id)
+                .match(
+                    /^MEM-(\d+)$/
+                );
+
+        if (match) {
+
+            max =
+                Math.max(
+                    max,
+                    Number(match[1])
+                );
+        }
+    }
+
+    return (
+        "MEM-" +
+        String(max + 1)
+            .padStart(6, "0")
+    );
+}
+
+
+function nextEdgeId() {
+
+    let max = 0;
+
+    for (const edge of edges) {
+
+        const match =
+            String(edge.id)
+                .match(
+                    /^EDGE-(\d+)$/
+                );
+
+        if (match) {
+
+            max =
+                Math.max(
+                    max,
+                    Number(match[1])
+                );
+        }
+    }
+
+    return (
+        "EDGE-" +
+        String(max + 1)
+            .padStart(6, "0")
+    );
+}
+
+
+/* ============================================================
+   RANDOM INITIAL POSITION
+============================================================ */
+
+function randomPosition() {
+
+    return {
+        x:
+            (Math.random() - .5) * 8,
+
+        y:
+            (Math.random() - .5) * 6,
+
+        z:
+            (Math.random() - .5) * 8
+    };
+}
+
+
+/* ============================================================
+   ANCHOR-BASED POSITION
+============================================================ */
+
+function calculatePosition(
+    vector,
+    existingMemories
+) {
+
+    if (
+        existingMemories.length === 0
+    ) {
+
+        return randomPosition();
+    }
+
+    const ranked =
+        existingMemories
+            .filter(
+                memory =>
+                    Array.isArray(
+                        memory.vector
+                    ) &&
+                    memory.vector.length ===
+                    EMBEDDING_DIMENSIONS &&
+                    memory.pos3d
+            )
+            .map(
+                memory => ({
+                    memory,
+
+                    similarity:
+                        cosineSimilarity(
+                            vector,
+                            memory.vector
+                        )
+                })
+            )
+            .sort(
+                (a, b) =>
+                    b.similarity -
+                    a.similarity
+            )
+            .slice(0, 4);
+
+    if (!ranked.length) {
+        return randomPosition();
+    }
+
+    let totalWeight = 0;
+
+    let x = 0;
+
+    let y = 0;
+
+    let z = 0;
+
+    for (const item of ranked) {
+
+        const similarity =
+            Math.max(
+                0.01,
+                item.similarity
+            );
+
+        const weight =
+            Math.pow(
+                similarity,
+                4
+            );
+
+        totalWeight +=
+            weight;
+
+        x +=
+            item.memory.pos3d.x *
+            weight;
+
+        y +=
+            item.memory.pos3d.y *
+            weight;
+
+        z +=
+            item.memory.pos3d.z *
+            weight;
+    }
+
+    if (
+        totalWeight <= 0
+    ) {
+        return randomPosition();
+    }
+
+    x /= totalWeight;
+
+    y /= totalWeight;
+
+    z /= totalWeight;
+
+    /*
+     * Kleiner lokaler Offset.
+     *
+     * Bestehende Nodes bleiben
+     * vollständig unverändert.
+     */
+
+    const nearest =
+        ranked[0].memory;
+
+    const dx =
+        vectorHashOffset(
+            vector,
+            0
+        );
+
+    const dy =
+        vectorHashOffset(
+            vector,
+            1
+        );
+
+    const dz =
+        vectorHashOffset(
+            vector,
+            2
+        );
+
+    const similarity =
+        ranked[0].similarity;
+
+    const distance =
+        .35 +
+        (1 - similarity) * 2.2;
+
+    x += dx * distance;
+
+    y += dy * distance;
+
+    z += dz * distance;
+
+    return {
+        x,
+        y,
+        z
+    };
+}
+
+
+function vectorHashOffset(
+    vector,
+    index
+) {
+
+    let value = 0;
+
+    const start =
+        index * 41;
+
+    for (
+        let i = start;
+        i < start + 41 &&
+        i < vector.length;
+        i++
+    ) {
+
+        value +=
+            vector[i] *
+            (i + 1);
+    }
+
+    return Math.sin(value * 13.731);
+}
+
+
+/* ============================================================
+   BUILD MEMORY
+============================================================ */
+
+function buildMemoryObject(
+    text,
+    title,
+    type,
+    tags,
+    vector,
+    position
+) {
+
+    const memory = {
+
+        id:
+            nextMemoryId(),
+
+        schema_version:
+            "1.1",
+
+        type,
+
+        text,
+
+        title,
+
+        tags,
+
+        vector,
+
+        pos3d:
+            position,
+
+        anchors: [],
+
+        positionLocked:
+            true,
+
+        createdAt:
+            new Date().toISOString(),
+
+        updatedAt:
+            new Date().toISOString()
+    };
+
+
+    /*
+     * PROJECT / GIT TYPES
+     */
+
+    const projectTypes = [
+        "git_commit",
+        "git_diff",
+        "code_state",
+        "project_state"
+    ];
+
+    if (
+        projectTypes.includes(type)
+    ) {
+
+        const additions =
+            Number(
+                $("gitAdditions").value
+            );
+
+        const deletions =
+            Number(
+                $("gitDeletions").value
+            );
+
+        memory.project = {
+
+            name:
+                $("gitProject")
+                    .value
+                    .trim(),
+
+            repository:
+                $("gitRepository")
+                    .value
+                    .trim(),
+
+            branch:
+                $("gitBranch")
+                    .value
+                    .trim()
+        };
+
+        memory.git = {
+
+            commit:
+                $("gitCommit")
+                    .value
+                    .trim(),
+
+            parent:
+                $("gitParent")
+                    .value
+                    .trim(),
+
+            file:
+                $("gitFile")
+                    .value
+                    .trim(),
+
+            additions:
+                Number.isFinite(
+                    additions
+                )
+                    ? additions
+                    : 0,
+
+            deletions:
+                Number.isFinite(
+                    deletions
+                )
+                    ? deletions
+                    : 0
+        };
+
+
+        const patch =
+            $("gitPatch")
+                .value;
+
+        if (
+            patch.trim()
+        ) {
+
+            memory.patch = {
+
+                format:
+                    "unified_diff",
+
+                content:
+                    patch
+            };
+        }
+    }
+
+
+    /*
+     * CODE STATE
+     */
+
+    if (
+        type === "code_state"
+    ) {
+
+        memory.file = {
+
+            path:
+                $("gitFile")
+                    .value
+                    .trim(),
+
+            language:
+                $("codeLanguage")
+                    .value
+                    .trim()
+        };
+
+        memory.code = {
+
+            hash:
+                $("codeHash")
+                    .value
+                    .trim()
+        };
+    }
+
+
+    /*
+     * PROJECT STATE
+     */
+
+    if (
+        type === "project_state"
+    ) {
+
+        memory.state = {
+
+            commit_hash:
+                $("gitCommit")
+                    .value
+                    .trim(),
+
+            files: [],
+
+            memories: [],
+
+            diffs: [],
+
+            code_states: []
+        };
+    }
+
+
+    return memory;
+}
+
+
+/* ============================================================
+   STORE MEMORY
+============================================================ */
+
+async function createMemory() {
+
+    if (isStoring) {
+        return;
+    }
+
+    const text =
+        $("memoryText")
+            .value
+            .trim();
+
+    const title =
+        $("memoryTitle")
+            .value
+            .trim() ||
+        "Untitled Memory";
+
+    const type =
+        $("memoryType")
+            .value;
+
+    const tags =
+        $("memoryTags")
+            .value
+            .split(",")
+            .map(
+                value =>
+                    value.trim()
+            )
+            .filter(Boolean);
+
+
+    if (!text) {
+
+        log(
+            "Memory kann nicht gespeichert werden: Text fehlt.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    try {
+
+        isStoring = true;
+
+        $("storeButton")
+            .disabled = true;
+
+        $("storeButton")
+            .textContent =
+            "GENERATING 384D VECTOR...";
+
+
+        log(
+            "Embedding wird berechnet..."
+        );
 
 
         const vector =
-          Array.from(
-            smoke.data ||
-            smoke.tolist()[0]
-          );
-
-
-        if(
-          vector.length !==
-          CONFIG.DIM
-        ){
-
-          throw new Error(
-            `Modelltest lieferte ${vector.length} Dimensionen statt ${CONFIG.DIM}.`
-          );
-
-        }
-
-
-        state.modelReady =
-          true;
-
-        setStatus(
-          true,
-          `EMBEDDING CORE ONLINE · ${CONFIG.DIM}D`
-        );
-
-        $('dimension').textContent =
-          CONFIG.DIM;
-
-        stage(
-          'stageModel',
-          'done'
-        );
-
-        log(
-          'Embedding Core ONLINE.',
-          'ok'
-        );
-
-        log(
-          `Smoke-Test erfolgreich · ${CONFIG.DIM}D.`,
-          'ok'
-        );
-
-        return true;
-
-      }catch(e){
-
-        state.extractor =
-          null;
-
-        state.modelReady =
-          false;
-
-        setStatus(
-          false,
-          'LOAD FAILED'
-        );
-
-        stage(
-          'stageModel',
-          null
-        );
-
-        error(
-          `${e?.message || e}\n\n` +
-          'Das Modell wird im Browser geladen. ' +
-          'Beim ersten Start kann der Download länger dauern.'
-        );
-
-        log(
-          `Embedding-Modell konnte nicht geladen werden: ${e?.message || e}`,
-          'err'
-        );
-
-        return false;
-
-      }finally{
-
-        state.modelPromise =
-          null;
-
-      }
-
-    })();
-
-
-  return state.modelPromise;
-
-}
-
-
-async function embed(
-  text,
-  mode='passage'
-){
-
-  const ready =
-    await loadModel();
-
-  if(
-    !ready ||
-    !state.extractor
-  ){
-
-    throw new Error(
-      'Embedding-Modell ist nicht verfügbar.'
-    );
-
-  }
-
-
-  const clean =
-    text.trim();
-
-  if(!clean){
-
-    throw new Error(
-      'Leerer Text kann nicht eingebettet werden.'
-    );
-
-  }
-
-
-  const prepared =
-    `${mode}: ${clean}`;
-
-
-  const output =
-    await state.extractor(
-      prepared,
-      {
-        pooling:'mean',
-        normalize:true
-      }
-    );
-
-
-  const vector =
-    Array.from(
-      output.data ||
-      output.tolist()[0]
-    );
-
-
-  if(
-    vector.length !==
-    CONFIG.DIM
-  ){
-
-    throw new Error(
-      `Unerwartete Dimension ${vector.length}, erwartet ${CONFIG.DIM}.`
-    );
-
-  }
-
-
-  return vector;
-
-}
-
-
-/* =========================================================
-   MEMORY SCHEMA
-========================================================= */
-
-/*
-   WICHTIG:
-
-   semantic.embedding.vector
-       = vollständiger 384D-Vektor
-
-   geometry.pos3d
-       = separate 3D-Visualisierung
-
-   Git-Metadaten werden später separat
-   als deterministische Node-Typen ergänzt.
-*/
-
-function createMemoryRecord(
-  id,
-  text,
-  vector
-){
-
-  return {
-
-    id,
-
-    schema_version:
-      '1.1',
-
-    type:
-      'memory',
-
-    content:{
-
-      title:
-        text.slice(0,80),
-
-      text
-
-    },
-
-    semantic:{
-
-      embedding:{
-
-        model:
-          CONFIG.MODEL,
-
-        dimensions:
-          CONFIG.DIM,
-
-        vector:
-          vector.slice()
-
-      }
-
-    },
-
-    geometry:{
-
-      pos3d:[
-        0,
-        0,
-        0
-      ]
-
-    },
-
-    anchors:[],
-
-    positionLocked:
-      true,
-
-    created_at:
-      now()
-
-  };
-
-}
-
-
-/*
-   Compatibility helpers.
-
-   Die 384D-Daten liegen strukturiert unter
-   semantic.embedding.vector.
-
-   Die Funktionen erlauben zugleich den
-   Zugriff auf ältere gespeicherte Datensätze.
-*/
-
-function getVector(memory){
-
-  if(
-    Array.isArray(
-      memory?.semantic
-        ?.embedding
-        ?.vector
-    )
-  ){
-
-    return memory.semantic.embedding.vector;
-
-  }
-
-  if(
-    Array.isArray(
-      memory?.vector
-    )
-  ){
-
-    return memory.vector;
-
-  }
-
-  return [];
-
-}
-
-
-function getPosition(memory){
-
-  if(
-    Array.isArray(
-      memory?.geometry?.pos3d
-    )
-  ){
-
-    return memory.geometry.pos3d;
-
-  }
-
-  if(
-    Array.isArray(memory?.pos3d)
-  ){
-
-    return memory.pos3d;
-
-  }
-
-  return [0,0,0];
-
-}
-
-
-function setPosition(
-  memory,
-  position
-){
-
-  if(!memory.geometry){
-
-    memory.geometry = {};
-
-  }
-
-  memory.geometry.pos3d =
-    position.slice();
-
-}
-
-
-/* =========================================================
-   ANCHOR SEARCH
-========================================================= */
-
-function nearestNeighbors(
-  vector
-){
-
-  return state.memories
-
-    .map(
-      memory => {
-
-        const v =
-          getVector(memory);
-
-        return {
-
-          memory,
-
-          score:
-            cosine(vector,v),
-
-          distance:
-            angularDistance(
-              vector,
-              v
-            )
-
-        };
-
-      }
-    )
-
-    .sort(
-      (a,b) =>
-        b.score -
-        a.score
-    )
-
-    .slice(
-      0,
-      CONFIG.K_NEIGHBORS
-    );
-
-}
-
-
-/* =========================================================
-   ANCHOR SELECTION
-========================================================= */
-
-function chooseAnchors(
-  neighbors
-){
-
-  if(
-    neighbors.length <=
-    CONFIG.ANCHOR_COUNT
-  ){
-
-    return neighbors.map(
-      x => x.memory
-    );
-
-  }
-
-
-  const selected = [
-    neighbors[0].memory
-  ];
-
-
-  while(
-    selected.length <
-    Math.min(
-      CONFIG.ANCHOR_COUNT,
-      neighbors.length
-    )
-  ){
-
-    let best =
-      null;
-
-    let bestValue =
-      -Infinity;
-
-
-    for(
-      const candidate
-      of neighbors
-    ){
-
-      if(
-        selected.some(
-          item =>
-            item.id ===
-            candidate.memory.id
-        )
-      ){
-
-        continue;
-
-      }
-
-
-      let diversity =
-        Infinity;
-
-
-      for(
-        const selectedMemory
-        of selected
-      ){
-
-        diversity =
-          Math.min(
-            diversity,
-            angularDistance(
-              getVector(candidate.memory),
-              getVector(selectedMemory)
-            )
-          );
-
-      }
-
-
-      const value =
-        diversity * 0.65 +
-        candidate.score * 0.35;
-
-
-      if(
-        value >
-        bestValue
-      ){
-
-        bestValue =
-          value;
-
-        best =
-          candidate.memory;
-
-      }
-
-    }
-
-
-    if(!best)break;
-
-    selected.push(best);
-
-  }
-
-
-  return selected;
-
-}
-
-
-/* =========================================================
-   LOCAL 3D SCALE
-========================================================= */
-
-function localScale(
-  anchors
-){
-
-  const ratios = [];
-
-
-  for(
-    let i=0;
-    i<anchors.length;
-    i++
-  ){
-
-    for(
-      let j=i+1;
-      j<anchors.length;
-      j++
-    ){
-
-      const semanticDistance =
-        angularDistance(
-          getVector(anchors[i]),
-          getVector(anchors[j])
-        );
-
-
-      const visualDistance =
-        distance3(
-          getPosition(anchors[i]),
-          getPosition(anchors[j])
-        );
-
-
-      if(
-        semanticDistance > 1e-5 &&
-        visualDistance > 1e-5
-      ){
-
-        ratios.push(
-          visualDistance /
-          semanticDistance
-        );
-
-      }
-
-    }
-
-  }
-
-
-  if(!ratios.length){
-
-    return 3;
-
-  }
-
-
-  ratios.sort(
-    (a,b)=>a-b
-  );
-
-
-  return clamp(
-    ratios[
-      Math.floor(
-        ratios.length / 2
-      )
-    ],
-    .35,
-    8
-  );
-
-}
-
-
-/* =========================================================
-   INITIAL POSITION
-========================================================= */
-
-function initialPosition(
-  vector,
-  anchors
-){
-
-  if(!anchors.length){
-
-    return [0,0,0];
-
-  }
-
-
-  const weights =
-    anchors.map(
-      anchor =>
-        Math.max(
-          .0001,
-          Math.pow(
-            (
-              cosine(
-                vector,
-                getVector(anchor)
-              ) + 1
-            ) / 2,
-            4
-          )
-        )
-    );
-
-
-  const sum =
-    weights.reduce(
-      (a,b)=>a+b,
-      0
-    );
-
-
-  const position =
-    [0,0,0];
-
-
-  anchors.forEach(
-    (anchor,index)=>{
-
-      const p =
-        getPosition(anchor);
-
-      position[0] +=
-        p[0] *
-        weights[index];
-
-      position[1] +=
-        p[1] *
-        weights[index];
-
-      position[2] +=
-        p[2] *
-        weights[index];
-
-    }
-  );
-
-
-  position[0] /= sum;
-  position[1] /= sum;
-  position[2] /= sum;
-
-
-  return position;
-
-}
-
-
-/* =========================================================
-   LOCAL POSITION SOLVER
-========================================================= */
-
-function solveLocalPosition(
-  vector,
-  anchors
-){
-
-  if(!anchors.length){
-
-    return [0,0,0];
-
-  }
-
-
-  if(anchors.length === 1){
-
-    return getPosition(
-      anchors[0]
-    ).slice();
-
-  }
-
-
-  const scale =
-    localScale(
-      anchors
-    );
-
-
-  const targets =
-    anchors.map(
-      anchor =>
-        clamp(
-          angularDistance(
-            vector,
-            getVector(anchor)
-          ) * scale,
-          .03,
-          12
-        )
-    );
-
-
-  let position =
-    initialPosition(
-      vector,
-      anchors
-    );
-
-
-  let best =
-    position.slice();
-
-  let bestLoss =
-    Infinity;
-
-
-  for(
-    let iteration=0;
-    iteration<CONFIG.RELAX_ITERATIONS;
-    iteration++
-  ){
-
-    const gradient =
-      [0,0,0];
-
-    let loss =
-      0;
-
-
-    for(
-      let k=0;
-      k<anchors.length;
-      k++
-    ){
-
-      const anchorPosition =
-        getPosition(
-          anchors[k]
-        );
-
-
-      let dx =
-        position[0] -
-        anchorPosition[0];
-
-      let dy =
-        position[1] -
-        anchorPosition[1];
-
-      let dz =
-        position[2] -
-        anchorPosition[2];
-
-
-      let radius =
-        Math.hypot(
-          dx,
-          dy,
-          dz
-        );
-
-
-      if(
-        radius < 1e-6
-      ){
-
-        radius = 1e-6;
-
-      }
-
-
-      const errorDistance =
-        radius -
-        targets[k];
-
-
-      const similarityWeight =
-        .2 +
-        .8 *
-        Math.pow(
-          (
-            cosine(
-              vector,
-              getVector(
-                anchors[k]
-              )
-            ) + 1
-          ) / 2,
-          2
-        );
-
-
-      const weight =
-        similarityWeight *
-        (
-          1 /
-          (1 + targets[k])
-        );
-
-
-      loss +=
-        weight *
-        errorDistance *
-        errorDistance;
-
-
-      gradient[0] +=
-        2 *
-        weight *
-        errorDistance *
-        dx /
-        radius;
-
-
-      gradient[1] +=
-        2 *
-        weight *
-        errorDistance *
-        dy /
-        radius;
-
-
-      gradient[2] +=
-        2 *
-        weight *
-        errorDistance *
-        dz /
-        radius;
-
-    }
-
-
-    const learningRate =
-      .075 *
-      (
-        1 -
-        iteration /
-        CONFIG.RELAX_ITERATIONS
-      ) +
-      .008;
-
-
-    position[0] -=
-      learningRate *
-      gradient[0];
-
-    position[1] -=
-      learningRate *
-      gradient[1];
-
-    position[2] -=
-      learningRate *
-      gradient[2];
-
-
-    if(
-      loss <
-      bestLoss
-    ){
-
-      bestLoss =
-        loss;
-
-      best =
-        position.slice();
-
-    }
-
-  }
-
-
-  return best;
-
-}
-
-
-/* =========================================================
-   INITIAL FRAME
-========================================================= */
-
-function seedInitialFrame(){
-
-  const memories =
-    state.memories;
-
-
-  if(
-    memories.length === 0
-  ){
-
-    return;
-
-  }
-
-
-  /*
-     Memory 1
-  */
-
-  if(
-    memories.length === 1
-  ){
-
-    setPosition(
-      memories[0],
-      [0,0,0]
-    );
-
-    memories[0].anchors = [];
-
-    memories[0].positionLocked =
-      true;
-
-    return;
-
-  }
-
-
-  /*
-     Memory 2
-  */
-
-  if(
-    memories.length === 2
-  ){
-
-    const a =
-      memories[0];
-
-    const b =
-      memories[1];
-
-
-    const semanticDistance =
-      angularDistance(
-        getVector(a),
-        getVector(b)
-      );
-
-
-    const separation =
-      clamp(
-        1.5 +
-        semanticDistance * 2.5,
-        1.5,
-        4.0
-      );
-
-
-    setPosition(
-      a,
-      [
-        -separation / 2,
-        0,
-        0
-      ]
-    );
-
-
-    setPosition(
-      b,
-      [
-        separation / 2,
-        0,
-        0
-      ]
-    );
-
-
-    a.anchors = [];
-
-    b.anchors = [
-      a.id
-    ];
-
-    a.positionLocked = true;
-    b.positionLocked = true;
-
-    return;
-
-  }
-
-
-  /*
-     Memory 3
-
-     Establishes a stable initial
-     triangular frame.
-  */
-
-  const a =
-    memories[0];
-
-  const b =
-    memories[1];
-
-  const c =
-    memories[2];
-
-
-  const dAB =
-    angularDistance(
-      getVector(a),
-      getVector(b)
-    );
-
-  const dAC =
-    angularDistance(
-      getVector(a),
-      getVector(c)
-    );
-
-  const dBC =
-    angularDistance(
-      getVector(b),
-      getVector(c)
-    );
-
-
-  const base =
-    Math.max(
-      dAB,
-      1e-6
-    );
-
-
-  const scale =
-    4.8 /
-    base;
-
-
-  setPosition(
-    a,
-    [-2.4,0,0]
-  );
-
-
-  setPosition(
-    b,
-    [2.4,0,0]
-  );
-
-
-  const AC =
-    dAC * scale;
-
-  const BC =
-    dBC * scale;
-
-
-  const x =
-    (
-      AC * AC -
-      BC * BC +
-      4.8 * 4.8
-    ) /
-    (
-      2 * 4.8
-    );
-
-
-  const y =
-    Math.sqrt(
-      Math.max(
-        0,
-        AC * AC -
-        x * x
-      )
-    );
-
-
-  setPosition(
-    c,
-    [
-      x - 2.4,
-      y,
-      0
-    ]
-  );
-
-
-  c.anchors = [
-    a.id,
-    b.id
-  ];
-
-
-  for(
-    const memory
-    of [a,b,c]
-  ){
-
-    memory.positionLocked =
-      true;
-
-  }
-
-}
-
-
-/* =========================================================
-   PERSISTENCE
-========================================================= */
-
-async function persistAll(){
-
-  await dbPutMany(
-    state.memories
-  );
-
-}
-
-
-/* =========================================================
-   INSERT MEMORY
-========================================================= */
-
-async function insertMemory(
-  text,
-  vector
-){
-
-  const id =
-    `MEM-${String(
-      state.nextId++
-    ).padStart(6,'0')}`;
-
-
-  const record =
-    createMemoryRecord(
-      id,
-      text,
-      vector
-    );
-
-
-  state.memories.push(
-    record
-  );
-
-
-  /*
-     First three memories create
-     the fixed coordinate frame.
-  */
-
-  if(
-    state.memories.length <= 3
-  ){
-
-    seedInitialFrame();
-
-    await persistAll();
-
-    return record;
-
-  }
-
-
-  /*
-     From Memory #4 onward:
-
-     Only the NEW memory gets
-     a calculated position.
-
-     Existing memories remain fixed.
-  */
-
-  const neighbors =
-    nearestNeighbors(
-      vector
-    );
-
-
-  const anchors =
-    chooseAnchors(
-      neighbors
-    );
-
-
-  record.anchors =
-    anchors.map(
-      anchor => anchor.id
-    );
-
-
-  setPosition(
-    record,
-    solveLocalPosition(
-      vector,
-      anchors
-    )
-  );
-
-
-  record.positionLocked =
-    true;
-
-
-  await dbPut(
-    record
-  );
-
-
-  return record;
-
-}
-
-
-/* =========================================================
-   THREE.JS
-========================================================= */
-
-let scene;
-let camera;
-let renderer;
-let controls;
-
-let pointsMesh;
-let linesGroup;
-
-let raycaster;
-let mouse;
-
-
-const vertexShader = `
-
-attribute float aSelected;
-
-varying float vSelected;
-
-void main(){
-
-  vSelected =
-    float(aSelected > 0.5);
-
-  vec4 mvPosition =
-    modelViewMatrix *
-    vec4(position,1.0);
-
-  gl_Position =
-    projectionMatrix *
-    mvPosition;
-
-  float distanceScale =
-    260.0 /
-    max(
-      40.0,
-      -mvPosition.z
-    );
-
-  gl_PointSize =
-    (
-      aSelected > 0.5
-      ? 8.5
-      : 5.5
-    )
-    *
-    distanceScale;
-
-}
-
-`;
-
-
-const fragmentShader = `
-
-varying float vSelected;
-
-void main(){
-
-  vec2 p =
-    gl_PointCoord -
-    vec2(0.5);
-
-  float radius =
-    length(p);
-
-  if(radius > 0.5){
-
-    discard;
-
-  }
-
-  float core =
-    1.0 -
-    smoothstep(
-      0.03,
-      0.23,
-      radius
-    );
-
-  float glow =
-    1.0 -
-    smoothstep(
-      0.12,
-      0.50,
-      radius
-    );
-
-  vec3 cyan =
-    vec3(
-      0.0,
-      0.90,
-      1.0
-    );
-
-  vec3 pink =
-    vec3(
-      1.0,
-      0.18,
-      0.58
-    );
-
-  vec3 color =
-    mix(
-      cyan,
-      pink,
-      vSelected
-    );
-
-  float alpha =
-    max(
-      core,
-      glow * 0.65
-    );
-
-  gl_FragColor =
-    vec4(
-      color,
-      alpha
-    );
-
-}
-
-`;
-
-
-/* =========================================================
-   THREE INITIALIZATION
-========================================================= */
-
-function initThree(){
-
-  const container =
-    $('scene');
-
-  const canvas =
-    $('canvas3d');
-
-
-  scene =
-    new THREE.Scene();
-
-
-  scene.fog =
-    new THREE.FogExp2(
-      0x05080c,
-      .035
-    );
-
-
-  camera =
-    new THREE.PerspectiveCamera(
-      55,
-      1,
-      .1,
-      200
-    );
-
-
-  camera.position.set(
-    8,
-    6,
-    10
-  );
-
-
-  renderer =
-    new THREE.WebGLRenderer({
-
-      canvas,
-
-      antialias:true,
-
-      alpha:true
-
-    });
-
-
-  renderer.setPixelRatio(
-    Math.min(
-      window.devicePixelRatio || 1,
-      2
-    )
-  );
-
-
-  renderer.setClearColor(
-    0x000000,
-    0
-  );
-
-
-  controls =
-    new OrbitControls(
-      camera,
-      canvas
-    );
-
-
-  controls.enableDamping =
-    true;
-
-  controls.dampingFactor =
-    .08;
-
-  controls.minDistance =
-    1.5;
-
-  controls.maxDistance =
-    50;
-
-  controls.target.set(
-    0,
-    0,
-    0
-  );
-
-
-  scene.add(
-    new THREE.AmbientLight(
-      0x406080,
-      .6
-    )
-  );
-
-
-  const directionalLight =
-    new THREE.DirectionalLight(
-      0x00e5ff,
-      .45
-    );
-
-
-  directionalLight.position.set(
-    5,
-    10,
-    7
-  );
-
-
-  scene.add(
-    directionalLight
-  );
-
-
-  const grid =
-    new THREE.GridHelper(
-      18,
-      18,
-      0x1a2a36,
-      0x0f1a22
-    );
-
-
-  grid.material.transparent =
-    true;
-
-  grid.material.opacity =
-    .4;
-
-
-  scene.add(
-    grid
-  );
-
-
-  const axes =
-    new THREE.AxesHelper(
-      3.5
-    );
-
-
-  axes.setColors(
-    0xff2d95,
-    0x00ff9d,
-    0x00e5ff
-  );
-
-
-  axes.material.transparent =
-    true;
-
-  axes.material.opacity =
-    .45;
-
-
-  scene.add(
-    axes
-  );
-
-
-  linesGroup =
-    new THREE.Group();
-
-
-  scene.add(
-    linesGroup
-  );
-
-
-  raycaster =
-    new THREE.Raycaster();
-
-
-  raycaster.params.Points.threshold =
-    .25;
-
-
-  mouse =
-    new THREE.Vector2();
-
-
-  canvas.addEventListener(
-    'pointerdown',
-    onPointerDown
-  );
-
-
-  canvas.addEventListener(
-    'dblclick',
-    onDoubleClick
-  );
-
-
-  resizeThree();
-
-
-  window.addEventListener(
-    'resize',
-    resizeThree
-  );
-
-
-  animate();
-
-}
-
-
-/* =========================================================
-   THREE RESIZE
-========================================================= */
-
-function resizeThree(){
-
-  if(!renderer)return;
-
-
-  const width =
-    $('scene').clientWidth ||
-    1;
-
-  const height =
-    $('scene').clientHeight ||
-    1;
-
-
-  camera.aspect =
-    width / height;
-
-
-  camera.updateProjectionMatrix();
-
-
-  renderer.setSize(
-    width,
-    height,
-    false
-  );
-
-}
-
-
-/* =========================================================
-   RENDER LOOP
-========================================================= */
-
-function animate(){
-
-  requestAnimationFrame(
-    animate
-  );
-
-  controls.update();
-
-  renderer.render(
-    scene,
-    camera
-  );
-
-}
-
-
-/* =========================================================
-   POINT CLOUD
-========================================================= */
-
-function disposeObject(
-  object
-){
-
-  if(!object)return;
-
-
-  if(object.geometry){
-
-    object.geometry.dispose();
-
-  }
-
-
-  if(object.material){
-
-    if(
-      Array.isArray(
-        object.material
-      )
-    ){
-
-      object.material.forEach(
-        material =>
-          material.dispose()
-      );
-
-    }else{
-
-      object.material.dispose();
-
-    }
-
-  }
-
-}
-
-
-function makePoints(){
-
-  if(pointsMesh){
-
-    scene.remove(
-      pointsMesh
-    );
-
-    disposeObject(
-      pointsMesh
-    );
-
-    pointsMesh =
-      null;
-
-  }
-
-
-  if(
-    !state.memories.length
-  ){
-
-    return;
-
-  }
-
-
-  const count =
-    state.memories.length;
-
-
-  const positions =
-    new Float32Array(
-      count * 3
-    );
-
-
-  const selected =
-    new Float32Array(
-      count
-    );
-
-
-  state.memories.forEach(
-    (memory,index)=>{
-
-      const p =
-        getPosition(
-          memory
-        );
-
-
-      positions[
-        index * 3
-      ] =
-        p[0];
-
-      positions[
-        index * 3 + 1
-      ] =
-        p[1];
-
-      positions[
-        index * 3 + 2
-      ] =
-        p[2];
-
-
-      selected[index] =
-        memory.id ===
-        state.selectedId
-        ? 1
-        : 0;
-
-    }
-  );
-
-
-  const geometry =
-    new THREE.BufferGeometry();
-
-
-  geometry.setAttribute(
-    'position',
-    new THREE.BufferAttribute(
-      positions,
-      3
-    )
-  );
-
-
-  geometry.setAttribute(
-    'aSelected',
-    new THREE.BufferAttribute(
-      selected,
-      1
-    )
-  );
-
-
-  const material =
-    new THREE.ShaderMaterial({
-
-      vertexShader,
-
-      fragmentShader,
-
-      transparent:true,
-
-      depthWrite:false,
-
-      blending:
-        THREE.AdditiveBlending
-
-    });
-
-
-  pointsMesh =
-    new THREE.Points(
-      geometry,
-      material
-    );
-
-
-  scene.add(
-    pointsMesh
-  );
-
-}
-
-
-/* =========================================================
-   SEMANTIC EDGES
-========================================================= */
-
-function rebuildLinks(){
-
-  while(
-    linesGroup.children.length
-  ){
-
-    const object =
-      linesGroup
-        .children
-        .pop();
-
-
-    disposeObject(
-      object
-    );
-
-  }
-
-
-  if(
-    !state.showLinks ||
-    state.memories.length < 2
-  ){
-
-    return;
-
-  }
-
-
-  const positions = [];
-
-
-  for(
-    let i=0;
-    i<state.memories.length;
-    i++
-  ){
-
-    const a =
-      state.memories[i];
-
-
-    for(
-      let j=i+1;
-      j<state.memories.length;
-      j++
-    ){
-
-      const b =
-        state.memories[j];
-
-
-      const similarity =
-        cosine(
-          getVector(a),
-          getVector(b)
-        );
-
-
-      if(
-        similarity >=
-        CONFIG.EDGE_THRESHOLD
-      ){
-
-        const pa =
-          getPosition(a);
-
-        const pb =
-          getPosition(b);
-
-
-        positions.push(
-
-          pa[0],
-          pa[1],
-          pa[2],
-
-          pb[0],
-          pb[1],
-          pb[2]
-
-        );
-
-      }
-
-    }
-
-  }
-
-
-  if(!positions.length){
-
-    return;
-
-  }
-
-
-  const geometry =
-    new THREE.BufferGeometry();
-
-
-  geometry.setAttribute(
-    'position',
-    new THREE.Float32BufferAttribute(
-      positions,
-      3
-    )
-  );
-
-
-  const material =
-    new THREE.LineBasicMaterial({
-
-      color:
-        0x00e5ff,
-
-      transparent:true,
-
-      opacity:.25,
-
-      depthWrite:false
-
-    });
-
-
-  linesGroup.add(
-    new THREE.LineSegments(
-      geometry,
-      material
-    )
-  );
-
-}
-
-
-/* =========================================================
-   SCENE REBUILD
-========================================================= */
-
-function rebuildScene(){
-
-  makePoints();
-
-  rebuildLinks();
-
-
-  $('hudStatus').textContent =
-    state.memories.length
-
-      ? `${state.memories.length} MEMORIES · ANCHORED R³`
-
-      : 'MEMORY SPACE EMPTY';
-
-}
-
-
-/* =========================================================
-   RAYCASTING
-========================================================= */
-
-function getIntersections(
-  event
-){
-
-  if(!pointsMesh){
-
-    return [];
-
-  }
-
-
-  const rect =
-    renderer.domElement
-      .getBoundingClientRect();
-
-
-  mouse.x =
-    (
-      (event.clientX - rect.left)
-      /
-      rect.width
-    ) * 2 - 1;
-
-
-  mouse.y =
-    -(
-      (event.clientY - rect.top)
-      /
-      rect.height
-    ) * 2 + 1;
-
-
-  raycaster.setFromCamera(
-    mouse,
-    camera
-  );
-
-
-  return raycaster.intersectObject(
-    pointsMesh
-  );
-
-}
-
-
-function onPointerDown(
-  event
-){
-
-  if(
-    event.button !== 0
-  ){
-
-    return;
-
-  }
-
-
-  const hits =
-    getIntersections(
-      event
-    );
-
-
-  if(!hits.length)return;
-
-
-  const index =
-    hits[0].index;
-
-
-  if(
-    index == null ||
-    !state.memories[index]
-  ){
-
-    return;
-
-  }
-
-
-  selectMemory(
-    state.memories[index].id
-  );
-
-}
-
-
-function onDoubleClick(
-  event
-){
-
-  const hits =
-    getIntersections(
-      event
-    );
-
-
-  if(!hits.length)return;
-
-
-  const index =
-    hits[0].index;
-
-
-  if(
-    index == null ||
-    !state.memories[index]
-  ){
-
-    return;
-
-  }
-
-
-  const memory =
-    state.memories[index];
-
-
-  const p =
-    getPosition(
-      memory
-    );
-
-
-  controls.target.set(
-    p[0],
-    p[1],
-    p[2]
-  );
-
-
-  const direction =
-    new THREE.Vector3()
-      .subVectors(
-        camera.position,
-        controls.target
-      )
-      .normalize();
-
-
-  camera.position
-    .copy(
-      controls.target
-    )
-    .addScaledVector(
-      direction,
-      4
-    );
-
-
-  controls.update();
-
-}
-
-
-/* =========================================================
-   MEMORY LIST
-========================================================= */
-
-function renderMemoryList(){
-
-  const list =
-    $('memoryList');
-
-
-  if(
-    !state.memories.length
-  ){
-
-    list.innerHTML =
-      `
-      <div
-        style="
-          color:#405861;
-          font-size:10px
-        "
-      >
-        VECTOR STORE EMPTY
-      </div>
-      `;
-
-    return;
-
-  }
-
-
-  list.innerHTML =
-    state.memories
-      .map(
-        memory => {
-
-          const vector =
-            getVector(
-              memory
+            await generateEmbedding(
+                text
             );
 
 
-          return `
-            <div
-              class="memItem
-                ${
-                  memory.id ===
-                  state.selectedId
-                    ? 'selected'
-                    : ''
-                }"
-              data-id="${esc(memory.id)}"
-            >
-
-              <div class="memId">
-                ${esc(memory.id)}
-              </div>
-
-              <div class="memText">
-                ${esc(
-                  memory.content?.text ||
-                  memory.text ||
-                  ''
-                )}
-              </div>
-
-              <div class="memMeta">
-
-                ${
-                  memory.created_at
-                    ? new Date(
-                        memory.created_at
-                      ).toLocaleString(
-                        'de-DE'
-                      )
-                    : ''
-                }
-
-                · ${vector.length}D
-
-              </div>
-
-            </div>
-          `;
-
-        }
-      )
-      .join('');
-
-
-  list
-    .querySelectorAll(
-      '.memItem'
-    )
-    .forEach(
-      element => {
-
-        element.onclick =
-          () =>
-            selectMemory(
-              element.dataset.id
-            );
-
-      }
-    );
-
-}
-
-
-/* =========================================================
-   INSPECTOR
-========================================================= */
-
-function renderInspector(
-  memory,
-  score=null
-){
-
-  if(!memory){
-
-    $('inspector')
-      .classList
-      .remove('visible');
-
-    return;
-
-  }
-
-
-  const vector =
-    getVector(
-      memory
-    );
-
-
-  const position =
-    getPosition(
-      memory
-    );
-
-
-  const text =
-    memory.content?.text ||
-    memory.text ||
-    '';
-
-
-  const anchors =
-    Array.isArray(
-      memory.anchors
-    )
-      ? memory.anchors
-      : [];
-
-
-  $('inspector')
-    .classList
-    .add('visible');
-
-
-  $('inspId').textContent =
-    memory.id;
-
-
-  $('inspText').textContent =
-    text;
-
-
-  $('inspMeta').innerHTML = `
-
-    TYPE:
-    ${esc(
-      memory.type ||
-      'memory'
-    )}
-
-    <br>
-
-    SCHEMA:
-    ${esc(
-      memory.schema_version ||
-      '1.0'
-    )}
-
-    <br>
-
-    VECTOR:
-    ${vector.length}D
-
-    <br>
-
-    ‖v‖ =
-    ${norm(vector).toFixed(6)}
-
-    <br>
-
-    POS:
-    [
-      ${position.map(
-        x => x.toFixed(3)
-      ).join(', ')}
-    ]
-
-    ${
-      score == null
-      ? ''
-      :
-      `<br>
-       cos(query,v) =
-       ${score.toFixed(6)}`
-    }
-
-  `;
-
-
-  $('inspAnchors').innerHTML =
-    anchors.length
-
-      ? `
-        ANCHORS:
-
-        ${anchors
-          .map(
-            id =>
-              `<span class="tag">
-                ${esc(id)}
-              </span>`
-          )
-          .join('')
-        }
-      `
-
-      :
-
-      `
-        ANCHORS:
-
-        <span class="tag">
-          INITIAL FRAME
-        </span>
-      `;
-
-}
-
-
-/* =========================================================
-   SELECT MEMORY
-========================================================= */
-
-function selectMemory(
-  id
-){
-
-  const memory =
-    state.memories.find(
-      item =>
-        item.id === id
-    );
-
-
-  if(!memory)return;
-
-
-  state.selectedId =
-    id;
-
-
-  const vector =
-    getVector(
-      memory
-    );
-
-
-  state.currentVector =
-    vector.slice();
-
-
-  state.currentText =
-    memory.content?.text ||
-    memory.text ||
-    '';
-
-
-  $('textInput').value =
-    '';
-
-
-  $('vectorDim').textContent =
-    `d = ${vector.length}`;
-
-
-  $('vectorBox').textContent =
-    vector
-      .slice(0,24)
-      .map(
-        x =>
-          Number(x).toFixed(5)
-      )
-      .join(', ') +
-    ' …';
-
-
-  renderMemoryList();
-
-  renderInspector(
-    memory
-  );
-
-  rebuildScene();
-
-
-  const p =
-    getPosition(
-      memory
-    );
-
-
-  controls.target.set(
-    p[0],
-    p[1],
-    p[2]
-  );
-
-
-  $('hudStatus').textContent =
-    `${id} SELECTED`;
-
-}
-
-
-/* =========================================================
-   SEARCH
-========================================================= */
-
-async function runSearch(){
-
-  const query =
-    $('queryInput')
-      .value
-      .trim();
-
-
-  if(
-    !query ||
-    !state.memories.length
-  ){
-
-    return;
-
-  }
-
-
-  stage(
-    'stageSearch',
-    'active'
-  );
-
-
-  error('');
-
-
-  log(
-    `Query: "${query}"`,
-    'info'
-  );
-
-
-  try{
-
-    const queryVector =
-      await embed(
-        query,
-        'query'
-      );
-
-
-    state.queryVector =
-      queryVector;
-
-
-    const results =
-      state.memories
-
-        .map(
-          memory => ({
-
-            memory,
-
-            score:
-              cosine(
-                queryVector,
-                getVector(memory)
-              )
-
-          })
-        )
-
-        .sort(
-          (a,b) =>
-            b.score -
-            a.score
-        );
-
-
-    $('ranking').innerHTML =
-      results
-        .map(
-          (result,index)=>{
-
-            const percentage =
-              clamp(
-                (
-                  result.score + 1
-                ) / 2 * 100,
-                0,
-                100
-              );
-
-
-            const text =
-              result.memory
-                .content?.text ||
-              result.memory.text ||
-              '';
-
-
-            return `
-
-              <div
-                class="rankItem"
-                data-id="${esc(
-                  result.memory.id
-                )}"
-              >
-
-                <div class="rankScore">
-
-                  #${index + 1}
-                  · COS
-                  ${result.score.toFixed(6)}
-
-                </div>
-
-                <div class="rankText">
-
-                  ${esc(text)}
-
-                </div>
-
-                <div class="bar">
-
-                  <div
-                    class="barFill"
-                    style="
-                      width:${percentage}%
-                    "
-                  ></div>
-
-                </div>
-
-              </div>
-
+        $("vectorDisplay")
+            .innerHTML = `
+                d = ${vector.length}
+                <br><br>
+                <span class="vector-value">
+                    [
+                    ${vector
+                        .slice(0, 18)
+                        .map(
+                            value =>
+                                value.toFixed(5)
+                        )
+                        .join(", ")}
+                    ... ]
+                </span>
             `;
 
-          }
+
+        const position =
+            calculatePosition(
+                vector,
+                memories
+            );
+
+
+        const memory =
+            buildMemoryObject(
+                text,
+                title,
+                type,
+                tags,
+                vector,
+                position
+            );
+
+
+        /*
+         * Persistieren
+         */
+
+        await dbPut(
+            MEMORY_STORE,
+            memory
+        );
+
+
+        /*
+         * Lokalen Zustand aktualisieren
+         */
+
+        memories.push(
+            memory
+        );
+
+
+        /*
+         * Semantische Nachbarschaft
+         */
+
+        createSemanticEdges(
+            memory
+        );
+
+
+        /*
+         * 3D neu rendern
+         */
+
+        rebuildVisualization();
+
+        updateMetrics();
+
+        refreshInspector(
+            memory.id
+        );
+
+
+        log(
+            `${memory.id} gespeichert · ${type} · 384D`,
+            "ok"
+        );
+
+        log(
+            `3D Position fixed: ${formatPosition(memory.pos3d)}`,
+            "ok"
+        );
+
+
+        /*
+         * Eingabe leeren,
+         * Metadaten nicht zwingend.
+         */
+
+        $("memoryTitle").value = "";
+
+        $("memoryText").value = "";
+
+        $("memoryTags").value = "";
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        log(
+            "STORE MEMORY Fehler: " +
+            error.message,
+            "error"
+        );
+
+    }
+    finally {
+
+        isStoring = false;
+
+        $("storeButton")
+            .disabled = false;
+
+        $("storeButton")
+            .textContent =
+            "GENERATE EMBEDDING / STORE MEMORY";
+    }
+}
+
+
+/* ============================================================
+   EDGES
+============================================================ */
+
+function createSemanticEdges(
+    newMemory
+) {
+
+    const candidates =
+        memories
+            .filter(
+                memory =>
+                    memory.id !==
+                    newMemory.id &&
+                    Array.isArray(
+                        memory.vector
+                    ) &&
+                    memory.vector.length ===
+                    EMBEDDING_DIMENSIONS
+            )
+            .map(
+                memory => ({
+                    memory,
+
+                    similarity:
+                        cosineSimilarity(
+                            newMemory.vector,
+                            memory.vector
+                        )
+                })
+            )
+            .sort(
+                (a, b) =>
+                    b.similarity -
+                    a.similarity
+            )
+            .slice(0, 4);
+
+
+    for (const candidate of candidates) {
+
+        /*
+         * Nur echte semantische Nähe.
+         */
+
+        if (
+            candidate.similarity <
+            0.45
+        ) {
+            continue;
+        }
+
+
+        const exists =
+            edges.some(
+                edge =>
+                    (
+                        edge.from ===
+                        newMemory.id &&
+                        edge.to ===
+                        candidate.memory.id
+                    ) ||
+                    (
+                        edge.from ===
+                        candidate.memory.id &&
+                        edge.to ===
+                        newMemory.id
+                    )
+            );
+
+
+        if (exists) {
+            continue;
+        }
+
+
+        const edge = {
+
+            id:
+                nextEdgeId(),
+
+            type:
+                "semantic",
+
+            from:
+                newMemory.id,
+
+            to:
+                candidate.memory.id,
+
+            similarity:
+                candidate.similarity,
+
+            createdAt:
+                new Date()
+                    .toISOString()
+        };
+
+
+        edges.push(
+            edge
+        );
+
+        dbPut(
+            EDGE_STORE,
+            edge
+        ).catch(
+            error =>
+                console.error(
+                    error
+                )
+        );
+    }
+}
+
+
+/* ============================================================
+   POSITION FORMAT
+============================================================ */
+
+function formatPosition(position) {
+
+    if (!position) {
+        return "—";
+    }
+
+    return [
+        position.x,
+        position.y,
+        position.z
+    ]
+        .map(
+            value =>
+                Number(value)
+                    .toFixed(3)
         )
-        .join('');
+        .join(" / ");
+}
 
 
-    $('ranking')
-      .querySelectorAll(
-        '.rankItem'
-      )
-      .forEach(
-        element => {
+/* ============================================================
+   THREE INITIALIZATION
+============================================================ */
 
-          element.onclick =
-            () => {
+function initThree() {
 
-              const result =
-                results.find(
-                  item =>
-                    item.memory.id ===
-                    element.dataset.id
+    const container =
+        $("canvas");
+
+    scene =
+        new THREE.Scene();
+
+    scene.background =
+        new THREE.Color(
+            0x050708
+        );
+
+
+    camera =
+        new THREE.PerspectiveCamera(
+            55,
+            container.clientWidth /
+            container.clientHeight,
+            .1,
+            1000
+        );
+
+    camera.position.set(
+        0,
+        0,
+        14
+    );
+
+
+    renderer =
+        new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true
+        });
+
+    renderer.setPixelRatio(
+        Math.min(
+            window.devicePixelRatio,
+            2
+        )
+    );
+
+    renderer.setSize(
+        container.clientWidth,
+        container.clientHeight
+    );
+
+    container.appendChild(
+        renderer.domElement
+    );
+
+
+    controls =
+        new OrbitControls(
+            camera,
+            renderer.domElement
+        );
+
+    controls.enableDamping =
+        true;
+
+    controls.dampingFactor =
+        .06;
+
+    controls.minDistance =
+        2;
+
+    controls.maxDistance =
+        50;
+
+
+    nodeGroup =
+        new THREE.Group();
+
+    edgeGroup =
+        new THREE.Group();
+
+    anchorGroup =
+        new THREE.Group();
+
+    scene.add(
+        edgeGroup
+    );
+
+    scene.add(
+        nodeGroup
+    );
+
+    scene.add(
+        anchorGroup
+    );
+
+
+    raycaster =
+        new THREE.Raycaster();
+
+    mouse =
+        new THREE.Vector2();
+
+
+    renderer.domElement
+        .addEventListener(
+            "pointerdown",
+            onPointerDown
+        );
+
+
+    window.addEventListener(
+        "resize",
+        resizeThree
+    );
+
+
+    animate();
+}
+
+
+/* ============================================================
+   NODE MATERIAL
+============================================================ */
+
+function createNodeMaterial(
+    memory
+) {
+
+    let color =
+        0x00e5a0;
+
+    if (
+        memory.type ===
+        "concept"
+    ) {
+        color =
+            0x00c8ff;
+    }
+
+    if (
+        memory.type ===
+        "claim"
+    ) {
+        color =
+            0xe20074;
+    }
+
+    if (
+        memory.type ===
+        "evidence"
+    ) {
+        color =
+            0xe9d66b;
+    }
+
+    if (
+        memory.type ===
+        "hypothesis"
+    ) {
+        color =
+            0x9c7cff;
+    }
+
+    if (
+        memory.type.startsWith(
+            "git_"
+        )
+    ) {
+        color =
+            0x00c8ff;
+    }
+
+    if (
+        memory.type ===
+        "code_state"
+    ) {
+        color =
+            0xffa84a;
+    }
+
+    if (
+        memory.type ===
+        "project_state"
+    ) {
+        color =
+            0xffffff;
+    }
+
+
+    return new THREE.ShaderMaterial({
+
+        uniforms: {
+
+            uColor: {
+                value:
+                    new THREE.Color(
+                        color
+                    )
+            },
+
+            uSize: {
+                value:
+                    6.0
+            }
+
+        },
+
+        transparent:
+            true,
+
+        depthWrite:
+            false,
+
+        blending:
+            THREE.AdditiveBlending,
+
+        vertexShader: `
+
+            uniform float uSize;
+
+            varying float vDepth;
+
+            void main() {
+
+                vec4 mvPosition =
+                    modelViewMatrix *
+                    vec4(position, 1.0);
+
+                float depth =
+                    max(
+                        1.0,
+                        -mvPosition.z
+                    );
+
+                gl_PointSize =
+                    clamp(
+                        uSize *
+                        (180.0 / depth),
+                        2.5,
+                        8.0
+                    );
+
+                gl_Position =
+                    projectionMatrix *
+                    mvPosition;
+
+                vDepth =
+                    depth;
+            }
+
+        `,
+
+        fragmentShader: `
+
+            uniform vec3 uColor;
+
+            varying float vDepth;
+
+            void main() {
+
+                vec2 uv =
+                    gl_PointCoord -
+                    vec2(0.5);
+
+                float distanceFromCenter =
+                    length(uv);
+
+                if (
+                    distanceFromCenter >
+                    0.5
+                ) {
+                    discard;
+                }
+
+                float core =
+                    1.0 -
+                    smoothstep(
+                        0.0,
+                        0.23,
+                        distanceFromCenter
+                    );
+
+                float glow =
+                    1.0 -
+                    smoothstep(
+                        0.16,
+                        0.5,
+                        distanceFromCenter
+                    );
+
+                float alpha =
+                    core * .95 +
+                    glow * .35;
+
+                gl_FragColor =
+                    vec4(
+                        uColor,
+                        alpha
+                    );
+            }
+
+        `
+    });
+}
+
+
+/* ============================================================
+   REBUILD VISUALIZATION
+============================================================ */
+
+function rebuildVisualization() {
+
+    if (!nodeGroup) {
+        return;
+    }
+
+
+    while (
+        nodeGroup.children.length
+    ) {
+
+        const object =
+            nodeGroup.children.pop();
+
+        object.geometry?.dispose();
+
+        object.material?.dispose();
+    }
+
+
+    while (
+        edgeGroup.children.length
+    ) {
+
+        const object =
+            edgeGroup.children.pop();
+
+        object.geometry?.dispose();
+
+        object.material?.dispose();
+    }
+
+
+    while (
+        anchorGroup.children.length
+    ) {
+
+        const object =
+            anchorGroup.children.pop();
+
+        object.geometry?.dispose();
+
+        object.material?.dispose();
+    }
+
+
+    nodeMeshes = [];
+
+    nodePositions.clear();
+
+
+    /*
+     * NODES
+     */
+
+    for (const memory of memories) {
+
+        if (!memory.pos3d) {
+            memory.pos3d =
+                randomPosition();
+        }
+
+        const geometry =
+            new THREE.BufferGeometry();
+
+        geometry.setAttribute(
+            "position",
+            new THREE.Float32BufferAttribute(
+                [
+                    memory.pos3d.x,
+                    memory.pos3d.y,
+                    memory.pos3d.z
+                ],
+                3
+            )
+        );
+
+
+        const material =
+            createNodeMaterial(
+                memory
+            );
+
+
+        const point =
+            new THREE.Points(
+                geometry,
+                material
+            );
+
+
+        point.userData.memoryId =
+            memory.id;
+
+
+        nodeGroup.add(
+            point
+        );
+
+        nodeMeshes.push(
+            point
+        );
+
+        nodePositions.set(
+            memory.id,
+            new THREE.Vector3(
+                memory.pos3d.x,
+                memory.pos3d.y,
+                memory.pos3d.z
+            )
+        );
+    }
+
+
+    /*
+     * EDGES
+     */
+
+    if (showEdges) {
+
+        for (const edge of edges) {
+
+            const a =
+                nodePositions.get(
+                    edge.from
+                );
+
+            const b =
+                nodePositions.get(
+                    edge.to
+                );
+
+            if (!a || !b) {
+                continue;
+            }
+
+
+            const geometry =
+                new THREE.BufferGeometry()
+                    .setFromPoints([
+                        a,
+                        b
+                    ]);
+
+
+            const material =
+                new THREE.LineBasicMaterial({
+
+                    color:
+                        0x28434a,
+
+                    transparent:
+                        true,
+
+                    opacity:
+                        Math.min(
+                            .7,
+                            Math.max(
+                                .12,
+                                edge.similarity || .2
+                            )
+                        )
+                });
+
+
+            const line =
+                new THREE.Line(
+                    geometry,
+                    material
                 );
 
 
-              if(!result)return;
-
-
-              selectMemory(
-                result.memory.id
-              );
-
-
-              renderInspector(
-                result.memory,
-                result.score
-              );
-
-            };
-
+            edgeGroup.add(
+                line
+            );
         }
-      );
-
-
-    stage(
-      'stageSearch',
-      'done'
-    );
-
-
-    if(results[0]){
-
-      selectMemory(
-        results[0].memory.id
-      );
-
-
-      renderInspector(
-        results[0].memory,
-        results[0].score
-      );
-
-
-      log(
-        `Top-1: ${results[0].memory.id} · ${results[0].score.toFixed(6)}`,
-        'ok'
-      );
-
     }
 
-  }catch(e){
 
-    stage(
-      'stageSearch',
-      null
-    );
+    /*
+     * SELECTED NODE
+     */
 
-    error(
-      e?.message ||
-      String(e)
-    );
+    if (selectedMemoryId) {
 
-    log(
-      `Search fehlgeschlagen: ${e?.message || e}`,
-      'err'
-    );
+        const memory =
+            memories.find(
+                item =>
+                    item.id ===
+                    selectedMemoryId
+            );
 
-  }
+        if (memory) {
 
+            const position =
+                nodePositions.get(
+                    memory.id
+                );
+
+            if (position) {
+
+                const geometry =
+                    new THREE.RingGeometry(
+                        .11,
+                        .16,
+                        24
+                    );
+
+                const material =
+                    new THREE.MeshBasicMaterial({
+
+                        color:
+                            0xffffff,
+
+                        transparent:
+                            true,
+
+                        opacity:
+                            .8,
+
+                        side:
+                            THREE.DoubleSide
+                    });
+
+
+                const ring =
+                    new THREE.Mesh(
+                        geometry,
+                        material
+                    );
+
+                ring.position.copy(
+                    position
+                );
+
+                ring.rotation.x =
+                    Math.PI / 2;
+
+                anchorGroup.add(
+                    ring
+                );
+            }
+        }
+    }
+
+
+    /*
+     * ANCHORS
+     */
+
+    if (
+        showAnchors &&
+        selectedMemoryId
+    ) {
+
+        const selected =
+            memories.find(
+                memory =>
+                    memory.id ===
+                    selectedMemoryId
+            );
+
+        if (selected) {
+
+            const ranked =
+                memories
+                    .filter(
+                        memory =>
+                            memory.id !==
+                            selected.id
+                    )
+                    .map(
+                        memory => ({
+                            memory,
+
+                            similarity:
+                                cosineSimilarity(
+                                    selected.vector,
+                                    memory.vector
+                                )
+                        })
+                    )
+                    .sort(
+                        (a, b) =>
+                            b.similarity -
+                            a.similarity
+                    )
+                    .slice(0, 4);
+
+
+            for (const item of ranked) {
+
+                const a =
+                    nodePositions.get(
+                        selected.id
+                    );
+
+                const b =
+                    nodePositions.get(
+                        item.memory.id
+                    );
+
+                if (!a || !b) {
+                    continue;
+                }
+
+
+                const geometry =
+                    new THREE.BufferGeometry()
+                        .setFromPoints([
+                            a,
+                            b
+                        ]);
+
+
+                const material =
+                    new THREE.LineDashedMaterial({
+
+                        color:
+                            0x00c8ff,
+
+                        transparent:
+                            true,
+
+                        opacity:
+                            .35,
+
+                        dashSize:
+                            .08,
+
+                        gapSize:
+                            .06
+                    });
+
+
+                const line =
+                    new THREE.Line(
+                        geometry,
+                        material
+                    );
+
+                line.computeLineDistances();
+
+                anchorGroup.add(
+                    line
+                );
+            }
+        }
+    }
 }
 
 
-/* =========================================================
-   GENERATE EMBEDDING
-========================================================= */
+/* ============================================================
+   POINTER
+============================================================ */
 
-async function generate(){
+function onPointerDown(
+    event
+) {
 
-  const text =
-    $('textInput')
-      .value
-      .trim();
+    const rect =
+        renderer.domElement
+            .getBoundingClientRect();
 
+    mouse.x =
+        (
+            (event.clientX -
+            rect.left) /
+            rect.width
+        ) * 2 - 1;
 
-  if(!text){
-
-    error(
-      'Bitte Text eingeben.'
-    );
-
-    return;
-
-  }
-
-
-  error('');
-
-  $('embedBtn').disabled =
-    true;
-
-  $('storeBtn').disabled =
-    true;
+    mouse.y =
+        -(
+            (event.clientY -
+            rect.top) /
+            rect.height
+        ) * 2 + 1;
 
 
-  resetStages();
-
-
-  try{
-
-    stage(
-      'stageText',
-      'active'
-    );
-
-    log(
-      'Text empfangen.',
-      'info'
+    raycaster.setFromCamera(
+        mouse,
+        camera
     );
 
 
-    await sleep(80);
+    const intersections =
+        raycaster.intersectObjects(
+            nodeMeshes
+        );
 
 
-    stage(
-      'stageText',
-      'done'
+    if (
+        !intersections.length
+    ) {
+        return;
+    }
+
+
+    const object =
+        intersections[0].object;
+
+    const memoryId =
+        object.userData.memoryId;
+
+    if (!memoryId) {
+        return;
+    }
+
+
+    selectedMemoryId =
+        memoryId;
+
+    refreshInspector(
+        memoryId
     );
 
-
-    stage(
-      'stageToken',
-      'active'
-    );
+    rebuildVisualization();
+}
 
 
-    await sleep(100);
+/* ============================================================
+   INSPECTOR
+============================================================ */
+
+function refreshInspector(
+    memoryId
+) {
+
+    const memory =
+        memories.find(
+            item =>
+                item.id ===
+                memoryId
+        );
 
 
-    stage(
-      'stageToken',
-      'done'
-    );
+    if (!memory) {
+
+        $("inspector").innerHTML =
+            `
+            <div class="inspector-empty">
+                Keine Memory ausgewählt.
+            </div>
+            `;
+
+        return;
+    }
 
 
-    const vector =
-      await embed(
-        text,
-        'passage'
-      );
+    selectedMemoryId =
+        memory.id;
 
 
-    state.currentVector =
-      vector;
+    const tags =
+        (memory.tags || [])
+            .map(
+                tag =>
+                    `<span class="tag">${escapeHtml(tag)}</span>`
+            )
+            .join("");
 
 
-    state.currentText =
-      text;
+    let html = `
+
+        <div class="inspector-card">
+
+            <div class="inspector-id">
+                ${escapeHtml(memory.id)}
+            </div>
+
+            <div class="inspector-type">
+                ${escapeHtml(memory.type)}
+            </div>
+
+            <div class="inspector-title">
+                ${escapeHtml(
+                    memory.title ||
+                    "Untitled"
+                )}
+            </div>
+
+            <div class="inspector-text">
+                ${escapeHtml(
+                    memory.text ||
+                    ""
+                )}
+            </div>
+
+            <hr>
+
+            <div class="inspector-value">
+                <strong>SCHEMA</strong> /
+                ${escapeHtml(
+                    memory.schema_version ||
+                    "—"
+                )}
+            </div>
+
+            <div class="inspector-value">
+                <strong>EMBEDDING</strong> /
+                384D
+            </div>
+
+            <div class="inspector-value">
+                <strong>POSITION</strong> /
+                ${formatPosition(
+                    memory.pos3d
+                )}
+            </div>
+
+            <div class="inspector-value">
+                <strong>LOCKED</strong> /
+                ${memory.positionLocked
+                    ? "YES"
+                    : "NO"}
+            </div>
+
+            <div class="inspector-value">
+                <strong>CREATED</strong> /
+                ${escapeHtml(
+                    memory.createdAt ||
+                    "—"
+                )}
+            </div>
+
+            ${
+                tags
+                    ? `
+                    <hr>
+                    <div>
+                        ${tags}
+                    </div>
+                    `
+                    : ""
+            }
+
+    `;
 
 
-    stage(
-      'stageVector',
-      'active'
-    );
+    /*
+     * PROJECT
+     */
+
+    if (memory.project) {
+
+        html += `
+
+            <hr>
+
+            <div class="inspector-value">
+                PROJECT /
+                ${escapeHtml(
+                    memory.project.name ||
+                    "—"
+                )}
+            </div>
+
+            <div class="inspector-value">
+                REPOSITORY /
+                ${escapeHtml(
+                    memory.project.repository ||
+                    "—"
+                )}
+            </div>
+
+            <div class="inspector-value">
+                BRANCH /
+                ${escapeHtml(
+                    memory.project.branch ||
+                    "—"
+                )}
+            </div>
+
+        `;
+    }
 
 
-    $('vectorDim').textContent =
-      `d = ${vector.length}`;
+    /*
+     * GIT
+     */
+
+    if (memory.git) {
+
+        html += `
+
+            <hr>
+
+            <div class="inspector-value">
+                GIT COMMIT /
+                ${escapeHtml(
+                    memory.git.commit ||
+                    "—"
+                )}
+            </div>
+
+            <div class="inspector-value">
+                PARENT /
+                ${escapeHtml(
+                    memory.git.parent ||
+                    "—"
+                )}
+            </div>
+
+            <div class="inspector-value">
+                FILE /
+                ${escapeHtml(
+                    memory.git.file ||
+                    "—"
+                )}
+            </div>
+
+            <div class="inspector-value">
+                CHANGE /
+                +${memory.git.additions || 0}
+                /
+                -${memory.git.deletions || 0}
+            </div>
+
+        `;
+    }
 
 
-    $('vectorBox').textContent =
-      vector
-        .slice(0,24)
-        .map(
-          x =>
-            x.toFixed(5)
+    /*
+     * PATCH
+     */
+
+    if (memory.patch) {
+
+        html += `
+
+            <div class="inspector-value">
+                PATCH /
+                ${escapeHtml(
+                    memory.patch.format ||
+                    "—"
+                )}
+            </div>
+
+            <details style="margin-top:10px">
+
+                <summary
+                    style="
+                        color:var(--cyan);
+                        font-size:9px;
+                        cursor:pointer;
+                    "
+                >
+                    SHOW PATCH
+                </summary>
+
+                <pre
+                    style="
+                        white-space:pre-wrap;
+                        word-break:break-word;
+                        color:#84949a;
+                        font-size:8px;
+                        line-height:1.5;
+                        margin-top:8px;
+                    "
+                >${escapeHtml(
+                    memory.patch.content
+                )}</pre>
+
+            </details>
+
+        `;
+    }
+
+
+    /*
+     * CODE STATE
+     */
+
+    if (memory.file) {
+
+        html += `
+
+            <hr>
+
+            <div class="inspector-value">
+                CODE FILE /
+                ${escapeHtml(
+                    memory.file.path ||
+                    "—"
+                )}
+            </div>
+
+            <div class="inspector-value">
+                LANGUAGE /
+                ${escapeHtml(
+                    memory.file.language ||
+                    "—"
+                )}
+            </div>
+
+        `;
+    }
+
+
+    if (memory.code) {
+
+        html += `
+
+            <div class="inspector-value">
+                CODE HASH /
+                ${escapeHtml(
+                    memory.code.hash ||
+                    "—"
+                )}
+            </div>
+
+        `;
+    }
+
+
+    /*
+     * PROJECT STATE
+     */
+
+    if (memory.state) {
+
+        html += `
+
+            <hr>
+
+            <div class="inspector-value">
+                STATE COMMIT /
+                ${escapeHtml(
+                    memory.state.commit_hash ||
+                    "—"
+                )}
+            </div>
+
+            <div class="inspector-value">
+                FILES /
+                ${
+                    memory.state.files?.length ||
+                    0
+                }
+            </div>
+
+            <div class="inspector-value">
+                MEMORIES /
+                ${
+                    memory.state.memories?.length ||
+                    0
+                }
+            </div>
+
+            <div class="inspector-value">
+                DIFFS /
+                ${
+                    memory.state.diffs?.length ||
+                    0
+                }
+            </div>
+
+            <div class="inspector-value">
+                CODE STATES /
+                ${
+                    memory.state.code_states?.length ||
+                    0
+                }
+            </div>
+
+        `;
+    }
+
+
+    html += `
+
+        </div>
+    `;
+
+
+    $("inspector")
+        .innerHTML =
+        html;
+
+
+    /*
+     * Vector anzeigen
+     */
+
+    if (
+        Array.isArray(
+            memory.vector
         )
-        .join(', ') +
-      ' …';
+    ) {
 
+        $("vectorDisplay")
+            .innerHTML = `
 
-    await sleep(60);
+                d = ${memory.vector.length}
 
+                <br><br>
 
-    stage(
-      'stageVector',
-      'done'
-    );
+                <span class="vector-value">
+                    [
+                    ${memory.vector
+                        .slice(0, 24)
+                        .map(
+                            value =>
+                                value.toFixed(5)
+                        )
+                        .join(", ")}
+                    ... ]
+                </span>
 
-
-    $('storeBtn').disabled =
-      false;
-
-
-    log(
-      `384D Embedding erzeugt · ‖v‖=${norm(vector).toFixed(6)}`,
-      'ok'
-    );
-
-
-  }catch(e){
-
-    error(
-      e?.message ||
-      String(e)
-    );
-
-
-    log(
-      `Embedding fehlgeschlagen: ${e?.message || e}`,
-      'err'
-    );
-
-
-  }finally{
-
-    $('embedBtn').disabled =
-      false;
-
-  }
-
+            `;
+    }
 }
 
 
-/* =========================================================
-   STORE
-========================================================= */
+/* ============================================================
+   SEARCH
+============================================================ */
 
-async function store(){
+async function semanticSearch() {
 
-  if(
-    !state.currentVector
-  ){
-
-    return;
-
-  }
+    const query =
+        $("searchInput")
+            .value
+            .trim();
 
 
-  const text =
-    state.currentText.trim();
+    if (!query) {
+        return;
+    }
 
 
-  if(!text){
+    try {
 
-    error(
-      'Kein Text zum Speichern vorhanden.'
-    );
-
-    return;
-
-  }
+        log(
+            "Semantic Search gestartet..."
+        );
 
 
-  $('storeBtn').disabled =
-    true;
+        const queryVector =
+            await generateEmbedding(
+                query
+            );
 
 
-  try{
+        const results =
+            memories
+                .filter(
+                    memory =>
+                        Array.isArray(
+                            memory.vector
+                        ) &&
+                        memory.vector.length ===
+                        EMBEDDING_DIMENSIONS
+                )
+                .map(
+                    memory => ({
+                        memory,
 
-    stage(
-      'stageStore',
-      'active'
-    );
-
-
-    const record =
-      await insertMemory(
-        text,
-        state.currentVector
-      );
-
-
-    stage(
-      'stageStore',
-      'done'
-    );
-
-
-    state.selectedId =
-      record.id;
-
-
-    renderMemoryList();
-
-    renderInspector(
-      record
-    );
+                        similarity:
+                            cosineSimilarity(
+                                queryVector,
+                                memory.vector
+                            )
+                    })
+                )
+                .sort(
+                    (a, b) =>
+                        b.similarity -
+                        a.similarity
+                )
+                .slice(0, 8);
 
 
-    rebuildScene();
+        renderSearchResults(
+            results
+        );
 
 
-    $('memoryCount').textContent =
-      state.memories.length;
+        log(
+            `${results.length} semantische Treffer.`,
+            "ok"
+        );
 
+    }
+    catch (error) {
 
-    state.queryVector =
-      null;
-
-
-    log(
-      `${record.id} gespeichert. ` +
-      (
-        record.anchors?.length
-          ? `Anker: ${record.anchors.join(', ')}`
-          : 'Initial frame.'
-      ),
-      'ok'
-    );
-
-
-    state.currentVector =
-      null;
-
-    state.currentText =
-      '';
-
-    $('textInput').value =
-      '';
-
-
-  }catch(e){
-
-    $('storeBtn').disabled =
-      false;
-
-
-    error(
-      e?.message ||
-      String(e)
-    );
-
-
-    log(
-      `Speichern fehlgeschlagen: ${e?.message || e}`,
-      'err'
-    );
-
-  }
-
+        log(
+            "Search Fehler: " +
+            error.message,
+            "error"
+        );
+    }
 }
 
 
-/* =========================================================
-   CAMERA
-========================================================= */
+function renderSearchResults(
+    results
+) {
 
-$('resetCamBtn').onclick =
-  () => {
+    const container =
+        $("searchResults");
+
+
+    if (!results.length) {
+
+        container.innerHTML =
+            `
+            <div class="inspector-empty">
+                Keine Treffer.
+            </div>
+            `;
+
+        return;
+    }
+
+
+    container.innerHTML =
+        results
+            .map(
+                result => `
+
+                    <div
+                        class="search-result"
+                        data-memory-id="${
+                            escapeHtml(
+                                result.memory.id
+                            )
+                        }"
+                    >
+
+                        <div class="search-result-id">
+                            ${
+                                escapeHtml(
+                                    result.memory.id
+                                )
+                            }
+                            /
+                            ${
+                                escapeHtml(
+                                    result.memory.type
+                                )
+                            }
+                        </div>
+
+                        <div class="search-result-text">
+                            ${
+                                escapeHtml(
+                                    result.memory.text
+                                )
+                            }
+                        </div>
+
+                        <div class="search-score">
+                            COSINE /
+                            ${
+                                result.similarity
+                                    .toFixed(5)
+                            }
+                        </div>
+
+                    </div>
+
+                `
+            )
+            .join("");
+
+
+    container
+        .querySelectorAll(
+            ".search-result"
+        )
+        .forEach(
+            element => {
+
+                element.addEventListener(
+                    "click",
+                    () => {
+
+                        const id =
+                            element
+                                .dataset
+                                .memoryId;
+
+                        selectedMemoryId =
+                            id;
+
+                        refreshInspector(
+                            id
+                        );
+
+                        rebuildVisualization();
+
+                        const position =
+                            nodePositions.get(
+                                id
+                            );
+
+                        if (position) {
+
+                            controls.target.copy(
+                                position
+                            );
+
+                            camera.position
+                                .set(
+                                    position.x,
+                                    position.y,
+                                    position.z + 6
+                                );
+                        }
+                    }
+                );
+            }
+        );
+}
+
+
+/* ============================================================
+   LOAD DATA
+============================================================ */
+
+async function loadData() {
+
+    memories =
+        await dbGetAll(
+            MEMORY_STORE
+        );
+
+    edges =
+        await dbGetAll(
+            EDGE_STORE
+        );
+
+    hyperedges =
+        await dbGetAll(
+            HYPEREDGE_STORE
+        );
+
+
+    log(
+        `${memories.length} Memories geladen.`,
+        "ok"
+    );
+
+    log(
+        `${edges.length} Edges geladen.`,
+        "ok"
+    );
+
+    log(
+        `${hyperedges.length} Hyperedges geladen.`,
+        "ok"
+    );
+
+
+    /*
+     * Falls alte Daten aus früheren
+     * Versionen vorhanden sind:
+     *
+     * fehlende pos3d wird einmalig erzeugt
+     * und anschließend gespeichert.
+     */
+
+    let changed =
+        false;
+
+
+    for (const memory of memories) {
+
+        if (!memory.pos3d) {
+
+            memory.pos3d =
+                randomPosition();
+
+            memory.positionLocked =
+                true;
+
+            memory.updatedAt =
+                new Date()
+                    .toISOString();
+
+            await dbPut(
+                MEMORY_STORE,
+                memory
+            );
+
+            changed =
+                true;
+        }
+    }
+
+
+    if (changed) {
+
+        log(
+            "Fehlende 3D-Positionen initialisiert.",
+            "ok"
+        );
+    }
+
+
+    rebuildVisualization();
+
+    updateMetrics();
+
+
+    if (memories.length) {
+
+        refreshInspector(
+            memories[0].id
+        );
+    }
+}
+
+
+/* ============================================================
+   METRICS
+============================================================ */
+
+function updateMetrics() {
+
+    $("memoryCount")
+        .textContent =
+        memories.length;
+
+    $("edgeCount")
+        .textContent =
+        edges.length;
+
+    $("hyperedgeCount")
+        .textContent =
+        hyperedges.length;
+}
+
+
+/* ============================================================
+   RESIZE
+============================================================ */
+
+function resizeThree() {
+
+    const container =
+        $("canvas");
+
+    if (
+        !container ||
+        !renderer ||
+        !camera
+    ) {
+        return;
+    }
+
+
+    const width =
+        container.clientWidth;
+
+    const height =
+        container.clientHeight;
+
+
+    camera.aspect =
+        width / height;
+
+    camera.updateProjectionMatrix();
+
+
+    renderer.setSize(
+        width,
+        height
+    );
+}
+
+
+/* ============================================================
+   CAMERA RESET
+============================================================ */
+
+function resetCamera() {
 
     camera.position.set(
-      8,
-      6,
-      10
+        0,
+        0,
+        14
     );
 
     controls.target.set(
-      0,
-      0,
-      0
+        0,
+        0,
+        0
+    );
+
+    controls.update();
+}
+
+
+/* ============================================================
+   ANIMATION
+============================================================ */
+
+function animate() {
+
+    requestAnimationFrame(
+        animate
     );
 
     controls.update();
 
-  };
-
-
-$('toggleLinksBtn').onclick =
-  () => {
-
-    state.showLinks =
-      !state.showLinks;
-
-
-    $('toggleLinksBtn')
-      .textContent =
-        state.showLinks
-          ? 'LINKS ON'
-          : 'LINKS OFF';
-
-
-    rebuildLinks();
-
-  };
-
-
-/* =========================================================
-   EVENTS
-========================================================= */
-
-$('embedBtn')
-  .addEventListener(
-    'click',
-    generate
-  );
-
-
-$('storeBtn')
-  .addEventListener(
-    'click',
-    store
-  );
-
-
-$('searchBtn')
-  .addEventListener(
-    'click',
-    runSearch
-  );
-
-
-$('queryInput')
-  .addEventListener(
-    'keydown',
-    event => {
-
-      if(
-        event.key === 'Enter'
-      ){
-
-        runSearch();
-
-      }
-
-    }
-  );
-
-
-$('textInput')
-  .addEventListener(
-    'keydown',
-    event => {
-
-      if(
-        event.ctrlKey &&
-        event.key === 'Enter'
-      ){
-
-        generate();
-
-      }
-
-    }
-  );
-
-
-/* =========================================================
-   RESTORE DATABASE
-========================================================= */
-
-async function restore(){
-
-  log(
-    'Lese NEURAL MEMORY aus IndexedDB …',
-    'info'
-  );
-
-
-  const memories =
-    await dbGetAll();
-
-
-  state.memories =
-    Array.isArray(memories)
-      ? memories
-      : [];
-
-
-  state.memories.sort(
-    (a,b) =>
-      String(a.id)
-        .localeCompare(
-          String(b.id),
-          undefined,
-          {
-            numeric:true
-          }
-        )
-  );
-
-
-  /*
-     Normalize older records.
-
-     Alte Struktur:
-
-       text
-       vector
-       pos3d
-
-     Neue Struktur:
-
-       content.text
-       semantic.embedding.vector
-       geometry.pos3d
-  */
-
-  for(
-    const memory
-    of state.memories
-  ){
-
-    const vector =
-      getVector(memory);
-
-
-    const position =
-      getPosition(memory);
-
-
-    if(
-      !memory.schema_version
-    ){
-
-      memory.schema_version =
-        '1.1';
-
-    }
-
-
-    if(
-      !memory.type
-    ){
-
-      memory.type =
-        'memory';
-
-    }
-
-
-    if(
-      !memory.content
-    ){
-
-      memory.content = {
-
-        title:
-          (
-            memory.text ||
-            ''
-          ).slice(0,80),
-
-        text:
-          memory.text ||
-          ''
-
-      };
-
-    }
-
-
-    if(
-      !memory.semantic
-    ){
-
-      memory.semantic = {};
-
-    }
-
-
-    if(
-      !memory.semantic.embedding
-    ){
-
-      memory.semantic.embedding = {
-
-        model:
-          CONFIG.MODEL,
-
-        dimensions:
-          vector.length,
-
-        vector:
-          vector.slice()
-
-      };
-
-    }
-
-
-    if(
-      !memory.geometry
-    ){
-
-      memory.geometry = {};
-
-    }
-
-
-    memory.geometry.pos3d =
-      position.slice();
-
-
-    if(
-      !Array.isArray(
-        memory.anchors
-      )
-    ){
-
-      memory.anchors = [];
-
-    }
-
-
-    memory.positionLocked =
-      true;
-
-  }
-
-
-  /*
-     Restore next deterministic ID.
-  */
-
-  if(
-    state.memories.length
-  ){
-
-    const numbers =
-      state.memories.map(
-        memory =>
-          Number(
-            String(memory.id)
-              .split('-')
-              .pop()
-          ) || 0
-      );
-
-
-    state.nextId =
-      Math.max(
-        ...numbers
-      ) + 1;
-
-  }
-
-
-  /*
-     If old records had no real frame,
-     reconstruct only when necessary.
-  */
-
-  const needsFrame =
-    state.memories.length > 0 &&
-    state.memories.every(
-      memory => {
-
-        const p =
-          getPosition(memory);
-
-        return p.every(
-          Number.isFinite
-        );
-
-      }
-    ) &&
-    state.memories.some(
-      memory =>
-        getPosition(memory)
-          .some(
-            value =>
-              Math.abs(value) > 1e-9
-          )
-    ) === false;
-
-
-  if(needsFrame){
-
-    seedInitialFrame();
-
-    await persistAll();
-
-    log(
-      'Initial 3D frame rekonstruiert.',
-      'ok'
+    renderer.render(
+        scene,
+        camera
     );
-
-  }
-
-
-  $('memoryCount').textContent =
-    state.memories.length;
-
-
-  $('dimension').textContent =
-    state.memories.length
-      ? CONFIG.DIM
-      : '—';
-
-
-  renderMemoryList();
-
-  rebuildScene();
-
-
-  log(
-    `${state.memories.length} Memories aus IndexedDB geladen.`,
-    'ok'
-  );
-
 }
 
 
-/* =========================================================
-   BOOT
-========================================================= */
+/* ============================================================
+   BUTTONS
+============================================================ */
 
-initThree();
-
-
-(async()=>{
-
-  log(
-    'NEURAL MEMORY — Semantic Memory Core initialisiert.',
-    'ok'
-  );
-
-
-  log(
-    'Rendering: WebGL custom point shader.',
-    'info'
-  );
-
-
-  log(
-    'Semantik: 384D cosine, nicht 3D-Distanz.',
-    'info'
-  );
-
-
-  log(
-    `Embedding: ${CONFIG.MODEL}`,
-    'info'
-  );
-
-
-  await restore();
-
-
-  const modelReady =
-    await loadModel();
-
-
-  $('searchBtn').disabled =
-    !(
-      modelReady &&
-      state.memories.length > 0
+$("storeButton")
+    .addEventListener(
+        "click",
+        createMemory
     );
 
 
-  log(
-    'NEURAL MEMORY CORE ONLINE.',
-    'ok'
-  );
+$("searchButton")
+    .addEventListener(
+        "click",
+        semanticSearch
+    );
 
 
-})();
+$("searchInput")
+    .addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key ===
+                "Enter"
+            ) {
+
+                semanticSearch();
+            }
+        }
+    );
+
+
+$("resetCamera")
+    .addEventListener(
+        "click",
+        resetCamera
+    );
+
+
+$("toggleEdges")
+    .addEventListener(
+        "click",
+        () => {
+
+            showEdges =
+                !showEdges;
+
+            $("toggleEdges")
+                .textContent =
+                showEdges
+                    ? "EDGES ON"
+                    : "EDGES OFF";
+
+            rebuildVisualization();
+        }
+    );
+
+
+$("toggleAnchors")
+    .addEventListener(
+        "click",
+        () => {
+
+            showAnchors =
+                !showAnchors;
+
+            $("toggleAnchors")
+                .textContent =
+                showAnchors
+                    ? "ANCHORS ON"
+                    : "ANCHORS OFF";
+
+            rebuildVisualization();
+        }
+    );
+
+
+/* ============================================================
+   KEYBOARD
+============================================================ */
+
+$("memoryText")
+    .addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.ctrlKey &&
+                event.key === "Enter"
+            ) {
+
+                createMemory();
+            }
+        }
+    );
+
+
+/* ============================================================
+   STARTUP
+============================================================ */
+
+async function boot() {
+
+    try {
+
+        log(
+            "NEURAL MEMORY CORE ONLINE.",
+            "ok"
+        );
+
+        log(
+            `IndexedDB target: ${DB_NAME} / v${DB_VERSION}`
+        );
+
+
+        /*
+         * Wichtig:
+         *
+         * Erst DB öffnen.
+         */
+
+        await openDatabase();
+
+
+        log(
+            `IndexedDB ONLINE · Version ${db.version}`,
+            "ok"
+        );
+
+
+        /*
+         * Daten laden.
+         */
+
+        await loadData();
+
+
+        /*
+         * Three.js.
+         */
+
+        initThree();
+
+
+        /*
+         * Model nicht mehrfach laden.
+         *
+         * Der Loader wird nur gestartet,
+         * wenn tatsächlich ein Embedding
+         * benötigt wird.
+         */
+
+        $("coreStatus")
+            .textContent =
+            "CORE ONLINE · MODEL LAZY";
+
+
+        log(
+            "Embedding Core bereit · Model wird bei erster Memory geladen.",
+            "ok"
+        );
+
+
+        updateMemoryTypeUI();
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        $("coreStatus")
+            .textContent =
+            "CORE ERROR";
+
+        log(
+            "BOOT FEHLER: " +
+            error.message,
+            "error"
+        );
+    }
+}
+
+
+boot();
 
 </script>
 
