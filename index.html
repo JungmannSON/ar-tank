@@ -505,24 +505,6 @@ select:focus{
   border-color:var(--pink);
 }
 
-.btn.danger{
-  color:#ff5575;
-  border-color:rgba(255,85,117,.35);
-
-  background:
-    rgba(255,85,117,.035);
-}
-
-.btn.danger:hover{
-  border-color:#ff5575;
-
-  background:
-    rgba(255,85,117,.08);
-
-  box-shadow:
-    0 0 20px rgba(255,85,117,.08);
-}
-
 .btn.small{
   width:auto;
   margin-top:0;
@@ -595,6 +577,8 @@ select:focus{
   position:absolute;
   inset:0;
 }
+
+/* atmospheric glow */
 
 .viewport::before{
   content:"";
@@ -1088,67 +1072,6 @@ hr{
 
   font-size:7px;
   line-height:1.6;
-}
-
-.hyperedge-actions{
-  display:flex;
-
-  justify-content:flex-end;
-
-  margin-top:8px;
-}
-
-.hyperedge-delete{
-  padding:
-    5px
-    8px;
-
-  color:#ff5575;
-
-  background:
-    rgba(255,85,117,.025);
-
-  border:
-    1px solid
-    rgba(255,85,117,.22);
-
-  font-size:7px;
-  letter-spacing:1px;
-
-  transition:.15s;
-}
-
-.hyperedge-delete:hover{
-  color:#fff;
-
-  border-color:
-    #ff5575;
-
-  background:
-    rgba(255,85,117,.09);
-}
-
-/* =========================================================
-   DELETE AREA
-========================================================= */
-
-.delete-zone{
-  margin-top:14px;
-
-  padding-top:12px;
-
-  border-top:
-    1px solid
-    rgba(255,85,117,.10);
-}
-
-.delete-warning{
-  color:#5b4b52;
-
-  font-size:7px;
-  line-height:1.5;
-
-  margin-bottom:7px;
 }
 
 /* =========================================================
@@ -2509,202 +2432,6 @@ async function saveHyperedge(
 
 
 /* =========================================================
-   DELETE DATABASE OBJECTS
-========================================================= */
-
-/*
- * Löscht eine einzelne Memory persistent
- * aus IndexedDB.
- */
-
-async function deleteMemoryFromDB(
-  id
-){
-
-  const database =
-    await openDB();
-
-  return new Promise(
-    (resolve,reject) => {
-
-      const transaction =
-        database.transaction(
-          MEMORY_STORE,
-          'readwrite'
-        );
-
-      const request =
-        transaction
-          .objectStore(
-            MEMORY_STORE
-          )
-          .delete(id);
-
-      request.onsuccess =
-        () =>
-          resolve();
-
-      request.onerror =
-        () =>
-          reject(
-            request.error ||
-            new Error(
-              'Memory konnte nicht aus IndexedDB gelöscht werden.'
-            )
-          );
-
-      transaction.onerror =
-        () =>
-          reject(
-            transaction.error ||
-            new Error(
-              'Memory-Löschtransaktion fehlgeschlagen.'
-            )
-          );
-
-      transaction.onabort =
-        () =>
-          reject(
-            transaction.error ||
-            new Error(
-              'Memory-Löschtransaktion abgebrochen.'
-            )
-          );
-    }
-  );
-}
-
-
-/*
- * Löscht eine Hyperedge persistent
- * aus IndexedDB.
- */
-
-async function deleteHyperedgeFromDB(
-  id
-){
-
-  const database =
-    await openDB();
-
-  return new Promise(
-    (resolve,reject) => {
-
-      const transaction =
-        database.transaction(
-          HYPEREDGE_STORE,
-          'readwrite'
-        );
-
-      const request =
-        transaction
-          .objectStore(
-            HYPEREDGE_STORE
-          )
-          .delete(id);
-
-      request.onsuccess =
-        () =>
-          resolve();
-
-      request.onerror =
-        () =>
-          reject(
-            request.error ||
-            new Error(
-              'Hyperedge konnte nicht aus IndexedDB gelöscht werden.'
-            )
-          );
-
-      transaction.onerror =
-        () =>
-          reject(
-            transaction.error ||
-            new Error(
-              'Hyperedge-Löschtransaktion fehlgeschlagen.'
-            )
-          );
-
-      transaction.onabort =
-        () =>
-          reject(
-            transaction.error ||
-            new Error(
-              'Hyperedge-Löschtransaktion abgebrochen.'
-            )
-          );
-    }
-  );
-}
-
-
-/*
- * Löscht mehrere Hyperedges in einer
- * einzigen IndexedDB-Transaktion.
- */
-
-async function deleteHyperedgesFromDB(
-  ids
-){
-
-  if(!ids.length){
-    return;
-  }
-
-  const database =
-    await openDB();
-
-  return new Promise(
-    (resolve,reject) => {
-
-      const transaction =
-        database.transaction(
-          HYPEREDGE_STORE,
-          'readwrite'
-        );
-
-      const store =
-        transaction.objectStore(
-          HYPEREDGE_STORE
-        );
-
-
-      for(
-        const id
-        of ids
-      ){
-
-        store.delete(id);
-      }
-
-
-      transaction.oncomplete =
-        () =>
-          resolve();
-
-      transaction.onerror =
-        () =>
-          reject(
-            transaction.error ||
-            new Error(
-              'Hyperedges konnten nicht gelöscht werden.'
-            )
-          );
-
-      transaction.onabort =
-        () =>
-          reject(
-            transaction.error ||
-            new Error(
-              'Hyperedge-Löschtransaktion abgebrochen.'
-            )
-          );
-    }
-  );
-}
-
-
-/* =========================================================
    IDS
 ========================================================= */
 
@@ -2942,7 +2669,6 @@ async function loadModel(){
       'CORE ONLINE',
       'green'
     );
-
 
     log(
       `${DIM}D Embedding Engine bereit.`,
@@ -3536,6 +3262,10 @@ function placeNewMemory(
   memory
 ){
 
+  /*
+   * NODE 1
+   */
+
   if(
     memories.length === 0
   ){
@@ -3552,6 +3282,10 @@ function placeNewMemory(
     return;
   }
 
+
+  /*
+   * NODE 2
+   */
 
   if(
     memories.length === 1
@@ -3591,6 +3325,10 @@ function placeNewMemory(
     return;
   }
 
+
+  /*
+   * NODE 3+
+   */
 
   const anchors =
     chooseAnchors(
@@ -3880,10 +3618,23 @@ async function createMemory(){
     };
 
 
+    /*
+     * Position wird ausschließlich
+     * anhand bereits existierender
+     * Nodes erzeugt.
+     */
+
     placeNewMemory(
       memory
     );
 
+
+    /*
+     * WICHTIG:
+     *
+     * Erst IndexedDB.
+     * Danach RAM.
+     */
 
     await saveMemory(
       memory
@@ -3894,6 +3645,10 @@ async function createMemory(){
       memory
     );
 
+
+    /*
+     * Hypergraph relation
+     */
 
     await createAutomaticHyperedge(
       memory
@@ -3982,227 +3737,6 @@ async function createMemory(){
 
 
 /* =========================================================
-   MEMORY DELETE
-========================================================= */
-
-/*
- * Löscht eine Memory.
- *
- * Zusätzlich werden ALLE Hyperedges entfernt,
- * die diese Memory referenzieren.
- *
- * Andere Memories werden NICHT neu positioniert.
- */
-
-async function deleteMemory(
-  id
-){
-
-  const memory =
-    memories.find(
-      m =>
-        m.id === id
-    );
-
-
-  if(!memory){
-
-    toast(
-      'Memory nicht gefunden.',
-      true
-    );
-
-    return;
-  }
-
-
-  const relatedHyperedges =
-    hyperedges.filter(
-      hyperedge =>
-        hyperedge.nodeIds
-          .includes(id)
-    );
-
-
-  const confirmed =
-    window.confirm(
-      `Memory ${id} wirklich löschen?\n\n` +
-      `Alle zugehörigen Hyperedges ` +
-      `(${relatedHyperedges.length}) ` +
-      `werden ebenfalls gelöscht.\n\n` +
-      `Die übrigen Nodes behalten ihre festen 3D-Positionen.`
-    );
-
-
-  if(!confirmed){
-    return;
-  }
-
-
-  try{
-
-    setStatus(
-      'DELETING MEMORY',
-      'yellow'
-    );
-
-
-    log(
-      `Lösche ${id} ...`
-    );
-
-
-    /*
-     * Zuerst Hyperedges persistent löschen.
-     */
-
-    const hyperedgeIds =
-      relatedHyperedges.map(
-        h =>
-          h.id
-      );
-
-
-    await deleteHyperedgesFromDB(
-      hyperedgeIds
-    );
-
-
-    /*
-     * Danach Memory persistent löschen.
-     */
-
-    await deleteMemoryFromDB(
-      id
-    );
-
-
-    /*
-     * RAM aktualisieren.
-     */
-
-    memories =
-      memories.filter(
-        m =>
-          m.id !== id
-      );
-
-
-    hyperedges =
-      hyperedges.filter(
-        h =>
-          !h.nodeIds.includes(id)
-      );
-
-
-    /*
-     * Context bereinigen.
-     */
-
-    activeContext.delete(
-      id
-    );
-
-
-    for(
-      const contextId
-      of [...activeContext]
-    ){
-
-      if(
-        !memories.some(
-          m =>
-            m.id === contextId
-        )
-      ){
-
-        activeContext.delete(
-          contextId
-        );
-      }
-    }
-
-
-    if(
-      selectedId === id
-    ){
-
-      selectedId =
-        null;
-    }
-
-
-    /*
-     * WICHTIG:
-     *
-     * KEINE Positionsneuberechnung.
-     *
-     * Die verbleibenden Nodes behalten
-     * ihre gespeicherten pos3d-Werte.
-     */
-
-    refreshAll();
-
-    renderScene();
-
-
-    setStatus(
-      'CORE ONLINE',
-      'green'
-    );
-
-
-    log(
-      `${id} gelöscht.`,
-      'ok'
-    );
-
-
-    if(
-      hyperedgeIds.length
-    ){
-
-      log(
-        `${hyperedgeIds.length} zugehörige Hyperedge(s) gelöscht.`,
-        'ok'
-      );
-    }
-
-
-    toast(
-      `${id} gelöscht.`
-    );
-
-
-  }catch(error){
-
-    console.error(
-      error
-    );
-
-
-    setStatus(
-      'DELETE ERROR',
-      'red'
-    );
-
-
-    log(
-      'Löschfehler: ' +
-      error.message,
-      'error'
-    );
-
-
-    toast(
-      'Memory konnte nicht vollständig gelöscht werden.',
-      true
-    );
-  }
-}
-
-
-/* =========================================================
    PAIR EDGES
 ========================================================= */
 
@@ -4257,6 +3791,13 @@ function getPairEdges(){
 
 
   return edges;
+}
+
+
+function countPairEdges(){
+
+  return getPairEdges()
+    .length;
 }
 
 
@@ -4551,119 +4092,6 @@ async function createManualHyperedge(){
 
 
 /* =========================================================
-   HYPEREDGE DELETE
-========================================================= */
-
-async function deleteHyperedge(
-  id
-){
-
-  const hyperedge =
-    hyperedges.find(
-      h =>
-        h.id === id
-    );
-
-
-  if(!hyperedge){
-
-    toast(
-      'Hyperedge nicht gefunden.',
-      true
-    );
-
-    return;
-  }
-
-
-  const confirmed =
-    window.confirm(
-      `Hyperedge ${id} wirklich löschen?\n\n` +
-      `Die enthaltenen Memories bleiben erhalten.`
-    );
-
-
-  if(!confirmed){
-    return;
-  }
-
-
-  try{
-
-    setStatus(
-      'DELETING HYPEREDGE',
-      'yellow'
-    );
-
-
-    log(
-      `Lösche ${id} ...`
-    );
-
-
-    await deleteHyperedgeFromDB(
-      id
-    );
-
-
-    hyperedges =
-      hyperedges.filter(
-        h =>
-          h.id !== id
-      );
-
-
-    refreshAll();
-
-    renderScene();
-
-
-    setStatus(
-      'CORE ONLINE',
-      'green'
-    );
-
-
-    log(
-      `${id} gelöscht.`,
-      'ok'
-    );
-
-
-    toast(
-      `${id} gelöscht.`
-    );
-
-
-  }catch(error){
-
-    console.error(
-      error
-    );
-
-
-    setStatus(
-      'DELETE ERROR',
-      'red'
-    );
-
-
-    log(
-      'Hyperedge-Löschfehler: ' +
-      error.message,
-      'error'
-    );
-
-
-    toast(
-      'Hyperedge konnte nicht gelöscht werden.',
-      true
-    );
-  }
-}
-
-
-/* =========================================================
    CONTEXT
 ========================================================= */
 
@@ -4925,31 +4353,7 @@ async function runQuery(){
               r.memory.id
           )
       );
-      currentQueryContext = {
-  schema: 'NEURAL_MEMORY_CONTEXT',
-  version: '1.0',
 
-  query: {
-    text
-  },
-
-  retrieval: {
-    model: MODEL,
-    dimension: DIM,
-    resultCount: results.length
-  },
-
-  memories: results
-    .slice(0, 8)
-    .map(result => ({
-      id: result.memory.id,
-      type: result.memory.type,
-      text: result.memory.text,
-      similarity: Number(
-        result.score.toFixed(6)
-      )
-    }))
-};
 
     refreshAll();
 
@@ -5221,24 +4625,6 @@ function refreshInspector(){
 
     </button>
 
-
-    <div class="delete-zone">
-
-      <div class="delete-warning">
-        Löscht die Memory dauerhaft aus IndexedDB.
-        Zugehörige Hyperedges werden ebenfalls entfernt.
-      </div>
-
-      <button
-        id="deleteMemoryBtn"
-        class="btn danger">
-
-        DELETE MEMORY
-
-      </button>
-
-    </div>
-
   `;
 
 
@@ -5250,19 +4636,6 @@ function refreshInspector(){
       'click',
       () =>
         activateContext(
-          memory.id
-        )
-    );
-
-
-  document
-    .getElementById(
-      'deleteMemoryBtn'
-    )
-    ?.addEventListener(
-      'click',
-      () =>
-        deleteMemory(
           memory.id
         )
     );
@@ -5293,9 +4666,7 @@ function refreshHypergraphPanel(){
       .map(
         h => `
 
-          <div
-            class="hyperedge"
-            data-hyperedge-id="${escapeHtml(h.id)}">
+          <div class="hyperedge">
 
             <div class="hyperedge-id">
               ${escapeHtml(h.id)}
@@ -5313,46 +4684,11 @@ function refreshHypergraphPanel(){
                 .join(' · ')}
             </div>
 
-            <div class="hyperedge-actions">
-
-              <button
-                class="hyperedge-delete"
-                data-delete-hyperedge="${escapeHtml(h.id)}">
-
-                DELETE
-
-              </button>
-
-            </div>
-
           </div>
 
         `
       )
       .join('');
-
-
-  element
-    .querySelectorAll(
-      '[data-delete-hyperedge]'
-    )
-    .forEach(
-      button => {
-
-        button.addEventListener(
-          'click',
-          event => {
-
-            event.stopPropagation();
-
-            deleteHyperedge(
-              button.dataset
-                .deleteHyperedge
-            );
-          }
-        );
-      }
-    );
 }
 
 
@@ -5525,8 +4861,12 @@ function initThree(){
 
 
   /*
+   * WICHTIG:
+   *
    * Keine GridHelper-Fläche.
    * Keine RingGeometry-Flächen.
+   *
+   * Der Raum bleibt frei.
    */
 
   createGrid();
@@ -5563,15 +4903,15 @@ function initThree(){
 function createGrid(){
 
   /*
-   * Der semantische Raum bleibt frei.
+   * Es wird absichtlich KEIN
+   * THREE.GridHelper erzeugt.
    *
-   * Es gibt bewusst:
+   * Es wird auch keine RingGeometry
+   * erzeugt.
    *
-   * - kein GridHelper
-   * - keine RingGeometry
-   * - keine Bodenfläche
-   *
-   * Nur sehr schwache Achsen zur Orientierung.
+   * Dadurch gibt es keine quadratische
+   * Bodenfläche und keine visuellen Ebenen
+   * im semantischen Raum.
    */
 
   const axes =
@@ -5790,7 +5130,19 @@ function rebuildPoints(){
 
 
   /*
-   * Kleine Nodes.
+   * KLEINE NODE-PUNKTE
+   *
+   * Vorher:
+   *   Desktop 2.8
+   *   Mobile 3.0
+   *
+   * Jetzt:
+   *   Desktop 0.75
+   *   Mobile 0.9
+   *
+   * Dadurch erscheinen die Nodes
+   * als kleine Punkte statt als große
+   * quadratische/flächenartige Elemente.
    */
 
   pointMaterial =
@@ -6082,6 +5434,10 @@ function rebuildHyperedges(){
     );
 
 
+    /*
+     * Hyperedge HUB
+     */
+
     const hubGeometry =
       new THREE.SphereGeometry(
         .105,
@@ -6326,9 +5682,12 @@ function findPointIntersection(){
 
 
   /*
-   * Sichtbarer Punkt bleibt klein.
-   * Die Raycast-Schwelle ist nur für
-   * die Bedienbarkeit etwas größer.
+   * Kleine Nodes benötigen eine
+   * etwas größere unsichtbare
+   * Interaktionsfläche.
+   *
+   * Der sichtbare Punkt bleibt
+   * trotzdem klein.
    */
 
   raycaster.params.Points.threshold =
@@ -6453,6 +5812,12 @@ function onResize(){
     width,
     height
   );
+
+
+  /*
+   * Nodes bleiben vollständig
+   * positionsstabil.
+   */
 }
 
 
