@@ -1,23 +1,24 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
 <meta charset="UTF-8">
 
-<meta name="viewport"
-      content="width=device-width,
-               initial-scale=1.0,
-               maximum-scale=1.0,
-               user-scalable=no">
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
+>
 
-<title>NEURAL MEMORY — CORE</title>
+<title>NEURAL MEMORY — Semantic Memory Core</title>
 
 <script type="importmap">
 {
   "imports": {
     "three":
-      "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+      "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+
     "three/addons/":
-      "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+      "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
   }
 }
 </script>
@@ -25,99 +26,49 @@
 <style>
 
 :root{
-  --bg:#010307;
-  --bg2:#03070d;
-  --panel:rgba(6,11,17,.82);
-  --panel2:rgba(9,16,24,.72);
+  --bg:#05080c;
+  --panel:#0a1016;
+  --panel2:#070d12;
+  --border:#1a2a36;
 
-  --cyan:#00f5ff;
-  --cyan2:#00a8ff;
-  --green:#4ade80;
-  --pink:#ff187f;
-  --purple:#b66cff;
-  --yellow:#f7d154;
+  --cyan:#00e5ff;
+  --pink:#ff2d95;
+  --green:#00ff9d;
+  --yellow:#ffe600;
+  --danger:#ff4d6a;
 
-  --text:#dce8ee;
-  --muted:#647582;
-  --muted2:#394853;
+  --text:#b8d4e3;
+  --muted:#405861;
 
-  --border:rgba(0,245,255,.13);
-  --border2:rgba(255,255,255,.055);
-
-  --shadow:
-    0 20px 70px rgba(0,0,0,.45),
-    inset 0 1px 0 rgba(255,255,255,.025);
+  --header-height:52px;
 }
 
 *{
   box-sizing:border-box;
+  margin:0;
+  padding:0;
 }
 
 html,
 body{
   width:100%;
   height:100%;
-  margin:0;
   overflow:hidden;
 
-  background:
-    radial-gradient(
-      ellipse at 50% 45%,
-      rgba(0,245,255,.035),
-      transparent 45%
-    ),
-    #010307;
-
+  background:var(--bg);
   color:var(--text);
 
   font-family:
-    Inter,
+    "JetBrains Mono",
+    "SF Mono",
+    "Fira Code",
     ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    Monaco,
-    Consolas,
     monospace;
 }
 
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  z-index:999;
-
-  opacity:.025;
-
-  background:
-    repeating-linear-gradient(
-      0deg,
-      rgba(255,255,255,.7) 0px,
-      rgba(255,255,255,.7) 1px,
-      transparent 1px,
-      transparent 4px
-    );
-
-  mix-blend-mode:screen;
-}
-
-button,
-input,
-textarea,
-select{
-  font:inherit;
-}
-
-button{
-  cursor:pointer;
-}
-
-#app{
-  width:100%;
-  height:100%;
-
+body{
   display:grid;
-  grid-template-rows:68px 1fr;
+  grid-template-rows:var(--header-height) 1fr;
 }
 
 /* =========================================================
@@ -125,143 +76,113 @@ button{
 ========================================================= */
 
 header{
-  position:relative;
-  z-index:50;
-
   display:flex;
   align-items:center;
   justify-content:space-between;
 
-  padding:0 22px;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(5,10,16,.96),
-      rgba(2,5,9,.92)
-    );
-
-  border-bottom:1px solid var(--border);
-
-  box-shadow:
-    0 8px 40px rgba(0,0,0,.3);
-}
-
-header::after{
-  content:"";
-
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:-1px;
-
-  height:1px;
+  padding:0 20px;
 
   background:
     linear-gradient(
       90deg,
-      transparent,
-      var(--cyan),
-      transparent
+      #060b10,
+      #0a121a
     );
 
-  opacity:.25;
-}
-
-.brand{
-  display:flex;
-  align-items:center;
-  gap:14px;
+  border-bottom:1px solid var(--border);
 }
 
 .logo{
-  width:38px;
-  height:38px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.logoMark{
+  width:34px;
+  height:34px;
 
   display:grid;
   place-items:center;
 
+  border:1px solid var(--cyan);
+
   color:var(--cyan);
 
-  border:1px solid rgba(0,245,255,.5);
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(0,245,255,.14),
-      transparent 65%
-    );
-
   box-shadow:
-    0 0 20px rgba(0,245,255,.15),
-    inset 0 0 18px rgba(0,245,255,.08);
+    0 0 12px rgba(0,229,255,.25);
 
   font-size:16px;
-  letter-spacing:0;
-
-  position:relative;
 }
 
-.logo::after{
-  content:"";
-  position:absolute;
-  width:5px;
-  height:5px;
-  background:var(--cyan);
-  border-radius:50%;
-  box-shadow:0 0 12px var(--cyan);
-}
-
-.brand-title{
+.logoText{
   font-size:14px;
-  letter-spacing:4px;
-  color:#f4fbff;
+  font-weight:600;
+  letter-spacing:3px;
 }
 
-.brand-sub{
-  margin-top:4px;
-  color:var(--muted);
-  font-size:8px;
-  letter-spacing:1.7px;
+.logoText span{
+  color:var(--cyan);
 }
 
-.header-right{
+.status{
   display:flex;
   align-items:center;
-  gap:9px;
+  gap:10px;
+
+  font-size:11px;
+  letter-spacing:1px;
 }
 
-.status-dot{
-  width:7px;
-  height:7px;
+.statusDot{
+  width:8px;
+  height:8px;
+
   border-radius:50%;
 
-  background:var(--yellow);
+  background:var(--danger);
 
   box-shadow:
-    0 0 8px currentColor,
-    0 0 18px currentColor;
+    0 0 8px var(--danger);
 }
 
-.status-text{
-  color:var(--muted);
-  font-size:8px;
-  letter-spacing:1.5px;
+.statusDot.online{
+  background:var(--green);
+
+  box-shadow:
+    0 0 10px var(--green);
 }
 
 /* =========================================================
-   MAIN
+   LAYOUT
 ========================================================= */
 
-.main{
-  min-height:0;
+main{
+  height:calc(100vh - var(--header-height));
 
   display:grid;
-
   grid-template-columns:
-    310px
+    320px
     minmax(0,1fr)
-    330px;
+    340px;
+
+  overflow:hidden;
+}
+
+.col{
+  display:flex;
+  flex-direction:column;
+
+  min-width:0;
+
+  overflow-y:auto;
+  overflow-x:hidden;
+
+  border-right:1px solid var(--border);
+}
+
+.col:last-child{
+  border-right:none;
 }
 
 /* =========================================================
@@ -269,955 +190,708 @@ header::after{
 ========================================================= */
 
 .panel{
-  min-height:0;
-  overflow:auto;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(7,12,18,.94),
-      rgba(2,5,9,.92)
-    );
-
-  border-right:1px solid var(--border);
-
-  scrollbar-width:thin;
-  scrollbar-color:
-    rgba(0,245,255,.25)
-    transparent;
+  border-bottom:1px solid var(--border);
 }
 
-.panel.right{
-  border-right:0;
-  border-left:1px solid var(--border);
-}
+.panelTitle{
+  padding:10px 14px;
 
-.panel::-webkit-scrollbar{
-  width:4px;
-}
+  background:var(--panel2);
 
-.panel::-webkit-scrollbar-thumb{
-  background:rgba(0,245,255,.22);
-}
-
-.section{
-  position:relative;
-
-  padding:15px;
-
-  border-bottom:1px solid var(--border2);
-}
-
-.section::before{
-  content:"";
-
-  position:absolute;
-
-  top:0;
-  left:0;
-
-  width:24px;
-  height:1px;
-
-  background:var(--cyan);
-
-  opacity:.35;
-}
-
-.section-title{
-  display:flex;
-  align-items:center;
-  gap:8px;
-
-  margin-bottom:13px;
+  border-bottom:1px solid var(--border);
 
   color:var(--cyan);
 
-  font-size:9px;
-  letter-spacing:2.4px;
+  font-size:10px;
+  letter-spacing:2px;
 }
 
-.section-title::before{
-  content:"";
-
-  width:4px;
-  height:4px;
-
-  background:var(--cyan);
-
-  box-shadow:
-    0 0 7px var(--cyan);
-
-  border-radius:50%;
+.panelBody{
+  padding:12px 14px;
 }
 
 /* =========================================================
-   INPUTS
+   INPUT
 ========================================================= */
 
-label{
-  display:block;
-
-  margin:
-    11px
-    0
-    5px;
-
-  color:var(--muted);
-
-  font-size:8px;
-  letter-spacing:1.4px;
-}
-
 textarea,
-input,
-select{
+input{
   width:100%;
 
-  border:
-    1px solid
-    rgba(255,255,255,.065);
+  background:#060b10;
 
-  outline:none;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(1,5,9,.92),
-      rgba(3,7,12,.92)
-    );
+  border:1px solid var(--border);
 
   color:var(--text);
 
-  padding:
-    9px
-    10px;
+  padding:10px;
 
-  border-radius:2px;
+  outline:none;
 
-  box-shadow:
-    inset 0 1px 8px rgba(0,0,0,.3);
-
-  transition:
-    border-color .15s,
-    box-shadow .15s;
+  font:inherit;
+  font-size:12px;
 }
 
 textarea{
-  min-height:125px;
+  min-height:90px;
   resize:vertical;
-  line-height:1.5;
-}
-
-textarea::placeholder,
-input::placeholder{
-  color:#34434e;
 }
 
 textarea:focus,
-input:focus,
-select:focus{
-  border-color:
-    rgba(0,245,255,.5);
+input:focus{
+  border-color:var(--cyan);
 
   box-shadow:
-    0 0 0 1px rgba(0,245,255,.08),
-    0 0 18px rgba(0,245,255,.05),
-    inset 0 0 15px rgba(0,245,255,.025);
+    0 0 8px rgba(0,229,255,.08);
 }
 
 /* =========================================================
    BUTTONS
 ========================================================= */
 
-.btn{
+button{
   width:100%;
 
-  margin-top:10px;
+  margin-top:8px;
 
-  padding:10px 11px;
+  padding:10px;
+
+  background:transparent;
+
+  border:1px solid var(--cyan);
 
   color:var(--cyan);
 
-  background:
-    linear-gradient(
-      180deg,
-      rgba(0,245,255,.07),
-      rgba(0,245,255,.025)
-    );
+  font:inherit;
+  font-size:11px;
 
-  border:
-    1px solid
-    rgba(0,245,255,.35);
-
-  box-shadow:
-    inset 0 0 15px rgba(0,245,255,.025);
-
-  font-size:8px;
   letter-spacing:1.5px;
 
+  cursor:pointer;
+
   transition:
-    .15s;
+    background .15s,
+    box-shadow .15s,
+    transform .05s;
 }
 
-.btn:hover{
-  color:#fff;
-
-  border-color:
-    var(--cyan);
-
-  background:
-    rgba(0,245,255,.11);
+button:hover:not(:disabled){
+  background:rgba(0,229,255,.12);
 
   box-shadow:
-    0 0 20px rgba(0,245,255,.1),
-    inset 0 0 20px rgba(0,245,255,.05);
+    0 0 12px rgba(0,229,255,.2);
 }
 
-.btn:disabled{
-  opacity:.45;
-  cursor:wait;
+button:active:not(:disabled){
+  transform:translateY(1px);
 }
 
-.btn.green{
-  color:var(--green);
-  border-color:rgba(74,222,128,.35);
-
-  background:
-    rgba(74,222,128,.035);
+button:disabled{
+  opacity:.35;
+  cursor:not-allowed;
 }
 
-.btn.green:hover{
+button.green{
   border-color:var(--green);
-  box-shadow:
-    0 0 20px rgba(74,222,128,.1);
+  color:var(--green);
 }
 
-.btn.pink{
-  color:var(--pink);
-  border-color:rgba(255,24,127,.35);
-
-  background:
-    rgba(255,24,127,.035);
-}
-
-.btn.pink:hover{
+button.pink{
   border-color:var(--pink);
+  color:var(--pink);
 }
 
-.btn.small{
-  width:auto;
-  margin-top:0;
-  padding:8px 10px;
+button.yellow{
+  border-color:var(--yellow);
+  color:var(--yellow);
 }
 
 /* =========================================================
-   HELP / LOG
+   ERROR
 ========================================================= */
 
-.help{
+.errorBox{
+  min-height:16px;
+
   margin-top:8px;
 
-  color:#53636e;
+  color:var(--danger);
 
-  font-size:8px;
+  font-size:10px;
+  line-height:1.5;
+
+  white-space:pre-wrap;
+}
+
+/* =========================================================
+   PIPELINE
+========================================================= */
+
+.pipeline{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.stage{
+  padding:5px 8px;
+
+  border:1px solid var(--border);
+
+  color:var(--muted);
+
+  font-size:9px;
+
+  letter-spacing:1px;
+}
+
+.stage.active{
+  border-color:var(--cyan);
+  color:var(--cyan);
+
+  box-shadow:
+    0 0 8px rgba(0,229,255,.3);
+}
+
+.stage.done{
+  border-color:var(--green);
+  color:var(--green);
+}
+
+/* =========================================================
+   LOG
+========================================================= */
+
+.log{
+  max-height:170px;
+
+  overflow-y:auto;
+
+  color:var(--muted);
+
+  font-size:10px;
   line-height:1.55;
 }
 
-#log{
-  max-height:155px;
-  overflow:auto;
-}
-
-.log-line{
-  padding:4px 0;
-
-  border-bottom:
-    1px solid
-    rgba(255,255,255,.025);
-
-  font-size:8px;
-  line-height:1.5;
-}
-
-.log-ok{
+.log .ok{
   color:var(--green);
 }
 
-.log-info{
-  color:#718794;
+.log .info{
+  color:var(--cyan);
 }
 
-.log-error{
-  color:#ff5575;
+.log .warn{
+  color:#ffb347;
+}
+
+.log .err{
+  color:var(--danger);
 }
 
 /* =========================================================
-   VIEWPORT
+   VECTOR
 ========================================================= */
 
-.viewport{
+.vectorDim{
+  margin-bottom:6px;
+
+  color:var(--cyan);
+
+  font-size:11px;
+}
+
+.vectorBox{
+  max-height:120px;
+
+  overflow-y:auto;
+
+  padding:8px;
+
+  background:#060b10;
+
+  border:1px solid var(--border);
+
+  color:var(--muted);
+
+  font-size:10px;
+  line-height:1.4;
+
+  word-break:break-all;
+}
+
+/* =========================================================
+   3D SCENE
+========================================================= */
+
+.sceneColumn{
   position:relative;
 
-  min-width:0;
+  overflow:hidden;
+}
+
+.scenePanel{
+  height:100%;
+
+  display:flex;
+  flex-direction:column;
+
+  border-bottom:none;
+}
+
+.sceneBody{
+  flex:1;
+
   min-height:0;
 
-  overflow:hidden;
+  padding:0;
 
-  background:
-    radial-gradient(
-      circle at 50% 50%,
-      rgba(0,245,255,.025),
-      transparent 52%
-    ),
-    #010307;
+  position:relative;
 }
 
 #scene{
-  position:absolute;
-  inset:0;
-}
+  position:relative;
 
-/* atmospheric glow */
+  width:100%;
+  height:100%;
 
-.viewport::before{
-  content:"";
+  min-height:420px;
 
-  position:absolute;
-  inset:0;
-
-  pointer-events:none;
-  z-index:2;
+  overflow:hidden;
 
   background:
     radial-gradient(
       ellipse at center,
-      transparent 35%,
-      rgba(0,0,0,.38) 100%
+      #0a1520 0%,
+      #05080c 70%
     );
 }
 
-/* =========================================================
-   HUD
-========================================================= */
+#canvas3d{
+  display:block;
+
+  width:100%;
+  height:100%;
+}
 
 .hud{
   position:absolute;
 
-  top:18px;
-  left:20px;
+  top:10px;
+  left:12px;
+  right:12px;
+
+  display:flex;
+  justify-content:space-between;
 
   z-index:10;
 
   pointer-events:none;
-}
 
-.hud-title{
-  color:#dffcff;
+  color:var(--muted);
 
   font-size:10px;
-  letter-spacing:2.8px;
-
-  text-shadow:
-    0 0 12px rgba(0,245,255,.35);
+  letter-spacing:1.5px;
 }
 
-.hud-sub{
-  margin-top:6px;
-
-  color:#40505c;
-
-  font-size:7px;
-  letter-spacing:1.6px;
+.hudRight{
+  color:var(--cyan);
 }
 
-.hud-sub::before{
-  content:"●";
-  color:var(--green);
-  margin-right:6px;
-
-  text-shadow:
-    0 0 8px var(--green);
-}
-
-/* =========================================================
-   STATS
-========================================================= */
-
-.stats{
+.controlsHint{
   position:absolute;
 
-  top:17px;
-  right:20px;
+  left:12px;
+  bottom:10px;
 
   z-index:10;
 
-  display:grid;
-
-  grid-template-columns:
-    repeat(2,auto);
-
-  gap:
-    5px
-    14px;
-
-  text-align:right;
-
   pointer-events:none;
-}
 
-.stat{
-  color:#465761;
-
-  font-size:7px;
-  letter-spacing:1px;
-}
-
-.stat strong{
-  margin-left:5px;
-
-  color:#b8cbd4;
-
-  font-weight:normal;
+  color:var(--muted);
 
   font-size:9px;
 }
 
-/* =========================================================
-   LEGEND
-========================================================= */
-
-.legend{
+.toolbar3d{
   position:absolute;
 
-  left:18px;
-  bottom:18px;
+  right:12px;
+  bottom:8px;
 
   z-index:10;
 
-  padding:9px 11px;
-
-  background:
-    rgba(2,5,9,.65);
-
-  border:
-    1px solid
-    rgba(255,255,255,.06);
-
-  box-shadow:
-    0 12px 30px rgba(0,0,0,.3);
-
-  backdrop-filter:blur(9px);
-
-  font-size:7px;
-
-  color:#55656f;
-}
-
-.legend-title{
-  color:#71838d;
-
-  margin-bottom:7px;
-
-  font-size:7px;
-  letter-spacing:1.5px;
-}
-
-.legend-row{
-  display:flex;
-  align-items:center;
-
-  gap:7px;
-
-  margin:5px 0;
-}
-
-.legend-dot{
-  width:5px;
-  height:5px;
-
-  border-radius:50%;
-}
-
-.dot-memory{
-  background:var(--cyan);
-  box-shadow:0 0 7px var(--cyan);
-}
-
-.dot-concept{
-  background:var(--green);
-  box-shadow:0 0 7px var(--green);
-}
-
-.dot-claim{
-  background:var(--yellow);
-  box-shadow:0 0 7px var(--yellow);
-}
-
-.dot-evidence{
-  background:var(--pink);
-  box-shadow:0 0 7px var(--pink);
-}
-
-.dot-hypothesis{
-  background:var(--purple);
-  box-shadow:0 0 7px var(--purple);
-}
-
-/* =========================================================
-   TOOLBAR
-========================================================= */
-
-.toolbar{
-  position:absolute;
-
-  right:18px;
-  bottom:18px;
-
-  z-index:10;
-
-  display:flex;
-  gap:5px;
-}
-
-.toggle{
-  padding:7px 9px;
-
-  color:#52636d;
-
-  background:
-    rgba(2,5,9,.72);
-
-  border:
-    1px solid
-    rgba(255,255,255,.07);
-
-  font-size:7px;
-  letter-spacing:1px;
-
-  backdrop-filter:blur(7px);
-
-  transition:.15s;
-}
-
-.toggle:hover{
-  color:#9eb3bd;
-
-  border-color:
-    rgba(0,245,255,.2);
-}
-
-.toggle.active{
-  color:var(--cyan);
-
-  border-color:
-    rgba(0,245,255,.3);
-
-  background:
-    rgba(0,245,255,.045);
-
-  box-shadow:
-    0 0 12px rgba(0,245,255,.04);
-}
-
-/* =========================================================
-   MEMORY LIST
-========================================================= */
-
-.memory-list{
-  max-height:350px;
-  overflow:auto;
-}
-
-.memory-item{
-  position:relative;
-
-  padding:9px;
-
-  margin-bottom:3px;
-
-  border:
-    1px solid
-    transparent;
-
-  background:
-    rgba(255,255,255,.008);
-
-  cursor:pointer;
-
-  transition:
-    .15s;
-}
-
-.memory-item::before{
-  content:"";
-
-  position:absolute;
-
-  top:0;
-  bottom:0;
-  left:0;
-
-  width:1px;
-
-  background:transparent;
-}
-
-.memory-item:hover{
-  background:
-    rgba(0,245,255,.025);
-
-  border-color:
-    rgba(0,245,255,.08);
-}
-
-.memory-item:hover::before{
-  background:var(--cyan);
-}
-
-.memory-item.selected{
-  background:
-    linear-gradient(
-      90deg,
-      rgba(0,245,255,.07),
-      transparent
-    );
-
-  border-color:
-    rgba(0,245,255,.2);
-}
-
-.memory-item.selected::before{
-  background:var(--cyan);
-
-  box-shadow:
-    0 0 10px var(--cyan);
-}
-
-.memory-id{
-  color:var(--cyan);
-
-  font-size:8px;
-  letter-spacing:.7px;
-}
-
-.memory-type{
-  float:right;
-
-  color:#465761;
-
-  font-size:7px;
-}
-
-.memory-text{
-  margin-top:5px;
-
-  color:#91a3ad;
-
-  font-size:8px;
-  line-height:1.45;
-
-  display:-webkit-box;
-  -webkit-line-clamp:3;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
-}
-
-/* =========================================================
-   QUERY
-========================================================= */
-
-.row{
   display:flex;
   gap:6px;
 }
 
-.row > *{
-  flex:1;
-}
+.toolbar3d button{
+  width:auto;
 
-.result{
-  position:relative;
+  margin:0;
 
-  padding:8px 2px;
+  padding:6px 9px;
 
-  border-bottom:
-    1px solid
-    rgba(255,255,255,.035);
-
-  cursor:pointer;
-
-  font-size:8px;
-}
-
-.result:hover{
-  color:var(--cyan);
-}
-
-.score{
-  float:right;
-
-  color:var(--green);
-
-  font-size:8px;
+  font-size:9px;
 }
 
 /* =========================================================
    INSPECTOR
 ========================================================= */
 
-.inspector-value{
-  margin:5px 0;
+.inspector{
+  position:absolute;
 
-  color:#7e929d;
+  top:40px;
+  right:12px;
 
-  font-size:8px;
-  line-height:1.55;
+  width:280px;
 
-  word-break:break-word;
+  max-height:
+    calc(100% - 60px);
+
+  overflow-y:auto;
+
+  padding:12px;
+
+  background:
+    rgba(8,14,20,.95);
+
+  border:1px solid var(--border);
+
+  z-index:20;
+
+  display:none;
+
+  font-size:11px;
+
+  backdrop-filter:blur(6px);
 }
 
-.inspector-id{
+.inspector.visible{
+  display:block;
+}
+
+.inspector h3{
+  margin-bottom:8px;
+
   color:var(--cyan);
 
   font-size:10px;
+  letter-spacing:2px;
+}
+
+.inspector .id{
+  margin-bottom:6px;
+
+  color:var(--green);
+}
+
+.inspector .txt{
+  margin-bottom:8px;
+
+  line-height:1.45;
+
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+
+.inspector .meta{
+  color:var(--muted);
+
+  font-size:10px;
+
+  line-height:1.5;
+}
+
+.tag{
+  display:inline-block;
+
+  margin:
+    2px
+    2px
+    0
+    0;
+
+  padding:3px 5px;
+
+  border:1px solid var(--border);
+
+  color:var(--muted);
+
+  font-size:9px;
+}
+
+/* =========================================================
+   MEMORY BANK
+========================================================= */
+
+.memoryList{
+  max-height:250px;
+
+  overflow-y:auto;
+
+  font-size:11px;
+}
+
+.memItem{
+  padding:8px 6px;
+
+  border-bottom:1px solid var(--border);
+
+  cursor:pointer;
+}
+
+.memItem:hover{
+  background:
+    rgba(0,229,255,.06);
+}
+
+.memItem.selected{
+  background:
+    rgba(0,229,255,.10);
+}
+
+.memId{
+  color:var(--cyan);
+
+  font-size:10px;
+}
+
+.memText{
+  margin-top:2px;
+
+  color:var(--text);
+
+  white-space:nowrap;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+}
+
+.memMeta{
+  margin-top:2px;
+
+  color:var(--muted);
+
+  font-size:9px;
+}
+
+/* =========================================================
+   METRICS
+========================================================= */
+
+.metrics{
+  display:grid;
+
+  grid-template-columns:
+    1fr
+    1fr;
+
+  gap:10px;
+
+  margin-top:12px;
+}
+
+.metric{
+  padding:10px;
+
+  background:#060b10;
+
+  border:1px solid var(--border);
+
+  text-align:center;
+}
+
+.metricLabel{
+  color:var(--muted);
+
+  font-size:9px;
 
   letter-spacing:1px;
 }
 
-.position{
-  margin-top:8px;
+.metricValue{
+  margin-top:4px;
 
-  color:var(--green);
+  color:var(--cyan);
 
-  font-size:8px;
-}
-
-.locked{
-  color:var(--green);
-}
-
-hr{
-  border:0;
-
-  border-top:
-    1px solid
-    rgba(255,255,255,.05);
-
-  margin:
-    12px
-    0;
+  font-size:18px;
 }
 
 /* =========================================================
-   HYPERGRAPH
+   SEARCH RANKING
 ========================================================= */
 
-.hyperedge{
-  position:relative;
+.rankItem{
+  padding:8px 6px;
 
-  padding:9px;
+  border-bottom:1px solid var(--border);
 
-  margin-bottom:5px;
+  cursor:pointer;
+}
 
-  border:
-    1px solid
-    rgba(182,108,255,.13);
+.rankItem:hover{
+  background:
+    rgba(0,229,255,.06);
+}
+
+.rankScore{
+  color:var(--pink);
+
+  font-size:10px;
+}
+
+.rankText{
+  margin-top:2px;
+
+  line-height:1.4;
+}
+
+.bar{
+  height:3px;
+
+  margin-top:5px;
+
+  background:#0c171e;
+}
+
+.barFill{
+  height:100%;
 
   background:
     linear-gradient(
       90deg,
-      rgba(182,108,255,.035),
-      transparent
+      var(--cyan),
+      var(--pink)
     );
 }
 
-.hyperedge::before{
-  content:"";
+/* =========================================================
+   METHOD
+========================================================= */
 
-  position:absolute;
+.arch{
+  color:var(--muted);
 
-  left:0;
-  top:0;
-  bottom:0;
-
-  width:1px;
-
-  background:
-    var(--purple);
-
-  box-shadow:
-    0 0 8px rgba(182,108,255,.5);
+  font-size:9px;
+  line-height:1.7;
 }
 
-.hyperedge-id{
-  color:var(--purple);
-
-  font-size:8px;
-  letter-spacing:.7px;
-}
-
-.hyperedge-label{
-  margin-top:4px;
-
-  color:#a998bb;
-
-  font-size:8px;
-}
-
-.hyperedge-members{
-  margin-top:6px;
-
-  color:#586873;
-
-  font-size:7px;
-  line-height:1.6;
+.arch b{
+  color:var(--text);
 }
 
 /* =========================================================
-   MODEL STATUS
+   MOBILE / TABLET
 ========================================================= */
 
-#modelStatus{
-  color:#82959f;
+@media(max-width:1100px){
 
-  font-size:8px;
-  line-height:1.5;
-}
-
-/* =========================================================
-   EMPTY
-========================================================= */
-
-.empty{
-  padding:8px 0;
-
-  color:#34434d;
-
-  font-size:8px;
-}
-
-/* =========================================================
-   TOAST
-========================================================= */
-
-#toast{
-  position:absolute;
-
-  left:50%;
-  bottom:28px;
-
-  z-index:100;
-
-  transform:
-    translateX(-50%)
-    translateY(18px);
-
-  padding:
-    9px
-    13px;
-
-  background:
-    rgba(3,7,11,.94);
-
-  border:
-    1px solid
-    rgba(0,245,255,.4);
-
-  color:var(--cyan);
-
-  font-size:8px;
-  letter-spacing:.7px;
-
-  box-shadow:
-    0 0 25px rgba(0,245,255,.08);
-
-  opacity:0;
-
-  pointer-events:none;
-
-  transition:
-    .22s;
-}
-
-#toast.show{
-  opacity:1;
-
-  transform:
-    translateX(-50%)
-    translateY(0);
-}
-
-#toast.error{
-  color:#ff5575;
-
-  border-color:
-    rgba(255,85,117,.45);
-}
-
-/* =========================================================
-   RESPONSIVE
-========================================================= */
-
-@media(max-width:1050px){
-
-  .main{
+  main{
     grid-template-columns:
-      270px
+      280px
       minmax(0,1fr);
   }
 
-  .panel.right{
-    display:none;
+  .col:last-child{
+    position:absolute;
+
+    top:var(--header-height);
+    right:0;
+    bottom:0;
+
+    width:320px;
+
+    background:
+      rgba(5,8,12,.97);
+
+    transform:translateX(100%);
+
+    transition:
+      transform .2s ease;
+
+    z-index:50;
   }
+
+  .col:last-child.open{
+    transform:translateX(0);
+  }
+
 }
 
 @media(max-width:700px){
 
-  #app{
-    grid-template-rows:58px 1fr;
+  body{
+    grid-template-rows:
+      48px
+      1fr;
   }
 
-  .main{
-    grid-template-columns:1fr;
+  header{
+    padding:0 12px;
+  }
+
+  .logoText{
+    font-size:11px;
+    letter-spacing:2px;
+  }
+
+  .logoMark{
+    width:30px;
+    height:30px;
+  }
+
+  main{
+    grid-template-columns:
+      1fr;
+
     grid-template-rows:
       40vh
       60vh;
   }
 
-  .panel.left{
-    max-height:none;
-  }
-
-  .viewport{
-    min-height:0;
-  }
-
-  .brand-sub{
+  .col:first-child{
     display:none;
   }
 
-  .brand-title{
-    font-size:11px;
+  .sceneColumn{
+    grid-row:1;
   }
 
-  .toolbar{
-    left:15px;
-    right:auto;
-    bottom:15px;
+  .col:last-child{
+    position:static;
+
+    width:auto;
+
+    transform:none;
+
+    grid-row:2;
+
+    display:flex;
   }
 
-  .stats{
+  .inspector{
+    width:
+      calc(100% - 24px);
+  }
+
+  .hud{
+    font-size:8px;
+  }
+
+  .hudRight{
     display:none;
   }
+
 }
 
 </style>
 </head>
 
-<body>
 
-<div id="app">
+<body>
 
 <!-- =======================================================
      HEADER
@@ -1225,397 +899,133 @@ hr{
 
 <header>
 
-  <div class="brand">
+  <div class="logo">
 
-    <div class="logo">
-      N
+    <div class="logoMark">
+      Σ
     </div>
 
-    <div>
-
-      <div class="brand-title">
-        NEURAL MEMORY
-      </div>
-
-      <div class="brand-sub">
-        SEMANTIC MEMORY CORE / HYPERGRAPH OBSERVATORY
-      </div>
-
+    <div class="logoText">
+      NEURAL <span>MEMORY</span>
     </div>
 
   </div>
 
-  <div class="header-right">
+  <div class="status">
 
     <div
       id="statusDot"
-      class="status-dot">
+      class="statusDot">
     </div>
 
-    <div
-      id="statusText"
-      class="status-text">
-      INITIALISIERUNG
-    </div>
+    <span id="statusText">
+      EMBEDDING CORE OFFLINE
+    </span>
 
   </div>
 
 </header>
 
 
-<div class="main">
+<main>
 
 <!-- =======================================================
-     LEFT PANEL
+     LEFT COLUMN
 ======================================================= -->
 
-<aside class="panel left">
+<div class="col">
 
-  <div class="section">
+  <!-- INPUT -->
 
-    <div class="section-title">
-      MEMORY INPUT
+  <div class="panel">
+
+    <div class="panelTitle">
+      01 / MEMORY INPUT
     </div>
 
-    <label for="memoryText">
-      TEXT
-    </label>
-
-    <textarea
-      id="memoryText"
-      placeholder="Gedächtnisinhalt eingeben ..."></textarea>
-
-
-    <label for="memoryType">
-      MEMORY TYPE
-    </label>
-
-    <select id="memoryType">
-
-      <option value="memory">
-        memory
-      </option>
-
-      <option value="concept">
-        concept
-      </option>
-
-      <option value="claim">
-        claim
-      </option>
-
-      <option value="evidence">
-        evidence
-      </option>
-
-      <option value="hypothesis">
-        hypothesis
-      </option>
-
-    </select>
-
-
-    <label for="memoryTags">
-      TAGS
-    </label>
-
-    <input
-      id="memoryTags"
-      placeholder="RAG, Architektur, Embedding">
-
-
-    <button
-      id="saveBtn"
-      class="btn green">
-
-      + MEMORY SPEICHERN
-
-    </button>
-
-
-    <div class="help">
-
-      Die Memory wird eingebettet,
-      erhält eine einmalige 3D-Position
-      und wird persistent gespeichert.
-
-    </div>
-
-  </div>
-
-
-  <!-- MODEL -->
-
-  <div class="section">
-
-    <div class="section-title">
-      EMBEDDING ENGINE
-    </div>
-
-    <div
-      id="modelStatus"
-      class="inspector-value">
-
-      Modell wird geladen ...
-
-    </div>
-
-    <div
-      id="embeddingStatus"
-      class="help">
-
-      Initialisierung ...
-
-    </div>
-
-  </div>
-
-
-  <!-- HYPEREDGE -->
-
-  <div class="section">
-
-    <div class="section-title">
-      CREATE HYPEREDGE
-    </div>
-
-    <label for="hyperedgeLabel">
-      LABEL
-    </label>
-
-    <input
-      id="hyperedgeLabel"
-      placeholder="SEMANTIC CONTEXT">
-
-
-    <label for="hyperedgeMembers">
-      MEMORY IDS
-    </label>
-
-    <input
-      id="hyperedgeMembers"
-      placeholder="MEM-000001, MEM-000002, MEM-000003">
-
-
-    <button
-      id="createHyperedgeBtn"
-      class="btn">
-
-      + HYPEREDGE ERSTELLEN
-
-    </button>
-
-
-    <div class="help">
-
-      Eine Hyperedge verbindet mehrere
-      Memories als gemeinsame Kontextgruppe.
-      Sie verändert keine Node-Positionen.
-
-    </div>
-
-  </div>
-
-
-  <!-- LOG -->
-
-  <div class="section">
-
-    <div class="section-title">
-      SYSTEM LOG
-    </div>
-
-    <div id="log"></div>
-
-  </div>
-
-</aside>
-
-
-<!-- =======================================================
-     3D VIEWPORT
-======================================================= -->
-
-<main class="viewport">
-
-  <div id="scene"></div>
-
-
-  <div class="hud">
-
-    <div class="hud-title">
-      FIXED SEMANTIC SPACE
-    </div>
-
-    <div class="hud-sub">
-      384D EMBEDDING / ANCHORED R³ / NO FORCE SIMULATION
-    </div>
-
-  </div>
-
-
-  <div class="stats">
-
-    <div class="stat">
-      NODES
-      <strong id="nodeCount">0</strong>
-    </div>
-
-    <div class="stat">
-      EDGES
-      <strong id="edgeCount">0</strong>
-    </div>
-
-    <div class="stat">
-      HYPEREDGES
-      <strong id="hyperedgeCount">0</strong>
-    </div>
-
-    <div class="stat">
-      ACTIVE
-      <strong id="activeCount">0</strong>
-    </div>
-
-  </div>
-
-
-  <div class="legend">
-
-    <div class="legend-title">
-      NODE CLASS
-    </div>
-
-    <div class="legend-row">
-      <span class="legend-dot dot-memory"></span>
-      MEMORY
-    </div>
-
-    <div class="legend-row">
-      <span class="legend-dot dot-concept"></span>
-      CONCEPT
-    </div>
-
-    <div class="legend-row">
-      <span class="legend-dot dot-claim"></span>
-      CLAIM
-    </div>
-
-    <div class="legend-row">
-      <span class="legend-dot dot-evidence"></span>
-      EVIDENCE
-    </div>
-
-    <div class="legend-row">
-      <span class="legend-dot dot-hypothesis"></span>
-      HYPOTHESIS
-    </div>
-
-  </div>
-
-
-  <div class="toolbar">
-
-    <button
-      id="toggleEdges"
-      class="toggle active">
-
-      EDGES
-
-    </button>
-
-    <button
-      id="toggleHyper"
-      class="toggle active">
-
-      HYPEREDGES
-
-    </button>
-
-    <button
-      id="toggleAnchors"
-      class="toggle">
-
-      ANCHORS
-
-    </button>
-
-    <button
-      id="clearContextBtn"
-      class="toggle">
-
-      CLEAR
-
-    </button>
-
-  </div>
-
-</main>
-
-
-<!-- =======================================================
-     RIGHT PANEL
-======================================================= -->
-
-<aside class="panel right">
-
-
-  <!-- SEARCH -->
-
-  <div class="section">
-
-    <div class="section-title">
-      SEMANTIC QUERY
-    </div>
-
-    <div class="row">
-
-      <input
-        id="queryInput"
-        placeholder="Kontext suchen ...">
-
-      <button
-        id="queryBtn"
-        class="btn small">
-
-        SEARCH
-
+    <div class="panelBody">
+
+      <textarea
+        id="textInput"
+        placeholder="Eine neue Memory eingeben ..."
+      ></textarea>
+
+      <button id="embedBtn">
+        GENERATE EMBEDDING
       </button>
 
-    </div>
+      <button
+        id="storeBtn"
+        class="green"
+        disabled
+      >
+        STORE MEMORY IN SPACE
+      </button>
 
-    <div id="queryResults"></div>
+      <div
+        id="errorBox"
+        class="errorBox"
+      ></div>
 
-  </div>
-
-
-  <!-- MEMORY BANK -->
-
-  <div class="section">
-
-    <div class="section-title">
-      MEMORY BANK
-    </div>
-
-    <div
-      id="memoryList"
-      class="memory-list">
     </div>
 
   </div>
 
 
-  <!-- INSPECTOR -->
+  <!-- PIPELINE -->
 
-  <div class="section">
+  <div class="panel">
 
-    <div class="section-title">
-      NODE INSPECTOR
+    <div class="panelTitle">
+      PIPELINE
     </div>
 
-    <div id="inspector">
+    <div class="panelBody">
 
-      <div class="empty">
-        Keine Memory ausgewählt.
+      <div class="pipeline">
+
+        <div
+          id="stageText"
+          class="stage"
+        >
+          TEXT
+        </div>
+
+        <div
+          id="stageToken"
+          class="stage"
+        >
+          TOKENIZATION
+        </div>
+
+        <div
+          id="stageModel"
+          class="stage"
+        >
+          E5 EMBEDDING
+        </div>
+
+        <div
+          id="stageVector"
+          class="stage"
+        >
+          VECTOR 384D
+        </div>
+
+        <div
+          id="stageStore"
+          class="stage"
+        >
+          ANCHORED INSERT
+        </div>
+
+        <div
+          id="stageSearch"
+          class="stage"
+        >
+          COSINE SEARCH
+        </div>
+
       </div>
 
     </div>
@@ -1623,29 +1033,371 @@ hr{
   </div>
 
 
-  <!-- HYPERGRAPH -->
+  <!-- SYSTEM LOG -->
 
-  <div class="section">
+  <div class="panel">
 
-    <div class="section-title">
-      HYPERGRAPH
+    <div class="panelTitle">
+      SYSTEM LOG
     </div>
 
-    <div id="hypergraphList"></div>
+    <div class="panelBody">
+
+      <div
+        id="log"
+        class="log"
+      ></div>
+
+    </div>
 
   </div>
 
-</aside>
+
+  <!-- VECTOR -->
+
+  <div class="panel">
+
+    <div class="panelTitle">
+      CURRENT VECTOR
+    </div>
+
+    <div class="panelBody">
+
+      <div
+        id="vectorDim"
+        class="vectorDim"
+      >
+        d = —
+      </div>
+
+      <div
+        id="vectorBox"
+        class="vectorBox"
+      >
+        Noch kein Embedding berechnet.
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- METHOD -->
+
+  <div class="panel">
+
+    <div class="panelTitle">
+      METHOD
+    </div>
+
+    <div class="panelBody">
+
+      <div class="arch">
+
+        <b>HIGH-D → 3D</b><br>
+
+        384D cosine neighborhood →
+        anchor selection →
+        local distance fitting →
+        local relaxation →
+        fixed 3D position.
+
+        <br><br>
+
+        <b>SEMANTIC SPACE</b><br>
+
+        Die vollständige 384D-Repräsentation
+        bleibt die semantische Wahrheit
+        für Retrieval und Similarity.
+
+        <br><br>
+
+        <b>3D POSITION</b><br>
+
+        <code>pos3d</code> ist ausschließlich
+        die visuelle Darstellung.
+
+        <br><br>
+
+        <b>ANCHORS</b><br>
+
+        Bereits platzierte Erinnerungen
+        werden bei späteren Inserts
+        nicht verschoben.
+
+        <br><br>
+
+        <b>EDGES</b><br>
+
+        Sichtbarkeit einer Brücke basiert
+        ausschließlich auf 384D-Cosine.
+
+        <br><br>
+
+        <b>PROJECT MEMORY</b><br>
+
+        Git-Commit, Diff, Code-State und
+        Project-State können später als
+        eigene deterministische Node-Typen
+        in denselben Graph integriert werden.
+
+      </div>
+
+    </div>
+
+  </div>
 
 </div>
 
 
-<div id="toast"></div>
+<!-- =======================================================
+     3D SPACE
+======================================================= -->
+
+<div
+  class="col sceneColumn"
+>
+
+  <div class="panel scenePanel">
+
+    <div class="panelTitle">
+      EMBEDDING SPACE / 3D MEMORY SPACE
+    </div>
+
+    <div class="panelBody sceneBody">
+
+      <div id="scene">
+
+        <div class="hud">
+
+          <div>
+            384D EMBEDDINGS → ANCHORED R³
+          </div>
+
+          <div
+            id="hudStatus"
+            class="hudRight"
+          >
+            MEMORY SPACE EMPTY
+          </div>
+
+        </div>
+
+
+        <canvas id="canvas3d"></canvas>
+
+
+        <div class="controlsHint">
+
+          DRAG · ROTATE
+          &nbsp;|&nbsp;
+          WHEEL · ZOOM
+          &nbsp;|&nbsp;
+          CLICK · SELECT
+          &nbsp;|&nbsp;
+          DBLCLICK · FOCUS
+
+        </div>
+
+
+        <div class="toolbar3d">
+
+          <button id="resetCamBtn">
+            RESET
+          </button>
+
+          <button id="toggleLinksBtn">
+            LINKS ON
+          </button>
+
+        </div>
+
+
+        <div
+          id="inspector"
+          class="inspector"
+        >
+
+          <h3>
+            MEMORY INSPECTOR
+          </h3>
+
+          <div
+            id="inspId"
+            class="id"
+          >
+            —
+          </div>
+
+          <div
+            id="inspText"
+            class="txt"
+          >
+            —
+          </div>
+
+          <div
+            id="inspMeta"
+            class="meta"
+          >
+            —
+          </div>
+
+          <div
+            id="inspAnchors"
+            class="meta"
+            style="margin-top:8px"
+          ></div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
 
 </div>
+
+
+<!-- =======================================================
+     RIGHT COLUMN
+======================================================= -->
+
+<div class="col">
+
+  <!-- MEMORY BANK -->
+
+  <div class="panel">
+
+    <div class="panelTitle">
+      MEMORY BANK
+    </div>
+
+    <div class="panelBody">
+
+      <div
+        id="memoryList"
+        class="memoryList"
+      >
+
+        <div
+          style="
+            color:#405861;
+            font-size:10px
+          "
+        >
+          VECTOR STORE EMPTY
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- SEARCH -->
+
+  <div class="panel">
+
+    <div class="panelTitle">
+      SEMANTIC QUERY
+    </div>
+
+    <div class="panelBody">
+
+      <input
+        id="queryInput"
+        placeholder="z.B. Stuttgart Termin"
+      >
+
+      <button
+        id="searchBtn"
+        class="pink"
+        disabled
+      >
+        RUN COSINE SEARCH
+      </button>
+
+
+      <div class="metrics">
+
+        <div class="metric">
+
+          <div class="metricLabel">
+            MEMORY COUNT
+          </div>
+
+          <div
+            id="memoryCount"
+            class="metricValue"
+          >
+            0
+          </div>
+
+        </div>
+
+
+        <div class="metric">
+
+          <div class="metricLabel">
+            VECTOR DIM
+          </div>
+
+          <div
+            id="dimension"
+            class="metricValue"
+          >
+            —
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- SEARCH RESULTS -->
+
+  <div class="panel">
+
+    <div class="panelTitle">
+      RELEVANCE SCANNER
+    </div>
+
+    <div class="panelBody">
+
+      <div id="ranking">
+
+        <div
+          style="
+            color:#405861;
+            font-size:10px
+          "
+        >
+          NO SEARCH RESULT
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+</main>
 
 
 <script type="module">
+
+/* =========================================================
+   IMPORTS
+========================================================= */
 
 import * as THREE from 'three';
 
@@ -1662,103 +1414,288 @@ import {
    CONFIGURATION
 ========================================================= */
 
-const MODEL =
-  'Xenova/multilingual-e5-small';
+const CONFIG = Object.freeze({
 
-const DIM = 384;
+  MODEL:
+    'Xenova/multilingual-e5-small',
 
-const DB_NAME =
-  'NEURAL_MEMORY_ANCHORED_V2';
+  DIM:
+    384,
 
-const DB_VERSION = 2;
+  K_NEIGHBORS:
+    8,
 
-const MEMORY_STORE =
-  'memories';
+  ANCHOR_COUNT:
+    5,
 
-const HYPEREDGE_STORE =
-  'hyperedges';
+  RELAX_ITERATIONS:
+    120,
 
-const PAIR_THRESHOLD =
-  0.72;
+  EDGE_THRESHOLD:
+    0.72,
 
-const HYPER_THRESHOLD =
-  0.72;
+  DB_NAME:
+    'NEURAL_MEMORY_ANCHORED_V2',
 
-const MAX_HYPER_MEMBERS =
-  6;
+  DB_STORE:
+    'memories',
 
-const MAX_CONTEXT_NEIGHBORS =
-  8;
+  DB_VERSION:
+    1
 
-const BASE_SCALE =
-  5;
+});
 
 
 /* =========================================================
    APPLICATION STATE
 ========================================================= */
 
-let db = null;
+const state = {
 
-let extractor = null;
+  extractor:
+    null,
 
-let modelReady = false;
+  modelPromise:
+    null,
 
-let saving = false;
+  modelReady:
+    false,
 
-let memories = [];
+  currentVector:
+    null,
 
-let hyperedges = [];
+  currentText:
+    '',
 
-let selectedId = null;
+  memories:
+    [],
 
-let activeContext =
-  new Set();
+  nextId:
+    1,
 
-let showEdges = true;
+  selectedId:
+    null,
 
-let showHyperedges = true;
+  showLinks:
+    true,
 
-let showAnchors = false;
+  queryVector:
+    null,
+
+  db:
+    null
+
+};
 
 
 /* =========================================================
-   THREE STATE
+   DOM CACHE
 ========================================================= */
 
-let scene;
-
-let camera;
-
-let renderer;
-
-let controls;
-
-let raycaster;
-
-let mouse;
-
-let points;
-
-let pointGeometry;
-
-let pointMaterial;
-
-let pairGroup;
-
-let hyperGroup;
-
-let anchorGroup;
-
-const container =
-  document.getElementById(
-    'scene'
-  );
+const $ = id =>
+  document.getElementById(id);
 
 
 /* =========================================================
    BASIC HELPERS
 ========================================================= */
+
+function sleep(ms){
+
+  return new Promise(
+    resolve => setTimeout(resolve,ms)
+  );
+
+}
+
+
+function now(){
+
+  return new Date().toISOString();
+
+}
+
+
+function esc(value){
+
+  return String(value)
+
+    .replaceAll('&','&amp;')
+
+    .replaceAll('<','&lt;')
+
+    .replaceAll('>','&gt;')
+
+    .replaceAll('"','&quot;')
+
+    .replaceAll("'",'&#039;');
+
+}
+
+
+function log(message,type='info'){
+
+  const entry =
+    document.createElement('div');
+
+  entry.className = type;
+
+  const time =
+    new Date().toLocaleTimeString(
+      'de-DE',
+      {hour12:false}
+    );
+
+  entry.textContent =
+    `[${time}] ${message}`;
+
+  $('log').prepend(entry);
+
+  while(
+    $('log').children.length > 60
+  ){
+
+    $('log').lastElementChild.remove();
+
+  }
+
+}
+
+
+function setStatus(online,text){
+
+  $('statusDot')
+    .classList
+    .toggle('online',online);
+
+  $('statusText').textContent =
+    text;
+
+}
+
+
+function stage(id,status){
+
+  const element = $(id);
+
+  if(!element)return;
+
+  element.classList.remove(
+    'active',
+    'done'
+  );
+
+  if(status){
+
+    element.classList.add(status);
+
+  }
+
+}
+
+
+function resetStages(){
+
+  [
+    'stageText',
+    'stageToken',
+    'stageModel',
+    'stageVector',
+    'stageStore',
+    'stageSearch'
+  ]
+  .forEach(
+    id => stage(id,null)
+  );
+
+}
+
+
+function error(message=''){
+
+  $('errorBox').textContent =
+    message;
+
+}
+
+
+/* =========================================================
+   VECTOR MATH
+========================================================= */
+
+/*
+   v ∈ R^384
+
+   Cosine similarity:
+
+   cos(a,b)
+     =
+   (a · b)
+   /
+   (||a|| ||b||)
+
+   3D coordinates are NOT used here.
+*/
+
+function dot(a,b){
+
+  let sum = 0;
+
+  const n =
+    Math.min(
+      a.length,
+      b.length
+    );
+
+  for(let i=0;i<n;i++){
+
+    sum +=
+      a[i] * b[i];
+
+  }
+
+  return sum;
+
+}
+
+
+function norm(v){
+
+  let sum = 0;
+
+  for(const x of v){
+
+    sum += x*x;
+
+  }
+
+  return Math.sqrt(sum);
+
+}
+
+
+function cosine(a,b){
+
+  const na =
+    norm(a);
+
+  const nb =
+    norm(b);
+
+  if(
+    na === 0 ||
+    nb === 0
+  ){
+
+    return 0;
+
+  }
+
+  return dot(a,b) /
+    (na * nb);
+
+}
+
 
 function clamp(
   value,
@@ -1770,1052 +1707,1498 @@ function clamp(
     min,
     Math.min(max,value)
   );
-}
 
-
-function safeText(value){
-
-  return String(
-    value ?? ''
-  );
-}
-
-
-function escapeHtml(value){
-
-  return safeText(value)
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;')
-    .replaceAll("'","&#039;");
-}
-
-
-function validVec3(p){
-
-  return Array.isArray(p) &&
-    p.length === 3 &&
-    p.every(
-      Number.isFinite
-    );
-}
-
-
-function add3(a,b){
-
-  return [
-    a[0]+b[0],
-    a[1]+b[1],
-    a[2]+b[2]
-  ];
-}
-
-
-function sub3(a,b){
-
-  return [
-    a[0]-b[0],
-    a[1]-b[1],
-    a[2]-b[2]
-  ];
-}
-
-
-function scale3(a,s){
-
-  return [
-    a[0]*s,
-    a[1]*s,
-    a[2]*s
-  ];
-}
-
-
-function norm3(a){
-
-  return Math.hypot(
-    a[0],
-    a[1],
-    a[2]
-  );
-}
-
-
-function normalize3(a){
-
-  const n =
-    norm3(a);
-
-  if(n < 1e-12){
-    return [1,0,0];
-  }
-
-  return scale3(
-    a,
-    1/n
-  );
-}
-
-
-function dist3(a,b){
-
-  return norm3(
-    sub3(a,b)
-  );
-}
-
-
-function formatVec3(p){
-
-  if(!validVec3(p)){
-    return '[ ?, ?, ? ]';
-  }
-
-  return '[' +
-    p
-      .map(
-        v => Number(v).toFixed(2)
-      )
-      .join(', ') +
-    ']';
-}
-
-
-/* =========================================================
-   HASH
-========================================================= */
-
-function hashString(str){
-
-  let h = 2166136261;
-
-  for(let i=0;i<str.length;i++){
-
-    h ^=
-      str.charCodeAt(i);
-
-    h =
-      Math.imul(
-        h,
-        16777619
-      );
-  }
-
-  return h >>> 0;
-}
-
-
-function randomDirectionFromId(id){
-
-  const h =
-    hashString(id);
-
-  const a =
-    ((h % 100000) / 100000) *
-    Math.PI * 2;
-
-  const b =
-    ((((h >>> 8) % 100000) /
-      100000) - .5) *
-    Math.PI;
-
-  const cb =
-    Math.cos(b);
-
-  return normalize3([
-    Math.cos(a)*cb,
-    Math.sin(b),
-    Math.sin(a)*cb
-  ]);
-}
-
-
-/* =========================================================
-   VECTOR MATH
-========================================================= */
-
-function dot(a,b){
-
-  let result = 0;
-
-  const n =
-    Math.min(
-      a.length,
-      b.length
-    );
-
-  for(let i=0;i<n;i++){
-
-    result +=
-      a[i] * b[i];
-  }
-
-  return result;
-}
-
-
-function vectorNorm(a){
-
-  return Math.sqrt(
-    dot(a,a)
-  );
-}
-
-
-/*
- * COSINE SIMILARITY
- *
- * sim(a,b) =
- * (a · b) / (||a|| ||b||)
- *
- * Die Berechnung erfolgt vollständig
- * im ursprünglichen 384D-Raum.
- */
-
-function cosine(a,b){
-
-  if(!a || !b){
-    return 0;
-  }
-
-  const na =
-    vectorNorm(a);
-
-  const nb =
-    vectorNorm(b);
-
-  if(
-    na < 1e-12 ||
-    nb < 1e-12
-  ){
-
-    return 0;
-  }
-
-  return clamp(
-    dot(a,b)/(na*nb),
-    -1,
-    1
-  );
 }
 
 
 function angularDistance(a,b){
 
-  return Math.acos(
-    clamp(
-      cosine(a,b),
-      -1,
-      1
+  return Math.sqrt(
+    Math.max(
+      0,
+      2 * (1 - cosine(a,b))
     )
-  ) / Math.PI;
+  );
+
+}
+
+
+function distance3(a,b){
+
+  return Math.hypot(
+    a[0]-b[0],
+    a[1]-b[1],
+    a[2]-b[2]
+  );
+
 }
 
 
 /* =========================================================
-   UI STATUS
+   INDEXEDDB
 ========================================================= */
 
-function log(
-  message,
-  type='info'
-){
+function openDB(){
 
-  const el =
-    document.getElementById(
-      'log'
+  if(state.db){
+
+    return Promise.resolve(
+      state.db
     );
 
-  const row =
-    document.createElement(
-      'div'
-    );
-
-  row.className =
-    'log-line ' +
-    (
-      type === 'error'
-        ? 'log-error'
-        : type === 'ok'
-          ? 'log-ok'
-          : 'log-info'
-    );
-
-  row.textContent =
-    `[${new Date().toLocaleTimeString()}] ${message}`;
-
-  el.prepend(row);
-
-  while(
-    el.children.length > 50
-  ){
-
-    el.removeChild(
-      el.lastChild
-    );
   }
-}
-
-
-function toast(
-  message,
-  error=false
-){
-
-  const el =
-    document.getElementById(
-      'toast'
-    );
-
-  el.textContent =
-    message;
-
-  el.classList.toggle(
-    'error',
-    error
-  );
-
-  el.classList.add(
-    'show'
-  );
-
-  clearTimeout(
-    toast.timer
-  );
-
-  toast.timer =
-    setTimeout(
-      () => {
-        el.classList.remove(
-          'show'
-        );
-      },
-      2600
-    );
-}
-
-
-function setStatus(
-  text,
-  color='yellow'
-){
-
-  document.getElementById(
-    'statusText'
-  ).textContent =
-    text;
-
-  const dot =
-    document.getElementById(
-      'statusDot'
-    );
-
-  const colors = {
-
-    green:'#4ade80',
-
-    pink:'#ff187f',
-
-    red:'#ff5575',
-
-    yellow:'#f7d154'
-
-  };
-
-  dot.style.color =
-    colors[color] ||
-    colors.yellow;
-
-  dot.style.background =
-    'currentColor';
-}
-
-
-/* =========================================================
-   INDEXED DB
-========================================================= */
-
-function requestToPromise(
-  request
-){
 
   return new Promise(
-    (resolve,reject) => {
+    (resolve,reject)=>{
+
+      const request =
+        indexedDB.open(
+          CONFIG.DB_NAME,
+          CONFIG.DB_VERSION
+        );
+
+
+      request.onupgradeneeded =
+        () => {
+
+          const db =
+            request.result;
+
+          if(
+            !db.objectStoreNames
+              .contains(CONFIG.DB_STORE)
+          ){
+
+            db.createObjectStore(
+              CONFIG.DB_STORE,
+              {
+                keyPath:'id'
+              }
+            );
+
+          }
+
+        };
+
 
       request.onsuccess =
-        () =>
+        () => {
+
+          state.db =
+            request.result;
+
+          state.db.onclose =
+            () => {
+
+              state.db = null;
+
+            };
+
           resolve(
-            request.result
+            state.db
           );
 
+        };
+
+
       request.onerror =
-        () =>
+        () => {
+
           reject(
-            request.error ||
-            new Error(
-              'IndexedDB request failed'
-            )
+            request.error
           );
+
+        };
+
     }
   );
+
 }
 
 
-async function openDB(){
+async function dbGetAll(){
 
-  if(db){
-    return db;
-  }
+  try{
 
-  db =
-    await new Promise(
-      (resolve,reject) => {
+    const db =
+      await openDB();
 
-        const request =
-          indexedDB.open(
-            DB_NAME,
-            DB_VERSION
+    return await new Promise(
+      (resolve,reject)=>{
+
+        const tx =
+          db.transaction(
+            CONFIG.DB_STORE,
+            'readonly'
           );
 
-        request.onupgradeneeded =
-          event => {
-
-            const database =
-              event.target.result;
-
-            if(
-              !database
-                .objectStoreNames
-                .contains(
-                  MEMORY_STORE
-                )
-            ){
-
-              const store =
-                database.createObjectStore(
-                  MEMORY_STORE,
-                  {keyPath:'id'}
-                );
-
-              store.createIndex(
-                'createdAt',
-                'createdAt',
-                {unique:false}
-              );
-            }
-
-            if(
-              !database
-                .objectStoreNames
-                .contains(
-                  HYPEREDGE_STORE
-                )
-            ){
-
-              const store =
-                database.createObjectStore(
-                  HYPEREDGE_STORE,
-                  {keyPath:'id'}
-                );
-
-              store.createIndex(
-                'createdAt',
-                'createdAt',
-                {unique:false}
-              );
-            }
-          };
-
+        const request =
+          tx
+            .objectStore(CONFIG.DB_STORE)
+            .getAll();
 
         request.onsuccess =
-          () => {
-
-            const database =
-              request.result;
-
-            database.onversionchange =
-              () => {
-
-                database.close();
-              };
-
-            resolve(
-              database
-            );
-          };
-
+          () => resolve(
+            request.result || []
+          );
 
         request.onerror =
-          () => {
-
-            reject(
-              request.error ||
-              new Error(
-                'IndexedDB konnte nicht geöffnet werden.'
-              )
-            );
-          };
-
-
-        request.onblocked =
-          () => {
-
-            log(
-              'IndexedDB wird von einem anderen Tab blockiert.',
-              'error'
-            );
-          };
+          () => reject(
+            request.error
+          );
 
       }
     );
 
-  return db;
-}
+  }catch(e){
 
-
-async function loadMemories(){
-
-  const database =
-    await openDB();
-
-  const transaction =
-    database.transaction(
-      MEMORY_STORE,
-      'readonly'
+    log(
+      `IndexedDB nicht verfügbar: ${e.message}`,
+      'warn'
     );
 
-  const request =
-    transaction
-      .objectStore(
-        MEMORY_STORE
-      )
-      .getAll();
+    return [];
 
-  return requestToPromise(
-    request
-  );
+  }
+
 }
 
 
-async function loadHyperedges(){
+async function dbPut(record){
 
-  const database =
+  const db =
     await openDB();
 
-  const transaction =
-    database.transaction(
-      HYPEREDGE_STORE,
-      'readonly'
-    );
+  return await new Promise(
+    (resolve,reject)=>{
 
-  const request =
-    transaction
-      .objectStore(
-        HYPEREDGE_STORE
-      )
-      .getAll();
-
-  return requestToPromise(
-    request
-  );
-}
-
-
-async function saveMemory(
-  memory
-){
-
-  const database =
-    await openDB();
-
-  return new Promise(
-    (resolve,reject) => {
-
-      const transaction =
-        database.transaction(
-          MEMORY_STORE,
+      const tx =
+        db.transaction(
+          CONFIG.DB_STORE,
           'readwrite'
         );
 
-      const request =
-        transaction
-          .objectStore(
-            MEMORY_STORE
-          )
-          .put(memory);
+      tx
+        .objectStore(CONFIG.DB_STORE)
+        .put(record);
 
-      request.onsuccess =
-        () =>
-          resolve();
+      tx.oncomplete =
+        () => resolve();
 
-      request.onerror =
-        () =>
-          reject(
-            request.error ||
-            new Error(
-              'Memory konnte nicht gespeichert werden.'
-            )
-          );
+      tx.onerror =
+        () => reject(
+          tx.error
+        );
 
-      transaction.onerror =
-        () =>
-          reject(
-            transaction.error ||
-            new Error(
-              'IndexedDB-Speicherung fehlgeschlagen.'
-            )
-          );
-
-      transaction.onabort =
-        () =>
-          reject(
-            transaction.error ||
-            new Error(
-              'IndexedDB-Transaktion abgebrochen.'
-            )
-          );
     }
   );
+
 }
 
 
-async function saveHyperedge(
-  hyperedge
-){
+async function dbPutMany(records){
 
-  const database =
+  if(!records.length)return;
+
+  const db =
     await openDB();
 
-  return new Promise(
-    (resolve,reject) => {
+  return await new Promise(
+    (resolve,reject)=>{
 
-      const transaction =
-        database.transaction(
-          HYPEREDGE_STORE,
+      const tx =
+        db.transaction(
+          CONFIG.DB_STORE,
           'readwrite'
         );
 
-      const request =
-        transaction
-          .objectStore(
-            HYPEREDGE_STORE
-          )
-          .put(
-            hyperedge
-          );
+      const store =
+        tx.objectStore(
+          CONFIG.DB_STORE
+        );
 
-      request.onsuccess =
-        () =>
-          resolve();
+      for(
+        const record
+        of records
+      ){
 
-      request.onerror =
-        () =>
-          reject(
-            request.error ||
-            new Error(
-              'Hyperedge konnte nicht gespeichert werden.'
-            )
-          );
+        store.put(record);
 
-      transaction.onerror =
-        () =>
-          reject(
-            transaction.error ||
-            new Error(
-              'Hyperedge-Speicherung fehlgeschlagen.'
-            )
-          );
+      }
+
+      tx.oncomplete =
+        () => resolve();
+
+      tx.onerror =
+        () => reject(
+          tx.error
+        );
+
     }
   );
+
 }
 
 
 /* =========================================================
-   IDS
+   EMBEDDING MODEL
 ========================================================= */
 
-function nextMemoryId(){
+async function loadModel(){
 
-  let max = 0;
+  if(state.modelReady){
 
-  for(
-    const memory
-    of memories
-  ){
+    return true;
 
-    const match =
-      /^MEM-(\d+)$/
-        .exec(
-          memory.id
-        );
-
-    if(match){
-
-      max =
-        Math.max(
-          max,
-          Number(match[1])
-        );
-    }
   }
 
-  return 'MEM-' +
-    String(
-      max+1
-    ).padStart(
-      6,
-      '0'
-    );
-}
 
+  if(state.modelPromise){
 
-function nextHyperedgeId(){
+    return state.modelPromise;
 
-  let max = 0;
-
-  for(
-    const hyperedge
-    of hyperedges
-  ){
-
-    const match =
-      /^H-(\d+)$/
-        .exec(
-          hyperedge.id
-        );
-
-    if(match){
-
-      max =
-        Math.max(
-          max,
-          Number(match[1])
-        );
-    }
   }
 
-  return 'H-' +
-    String(
-      max+1
-    ).padStart(
-      6,
-      '0'
-    );
+
+  state.modelPromise =
+    (async()=>{
+
+      setStatus(
+        false,
+        'LOADING EMBEDDING CORE'
+      );
+
+      stage(
+        'stageModel',
+        'active'
+      );
+
+      error('');
+
+      log(
+        `Lade ${CONFIG.MODEL} …`,
+        'info'
+      );
+
+      log(
+        'Browser-Modus: WASM + quantisiertes Modell.',
+        'info'
+      );
+
+      try{
+
+        state.extractor =
+          await pipeline(
+            'feature-extraction',
+            CONFIG.MODEL,
+            {
+
+              dtype:'q8',
+
+              device:'wasm',
+
+              progress_callback:
+                progress => {
+
+                  if(
+                    progress?.status ===
+                    'progress'
+                  ){
+
+                    const pct =
+                      Number.isFinite(
+                        progress.progress
+                      )
+                      ? ` ${Math.round(progress.progress)}%`
+                      : '';
+
+                    const file =
+                      progress.file
+                      ? ` · ${progress.file}`
+                      : '';
+
+                    log(
+                      `Modelldownload${pct}${file}`,
+                      'info'
+                    );
+
+                  }
+
+                }
+
+            }
+          );
+
+
+        /*
+           Echter Inferenztest.
+
+           Erst danach gilt das Modell
+           als ONLINE.
+        */
+
+        const smoke =
+          await state.extractor(
+            'passage: Modelltest',
+            {
+              pooling:'mean',
+              normalize:true
+            }
+          );
+
+
+        const vector =
+          Array.from(
+            smoke.data ||
+            smoke.tolist()[0]
+          );
+
+
+        if(
+          vector.length !==
+          CONFIG.DIM
+        ){
+
+          throw new Error(
+            `Modelltest lieferte ${vector.length} Dimensionen statt ${CONFIG.DIM}.`
+          );
+
+        }
+
+
+        state.modelReady =
+          true;
+
+        setStatus(
+          true,
+          `EMBEDDING CORE ONLINE · ${CONFIG.DIM}D`
+        );
+
+        $('dimension').textContent =
+          CONFIG.DIM;
+
+        stage(
+          'stageModel',
+          'done'
+        );
+
+        log(
+          'Embedding Core ONLINE.',
+          'ok'
+        );
+
+        log(
+          `Smoke-Test erfolgreich · ${CONFIG.DIM}D.`,
+          'ok'
+        );
+
+        return true;
+
+      }catch(e){
+
+        state.extractor =
+          null;
+
+        state.modelReady =
+          false;
+
+        setStatus(
+          false,
+          'LOAD FAILED'
+        );
+
+        stage(
+          'stageModel',
+          null
+        );
+
+        error(
+          `${e?.message || e}\n\n` +
+          'Das Modell wird im Browser geladen. ' +
+          'Beim ersten Start kann der Download länger dauern.'
+        );
+
+        log(
+          `Embedding-Modell konnte nicht geladen werden: ${e?.message || e}`,
+          'err'
+        );
+
+        return false;
+
+      }finally{
+
+        state.modelPromise =
+          null;
+
+      }
+
+    })();
+
+
+  return state.modelPromise;
+
 }
 
-
-/* =========================================================
-   EMBEDDING ENGINE
-========================================================= */
 
 async function embed(
   text,
   mode='passage'
 ){
 
-  if(!extractor){
+  const ready =
+    await loadModel();
+
+  if(
+    !ready ||
+    !state.extractor
+  ){
 
     throw new Error(
-      'Embedding-Modell ist noch nicht bereit.'
+      'Embedding-Modell ist nicht verfügbar.'
     );
+
   }
 
-  const prefix =
-    mode === 'query'
-      ? 'query: '
-      : 'passage: ';
+
+  const clean =
+    text.trim();
+
+  if(!clean){
+
+    throw new Error(
+      'Leerer Text kann nicht eingebettet werden.'
+    );
+
+  }
+
+
+  const prepared =
+    `${mode}: ${clean}`;
+
 
   const output =
-    await extractor(
-      prefix + text,
+    await state.extractor(
+      prepared,
       {
         pooling:'mean',
         normalize:true
       }
     );
 
-  let data;
-
-  if(output?.data){
-
-    data =
-      Array.from(
-        output.data
-      );
-
-  }else if(
-    typeof output?.tolist ===
-    'function'
-  ){
-
-    data =
-      output.tolist();
-
-  }else{
-
-    throw new Error(
-      'Unbekanntes Embedding-Format.'
-    );
-  }
-
-  while(
-    Array.isArray(data) &&
-    data.length === 1 &&
-    Array.isArray(data[0])
-  ){
-
-    data =
-      data[0];
-  }
 
   const vector =
     Array.from(
-      data,
-      Number
+      output.data ||
+      output.tolist()[0]
     );
 
+
   if(
-    vector.length !== DIM
+    vector.length !==
+    CONFIG.DIM
   ){
 
     throw new Error(
-      `Embedding ${vector.length}D statt ${DIM}D.`
+      `Unerwartete Dimension ${vector.length}, erwartet ${CONFIG.DIM}.`
     );
+
   }
+
 
   return vector;
-}
 
-
-async function loadModel(){
-
-  const status =
-    document.getElementById(
-      'modelStatus'
-    );
-
-  try{
-
-    status.textContent =
-      'Lade multilingual-e5-small ...';
-
-    log(
-      'Embedding Engine startet ...'
-    );
-
-    extractor =
-      await pipeline(
-        'feature-extraction',
-        MODEL,
-        {
-          dtype:'q8',
-          device:'wasm',
-
-          progress_callback:
-            data => {
-
-              if(
-                data?.status ===
-                'progress'
-              ){
-
-                const progress =
-                  Number.isFinite(
-                    data.progress
-                  )
-                    ? Math.round(
-                        data.progress
-                      ) + ' %'
-                    : '';
-
-                status.textContent =
-                  `MODEL LOAD ${progress}`;
-              }
-            }
-        }
-      );
-
-
-    const test =
-      await embed(
-        'Model test',
-        'passage'
-      );
-
-
-    if(
-      test.length !== DIM
-    ){
-
-      throw new Error(
-        'Falsche Embedding-Dimension.'
-      );
-    }
-
-
-    modelReady = true;
-
-    status.textContent =
-      `${DIM}D EMBEDDING ENGINE — READY`;
-
-    document.getElementById(
-      'embeddingStatus'
-    ).textContent =
-      'Semantic encoding online.';
-
-
-    setStatus(
-      'CORE ONLINE',
-      'green'
-    );
-
-    log(
-      `${DIM}D Embedding Engine bereit.`,
-      'ok'
-    );
-
-  }catch(error){
-
-    console.error(error);
-
-    modelReady = false;
-
-    status.textContent =
-      'MODEL ERROR';
-
-    setStatus(
-      'MODEL ERROR',
-      'red'
-    );
-
-    log(
-      'Modellfehler: ' +
-      error.message,
-      'error'
-    );
-
-    toast(
-      'Embedding-Modell konnte nicht geladen werden.',
-      true
-    );
-  }
 }
 
 
 /* =========================================================
-   ANCHORED POSITIONING
+   MEMORY SCHEMA
+========================================================= */
+
+/*
+   WICHTIG:
+
+   semantic.embedding.vector
+       = vollständiger 384D-Vektor
+
+   geometry.pos3d
+       = separate 3D-Visualisierung
+
+   Git-Metadaten werden später separat
+   als deterministische Node-Typen ergänzt.
+*/
+
+function createMemoryRecord(
+  id,
+  text,
+  vector
+){
+
+  return {
+
+    id,
+
+    schema_version:
+      '1.1',
+
+    type:
+      'memory',
+
+    content:{
+
+      title:
+        text.slice(0,80),
+
+      text
+
+    },
+
+    semantic:{
+
+      embedding:{
+
+        model:
+          CONFIG.MODEL,
+
+        dimensions:
+          CONFIG.DIM,
+
+        vector:
+          vector.slice()
+
+      }
+
+    },
+
+    geometry:{
+
+      pos3d:[
+        0,
+        0,
+        0
+      ]
+
+    },
+
+    anchors:[],
+
+    positionLocked:
+      true,
+
+    created_at:
+      now()
+
+  };
+
+}
+
+
+/*
+   Compatibility helpers.
+
+   Die 384D-Daten liegen strukturiert unter
+   semantic.embedding.vector.
+
+   Die Funktionen erlauben zugleich den
+   Zugriff auf ältere gespeicherte Datensätze.
+*/
+
+function getVector(memory){
+
+  if(
+    Array.isArray(
+      memory?.semantic
+        ?.embedding
+        ?.vector
+    )
+  ){
+
+    return memory.semantic.embedding.vector;
+
+  }
+
+  if(
+    Array.isArray(
+      memory?.vector
+    )
+  ){
+
+    return memory.vector;
+
+  }
+
+  return [];
+
+}
+
+
+function getPosition(memory){
+
+  if(
+    Array.isArray(
+      memory?.geometry?.pos3d
+    )
+  ){
+
+    return memory.geometry.pos3d;
+
+  }
+
+  if(
+    Array.isArray(memory?.pos3d)
+  ){
+
+    return memory.pos3d;
+
+  }
+
+  return [0,0,0];
+
+}
+
+
+function setPosition(
+  memory,
+  position
+){
+
+  if(!memory.geometry){
+
+    memory.geometry = {};
+
+  }
+
+  memory.geometry.pos3d =
+    position.slice();
+
+}
+
+
+/* =========================================================
+   ANCHOR SEARCH
 ========================================================= */
 
 function nearestNeighbors(
   vector
 ){
 
-  return memories
-
-    .filter(
-      memory =>
-        Array.isArray(
-          memory.vector
-        ) &&
-        memory.vector.length === DIM &&
-        validVec3(
-          memory.pos3d
-        )
-    )
+  return state.memories
 
     .map(
-      memory => ({
+      memory => {
 
-        memory,
+        const v =
+          getVector(memory);
 
-        similarity:
-          cosine(
-            vector,
-            memory.vector
-          )
+        return {
 
-      })
+          memory,
+
+          score:
+            cosine(vector,v),
+
+          distance:
+            angularDistance(
+              vector,
+              v
+            )
+
+        };
+
+      }
     )
 
     .sort(
       (a,b) =>
-        b.similarity -
-        a.similarity
+        b.score -
+        a.score
+    )
+
+    .slice(
+      0,
+      CONFIG.K_NEIGHBORS
     );
+
 }
 
 
-function localScale(){
+/* =========================================================
+   ANCHOR SELECTION
+========================================================= */
+
+function chooseAnchors(
+  neighbors
+){
 
   if(
-    memories.length < 2
+    neighbors.length <=
+    CONFIG.ANCHOR_COUNT
   ){
 
-    return BASE_SCALE;
+    return neighbors.map(
+      x => x.memory
+    );
+
   }
 
-  let total = 0;
 
-  let count = 0;
+  const selected = [
+    neighbors[0].memory
+  ];
 
-  const sample =
-    memories.slice(
-      Math.max(
-        0,
-        memories.length-20
-      )
-    );
+
+  while(
+    selected.length <
+    Math.min(
+      CONFIG.ANCHOR_COUNT,
+      neighbors.length
+    )
+  ){
+
+    let best =
+      null;
+
+    let bestValue =
+      -Infinity;
+
+
+    for(
+      const candidate
+      of neighbors
+    ){
+
+      if(
+        selected.some(
+          item =>
+            item.id ===
+            candidate.memory.id
+        )
+      ){
+
+        continue;
+
+      }
+
+
+      let diversity =
+        Infinity;
+
+
+      for(
+        const selectedMemory
+        of selected
+      ){
+
+        diversity =
+          Math.min(
+            diversity,
+            angularDistance(
+              getVector(candidate.memory),
+              getVector(selectedMemory)
+            )
+          );
+
+      }
+
+
+      const value =
+        diversity * 0.65 +
+        candidate.score * 0.35;
+
+
+      if(
+        value >
+        bestValue
+      ){
+
+        bestValue =
+          value;
+
+        best =
+          candidate.memory;
+
+      }
+
+    }
+
+
+    if(!best)break;
+
+    selected.push(best);
+
+  }
+
+
+  return selected;
+
+}
+
+
+/* =========================================================
+   LOCAL 3D SCALE
+========================================================= */
+
+function localScale(
+  anchors
+){
+
+  const ratios = [];
 
 
   for(
     let i=0;
-    i<sample.length;
+    i<anchors.length;
     i++
   ){
 
     for(
       let j=i+1;
-      j<sample.length;
+      j<anchors.length;
       j++
     ){
 
-      const distance =
-        dist3(
-          sample[i].pos3d,
-          sample[j].pos3d
+      const semanticDistance =
+        angularDistance(
+          getVector(anchors[i]),
+          getVector(anchors[j])
         );
 
+
+      const visualDistance =
+        distance3(
+          getPosition(anchors[i]),
+          getPosition(anchors[j])
+        );
+
+
       if(
-        distance >
-        .001
+        semanticDistance > 1e-5 &&
+        visualDistance > 1e-5
       ){
 
-        total +=
-          distance;
+        ratios.push(
+          visualDistance /
+          semanticDistance
+        );
 
-        count++;
       }
+
     }
+
   }
 
 
-  if(!count){
-    return BASE_SCALE;
+  if(!ratios.length){
+
+    return 3;
+
   }
+
+
+  ratios.sort(
+    (a,b)=>a-b
+  );
 
 
   return clamp(
-    total/count,
-    2,
-    10
+    ratios[
+      Math.floor(
+        ratios.length / 2
+      )
+    ],
+    .35,
+    8
   );
+
 }
 
 
-function chooseAnchors(
+/* =========================================================
+   INITIAL POSITION
+========================================================= */
+
+function initialPosition(
+  vector,
+  anchors
+){
+
+  if(!anchors.length){
+
+    return [0,0,0];
+
+  }
+
+
+  const weights =
+    anchors.map(
+      anchor =>
+        Math.max(
+          .0001,
+          Math.pow(
+            (
+              cosine(
+                vector,
+                getVector(anchor)
+              ) + 1
+            ) / 2,
+            4
+          )
+        )
+    );
+
+
+  const sum =
+    weights.reduce(
+      (a,b)=>a+b,
+      0
+    );
+
+
+  const position =
+    [0,0,0];
+
+
+  anchors.forEach(
+    (anchor,index)=>{
+
+      const p =
+        getPosition(anchor);
+
+      position[0] +=
+        p[0] *
+        weights[index];
+
+      position[1] +=
+        p[1] *
+        weights[index];
+
+      position[2] +=
+        p[2] *
+        weights[index];
+
+    }
+  );
+
+
+  position[0] /= sum;
+  position[1] /= sum;
+  position[2] /= sum;
+
+
+  return position;
+
+}
+
+
+/* =========================================================
+   LOCAL POSITION SOLVER
+========================================================= */
+
+function solveLocalPosition(
+  vector,
+  anchors
+){
+
+  if(!anchors.length){
+
+    return [0,0,0];
+
+  }
+
+
+  if(anchors.length === 1){
+
+    return getPosition(
+      anchors[0]
+    ).slice();
+
+  }
+
+
+  const scale =
+    localScale(
+      anchors
+    );
+
+
+  const targets =
+    anchors.map(
+      anchor =>
+        clamp(
+          angularDistance(
+            vector,
+            getVector(anchor)
+          ) * scale,
+          .03,
+          12
+        )
+    );
+
+
+  let position =
+    initialPosition(
+      vector,
+      anchors
+    );
+
+
+  let best =
+    position.slice();
+
+  let bestLoss =
+    Infinity;
+
+
+  for(
+    let iteration=0;
+    iteration<CONFIG.RELAX_ITERATIONS;
+    iteration++
+  ){
+
+    const gradient =
+      [0,0,0];
+
+    let loss =
+      0;
+
+
+    for(
+      let k=0;
+      k<anchors.length;
+      k++
+    ){
+
+      const anchorPosition =
+        getPosition(
+          anchors[k]
+        );
+
+
+      let dx =
+        position[0] -
+        anchorPosition[0];
+
+      let dy =
+        position[1] -
+        anchorPosition[1];
+
+      let dz =
+        position[2] -
+        anchorPosition[2];
+
+
+      let radius =
+        Math.hypot(
+          dx,
+          dy,
+          dz
+        );
+
+
+      if(
+        radius < 1e-6
+      ){
+
+        radius = 1e-6;
+
+      }
+
+
+      const errorDistance =
+        radius -
+        targets[k];
+
+
+      const similarityWeight =
+        .2 +
+        .8 *
+        Math.pow(
+          (
+            cosine(
+              vector,
+              getVector(
+                anchors[k]
+              )
+            ) + 1
+          ) / 2,
+          2
+        );
+
+
+      const weight =
+        similarityWeight *
+        (
+          1 /
+          (1 + targets[k])
+        );
+
+
+      loss +=
+        weight *
+        errorDistance *
+        errorDistance;
+
+
+      gradient[0] +=
+        2 *
+        weight *
+        errorDistance *
+        dx /
+        radius;
+
+
+      gradient[1] +=
+        2 *
+        weight *
+        errorDistance *
+        dy /
+        radius;
+
+
+      gradient[2] +=
+        2 *
+        weight *
+        errorDistance *
+        dz /
+        radius;
+
+    }
+
+
+    const learningRate =
+      .075 *
+      (
+        1 -
+        iteration /
+        CONFIG.RELAX_ITERATIONS
+      ) +
+      .008;
+
+
+    position[0] -=
+      learningRate *
+      gradient[0];
+
+    position[1] -=
+      learningRate *
+      gradient[1];
+
+    position[2] -=
+      learningRate *
+      gradient[2];
+
+
+    if(
+      loss <
+      bestLoss
+    ){
+
+      bestLoss =
+        loss;
+
+      best =
+        position.slice();
+
+    }
+
+  }
+
+
+  return best;
+
+}
+
+
+/* =========================================================
+   INITIAL FRAME
+========================================================= */
+
+function seedInitialFrame(){
+
+  const memories =
+    state.memories;
+
+
+  if(
+    memories.length === 0
+  ){
+
+    return;
+
+  }
+
+
+  /*
+     Memory 1
+  */
+
+  if(
+    memories.length === 1
+  ){
+
+    setPosition(
+      memories[0],
+      [0,0,0]
+    );
+
+    memories[0].anchors = [];
+
+    memories[0].positionLocked =
+      true;
+
+    return;
+
+  }
+
+
+  /*
+     Memory 2
+  */
+
+  if(
+    memories.length === 2
+  ){
+
+    const a =
+      memories[0];
+
+    const b =
+      memories[1];
+
+
+    const semanticDistance =
+      angularDistance(
+        getVector(a),
+        getVector(b)
+      );
+
+
+    const separation =
+      clamp(
+        1.5 +
+        semanticDistance * 2.5,
+        1.5,
+        4.0
+      );
+
+
+    setPosition(
+      a,
+      [
+        -separation / 2,
+        0,
+        0
+      ]
+    );
+
+
+    setPosition(
+      b,
+      [
+        separation / 2,
+        0,
+        0
+      ]
+    );
+
+
+    a.anchors = [];
+
+    b.anchors = [
+      a.id
+    ];
+
+    a.positionLocked = true;
+    b.positionLocked = true;
+
+    return;
+
+  }
+
+
+  /*
+     Memory 3
+
+     Establishes a stable initial
+     triangular frame.
+  */
+
+  const a =
+    memories[0];
+
+  const b =
+    memories[1];
+
+  const c =
+    memories[2];
+
+
+  const dAB =
+    angularDistance(
+      getVector(a),
+      getVector(b)
+    );
+
+  const dAC =
+    angularDistance(
+      getVector(a),
+      getVector(c)
+    );
+
+  const dBC =
+    angularDistance(
+      getVector(b),
+      getVector(c)
+    );
+
+
+  const base =
+    Math.max(
+      dAB,
+      1e-6
+    );
+
+
+  const scale =
+    4.8 /
+    base;
+
+
+  setPosition(
+    a,
+    [-2.4,0,0]
+  );
+
+
+  setPosition(
+    b,
+    [2.4,0,0]
+  );
+
+
+  const AC =
+    dAC * scale;
+
+  const BC =
+    dBC * scale;
+
+
+  const x =
+    (
+      AC * AC -
+      BC * BC +
+      4.8 * 4.8
+    ) /
+    (
+      2 * 4.8
+    );
+
+
+  const y =
+    Math.sqrt(
+      Math.max(
+        0,
+        AC * AC -
+        x * x
+      )
+    );
+
+
+  setPosition(
+    c,
+    [
+      x - 2.4,
+      y,
+      0
+    ]
+  );
+
+
+  c.anchors = [
+    a.id,
+    b.id
+  ];
+
+
+  for(
+    const memory
+    of [a,b,c]
+  ){
+
+    memory.positionLocked =
+      true;
+
+  }
+
+}
+
+
+/* =========================================================
+   PERSISTENCE
+========================================================= */
+
+async function persistAll(){
+
+  await dbPutMany(
+    state.memories
+  );
+
+}
+
+
+/* =========================================================
+   INSERT MEMORY
+========================================================= */
+
+async function insertMemory(
+  text,
   vector
 ){
+
+  const id =
+    `MEM-${String(
+      state.nextId++
+    ).padStart(6,'0')}`;
+
+
+  const record =
+    createMemoryRecord(
+      id,
+      text,
+      vector
+    );
+
+
+  state.memories.push(
+    record
+  );
+
+
+  /*
+     First three memories create
+     the fixed coordinate frame.
+  */
+
+  if(
+    state.memories.length <= 3
+  ){
+
+    seedInitialFrame();
+
+    await persistAll();
+
+    return record;
+
+  }
+
+
+  /*
+     From Memory #4 onward:
+
+     Only the NEW memory gets
+     a calculated position.
+
+     Existing memories remain fixed.
+  */
 
   const neighbors =
     nearestNeighbors(
@@ -2823,1365 +3206,1256 @@ function chooseAnchors(
     );
 
 
-  if(
-    neighbors.length <= 3
-  ){
-
-    return neighbors;
-  }
-
-
-  const selected = [];
-
-  selected.push(
-    neighbors[0]
-  );
-
-
-  for(
-    let i=1;
-    i<neighbors.length &&
-    selected.length<4;
-    i++
-  ){
-
-    const candidate =
-      neighbors[i];
-
-    let redundant =
-      false;
-
-
-    for(
-      const existing
-      of selected
-    ){
-
-      if(
-        cosine(
-          candidate.memory.vector,
-          existing.memory.vector
-        ) > .97
-      ){
-
-        redundant = true;
-
-        break;
-      }
-    }
-
-
-    if(!redundant){
-
-      selected.push(
-        candidate
-      );
-    }
-  }
-
-
-  return selected;
-}
-
-
-function positionFromTwoAnchors(
-  targetVector,
-  a,
-  b,
-  seedId
-){
-
-  const scale =
-    localScale();
-
-
-  const da =
-    scale *
-    (
-      .35 +
-      angularDistance(
-        targetVector,
-        a.vector
-      ) * 1.65
-    );
-
-
-  const db =
-    scale *
-    (
-      .35 +
-      angularDistance(
-        targetVector,
-        b.vector
-      ) * 1.65
-    );
-
-
-  const A =
-    a.pos3d;
-
-  const B =
-    b.pos3d;
-
-
-  const AB =
-    sub3(
-      B,
-      A
-    );
-
-
-  const L =
-    norm3(
-      AB
-    );
-
-
-  if(
-    L < .0001
-  ){
-
-    return add3(
-      A,
-      scale3(
-        randomDirectionFromId(
-          seedId
-        ),
-        da
-      )
-    );
-  }
-
-
-  const axis =
-    scale3(
-      AB,
-      1/L
-    );
-
-
-  let x =
-    (
-      da*da -
-      db*db +
-      L*L
-    ) /
-    (2*L);
-
-
-  x =
-    clamp(
-      x,
-      -L,
-      L
-    );
-
-
-  const h =
-    Math.sqrt(
-      Math.max(
-        0,
-        da*da -
-        x*x
-      )
-    );
-
-
-  let reference =
-    randomDirectionFromId(
-      seedId
-    );
-
-
-  let perpendicular =
-    sub3(
-      reference,
-      scale3(
-        axis,
-        reference[0]*axis[0] +
-        reference[1]*axis[1] +
-        reference[2]*axis[2]
-      )
-    );
-
-
-  if(
-    norm3(
-      perpendicular
-    ) < .001
-  ){
-
-    perpendicular =
-      Math.abs(
-        axis[0]
-      ) < .8
-        ? [1,0,0]
-        : [0,1,0];
-
-
-    perpendicular =
-      sub3(
-        perpendicular,
-        scale3(
-          axis,
-          perpendicular[0]*axis[0] +
-          perpendicular[1]*axis[1] +
-          perpendicular[2]*axis[2]
-        )
-      );
-  }
-
-
-  perpendicular =
-    normalize3(
-      perpendicular
-    );
-
-
-  return add3(
-    add3(
-      A,
-      scale3(
-        axis,
-        x
-      )
-    ),
-    scale3(
-      perpendicular,
-      h
-    )
-  );
-}
-
-
-function initialPosition(
-  vector,
-  anchors,
-  seedId
-){
-
-  if(!anchors.length){
-
-    return [0,0,0];
-  }
-
-
-  if(
-    anchors.length === 1
-  ){
-
-    const anchor =
-      anchors[0];
-
-    const distance =
-      localScale() *
-      (
-        .7 +
-        angularDistance(
-          vector,
-          anchor.vector
-        ) * 1.5
-      );
-
-
-    return add3(
-      anchor.pos3d,
-      scale3(
-        randomDirectionFromId(
-          seedId
-        ),
-        distance
-      )
-    );
-  }
-
-
-  if(
-    anchors.length === 2
-  ){
-
-    return positionFromTwoAnchors(
-      vector,
-      anchors[0].memory,
-      anchors[1].memory,
-      seedId
-    );
-  }
-
-
-  let result =
-    [0,0,0];
-
-  let weightTotal = 0;
-
-
-  for(
-    const anchor
-    of anchors
-  ){
-
-    const weight =
-      Math.max(
-        .001,
-        anchor.similarity
-      );
-
-
-    result =
-      add3(
-        result,
-        scale3(
-          anchor.memory.pos3d,
-          weight
-        )
-      );
-
-
-    weightTotal +=
-      weight;
-  }
-
-
-  return scale3(
-    result,
-    1/weightTotal
-  );
-}
-
-
-function solveLocalPosition(
-  vector,
-  anchors,
-  seedId
-){
-
-  if(
-    anchors.length <= 2
-  ){
-
-    return initialPosition(
-      vector,
-      anchors,
-      seedId
-    );
-  }
-
-
-  let position =
-    initialPosition(
-      vector,
-      anchors,
-      seedId
-    );
-
-
-  const scale =
-    localScale();
-
-
-  for(
-    let iteration=0;
-    iteration<90;
-    iteration++
-  ){
-
-    let gradient =
-      [0,0,0];
-
-
-    for(
-      const anchor
-      of anchors
-    ){
-
-      const target =
-        scale *
-        (
-          .35 +
-          angularDistance(
-            vector,
-            anchor.memory.vector
-          ) * 1.65
-        );
-
-
-      const delta =
-        sub3(
-          position,
-          anchor.memory.pos3d
-        );
-
-
-      const distance =
-        Math.max(
-          norm3(delta),
-          .0001
-        );
-
-
-      const error =
-        distance -
-        target;
-
-
-      gradient =
-        add3(
-          gradient,
-          scale3(
-            delta,
-            error/distance
-          )
-        );
-    }
-
-
-    const learning =
-      .055 *
-      (
-        1 -
-        iteration/100
-      );
-
-
-    position =
-      sub3(
-        position,
-        scale3(
-          gradient,
-          learning
-        )
-      );
-  }
-
-
-  return position;
-}
-
-
-function placeNewMemory(
-  memory
-){
-
-  /*
-   * NODE 1
-   */
-
-  if(
-    memories.length === 0
-  ){
-
-    memory.pos3d =
-      [0,0,0];
-
-    memory.anchors =
-      [];
-
-    memory.positionLocked =
-      true;
-
-    return;
-  }
-
-
-  /*
-   * NODE 2
-   */
-
-  if(
-    memories.length === 1
-  ){
-
-    const first =
-      memories[0];
-
-    const distance =
-      BASE_SCALE *
-      (
-        .8 +
-        angularDistance(
-          memory.vector,
-          first.vector
-        ) * 1.5
-      );
-
-
-    memory.pos3d =
-      [
-        distance,
-        0,
-        0
-      ];
-
-
-    memory.anchors =
-      [
-        first.id
-      ];
-
-
-    memory.positionLocked =
-      true;
-
-    return;
-  }
-
-
-  /*
-   * NODE 3+
-   */
-
   const anchors =
     chooseAnchors(
-      memory.vector
+      neighbors
     );
 
 
-  const anchorData =
+  record.anchors =
     anchors.map(
-      a => ({
-        memory:a.memory,
-        similarity:a.similarity
-      })
+      anchor => anchor.id
     );
 
 
-  memory.pos3d =
+  setPosition(
+    record,
     solveLocalPosition(
-      memory.vector,
-      anchorData,
-      memory.id
-    );
+      vector,
+      anchors
+    )
+  );
 
 
-  memory.anchors =
-    anchorData.map(
-      a =>
-        a.memory.id
-    );
-
-
-  memory.positionLocked =
+  record.positionLocked =
     true;
+
+
+  await dbPut(
+    record
+  );
+
+
+  return record;
+
 }
 
 
 /* =========================================================
-   LEGACY REPAIR
+   THREE.JS
 ========================================================= */
 
-async function repairLegacyPositions(){
+let scene;
+let camera;
+let renderer;
+let controls;
 
-  if(!memories.length){
-    return;
+let pointsMesh;
+let linesGroup;
+
+let raycaster;
+let mouse;
+
+
+const vertexShader = `
+
+attribute float aSelected;
+
+varying float vSelected;
+
+void main(){
+
+  vSelected =
+    float(aSelected > 0.5);
+
+  vec4 mvPosition =
+    modelViewMatrix *
+    vec4(position,1.0);
+
+  gl_Position =
+    projectionMatrix *
+    mvPosition;
+
+  float distanceScale =
+    260.0 /
+    max(
+      40.0,
+      -mvPosition.z
+    );
+
+  gl_PointSize =
+    (
+      aSelected > 0.5
+      ? 8.5
+      : 5.5
+    )
+    *
+    distanceScale;
+
+}
+
+`;
+
+
+const fragmentShader = `
+
+varying float vSelected;
+
+void main(){
+
+  vec2 p =
+    gl_PointCoord -
+    vec2(0.5);
+
+  float radius =
+    length(p);
+
+  if(radius > 0.5){
+
+    discard;
+
   }
 
+  float core =
+    1.0 -
+    smoothstep(
+      0.03,
+      0.23,
+      radius
+    );
 
-  const allValid =
-    memories.every(
-      memory =>
-        validVec3(
-          memory.pos3d
-        )
+  float glow =
+    1.0 -
+    smoothstep(
+      0.12,
+      0.50,
+      radius
+    );
+
+  vec3 cyan =
+    vec3(
+      0.0,
+      0.90,
+      1.0
+    );
+
+  vec3 pink =
+    vec3(
+      1.0,
+      0.18,
+      0.58
+    );
+
+  vec3 color =
+    mix(
+      cyan,
+      pink,
+      vSelected
+    );
+
+  float alpha =
+    max(
+      core,
+      glow * 0.65
+    );
+
+  gl_FragColor =
+    vec4(
+      color,
+      alpha
+    );
+
+}
+
+`;
+
+
+/* =========================================================
+   THREE INITIALIZATION
+========================================================= */
+
+function initThree(){
+
+  const container =
+    $('scene');
+
+  const canvas =
+    $('canvas3d');
+
+
+  scene =
+    new THREE.Scene();
+
+
+  scene.fog =
+    new THREE.FogExp2(
+      0x05080c,
+      .035
     );
 
 
-  if(allValid){
+  camera =
+    new THREE.PerspectiveCamera(
+      55,
+      1,
+      .1,
+      200
+    );
 
-    for(
-      const memory
-      of memories
-    ){
 
-      if(
-        memory.positionLocked !== true
-      ){
+  camera.position.set(
+    8,
+    6,
+    10
+  );
 
-        memory.positionLocked =
-          true;
 
-        await saveMemory(
-          memory
-        );
-      }
-    }
+  renderer =
+    new THREE.WebGLRenderer({
 
-    return;
+      canvas,
+
+      antialias:true,
+
+      alpha:true
+
+    });
+
+
+  renderer.setPixelRatio(
+    Math.min(
+      window.devicePixelRatio || 1,
+      2
+    )
+  );
+
+
+  renderer.setClearColor(
+    0x000000,
+    0
+  );
+
+
+  controls =
+    new OrbitControls(
+      camera,
+      canvas
+    );
+
+
+  controls.enableDamping =
+    true;
+
+  controls.dampingFactor =
+    .08;
+
+  controls.minDistance =
+    1.5;
+
+  controls.maxDistance =
+    50;
+
+  controls.target.set(
+    0,
+    0,
+    0
+  );
+
+
+  scene.add(
+    new THREE.AmbientLight(
+      0x406080,
+      .6
+    )
+  );
+
+
+  const directionalLight =
+    new THREE.DirectionalLight(
+      0x00e5ff,
+      .45
+    );
+
+
+  directionalLight.position.set(
+    5,
+    10,
+    7
+  );
+
+
+  scene.add(
+    directionalLight
+  );
+
+
+  const grid =
+    new THREE.GridHelper(
+      18,
+      18,
+      0x1a2a36,
+      0x0f1a22
+    );
+
+
+  grid.material.transparent =
+    true;
+
+  grid.material.opacity =
+    .4;
+
+
+  scene.add(
+    grid
+  );
+
+
+  const axes =
+    new THREE.AxesHelper(
+      3.5
+    );
+
+
+  axes.setColors(
+    0xff2d95,
+    0x00ff9d,
+    0x00e5ff
+  );
+
+
+  axes.material.transparent =
+    true;
+
+  axes.material.opacity =
+    .45;
+
+
+  scene.add(
+    axes
+  );
+
+
+  linesGroup =
+    new THREE.Group();
+
+
+  scene.add(
+    linesGroup
+  );
+
+
+  raycaster =
+    new THREE.Raycaster();
+
+
+  raycaster.params.Points.threshold =
+    .25;
+
+
+  mouse =
+    new THREE.Vector2();
+
+
+  canvas.addEventListener(
+    'pointerdown',
+    onPointerDown
+  );
+
+
+  canvas.addEventListener(
+    'dblclick',
+    onDoubleClick
+  );
+
+
+  resizeThree();
+
+
+  window.addEventListener(
+    'resize',
+    resizeThree
+  );
+
+
+  animate();
+
+}
+
+
+/* =========================================================
+   THREE RESIZE
+========================================================= */
+
+function resizeThree(){
+
+  if(!renderer)return;
+
+
+  const width =
+    $('scene').clientWidth ||
+    1;
+
+  const height =
+    $('scene').clientHeight ||
+    1;
+
+
+  camera.aspect =
+    width / height;
+
+
+  camera.updateProjectionMatrix();
+
+
+  renderer.setSize(
+    width,
+    height,
+    false
+  );
+
+}
+
+
+/* =========================================================
+   RENDER LOOP
+========================================================= */
+
+function animate(){
+
+  requestAnimationFrame(
+    animate
+  );
+
+  controls.update();
+
+  renderer.render(
+    scene,
+    camera
+  );
+
+}
+
+
+/* =========================================================
+   POINT CLOUD
+========================================================= */
+
+function disposeObject(
+  object
+){
+
+  if(!object)return;
+
+
+  if(object.geometry){
+
+    object.geometry.dispose();
+
   }
 
 
-  log(
-    'Legacy-Daten ohne gültige Position gefunden. Einmalige Migration ...'
-  );
-
-
-  memories.sort(
-    (a,b) =>
-      safeText(
-        a.createdAt
-      ).localeCompare(
-        safeText(
-          b.createdAt
-        )
-      )
-  );
-
-
-  const rebuilt = [];
-
-
-  for(
-    const memory
-    of memories
-  ){
+  if(object.material){
 
     if(
-      validVec3(
-        memory.pos3d
-      ) &&
-      memory.positionLocked === true
+      Array.isArray(
+        object.material
+      )
     ){
 
-      rebuilt.push(
-        memory
+      object.material.forEach(
+        material =>
+          material.dispose()
       );
 
-      continue;
+    }else{
+
+      object.material.dispose();
+
     }
 
+  }
 
-    const original =
-      memories;
+}
 
-    memories =
-      rebuilt;
 
-    placeNewMemory(
-      memory
+function makePoints(){
+
+  if(pointsMesh){
+
+    scene.remove(
+      pointsMesh
     );
 
-    memories =
-      original;
-
-    rebuilt.push(
-      memory
+    disposeObject(
+      pointsMesh
     );
+
+    pointsMesh =
+      null;
+
   }
 
 
-  for(
-    const memory
-    of rebuilt
+  if(
+    !state.memories.length
   ){
 
-    await saveMemory(
-      memory
-    );
+    return;
+
   }
 
 
-  log(
-    'Positionen einmalig migriert.',
-    'ok'
+  const count =
+    state.memories.length;
+
+
+  const positions =
+    new Float32Array(
+      count * 3
+    );
+
+
+  const selected =
+    new Float32Array(
+      count
+    );
+
+
+  state.memories.forEach(
+    (memory,index)=>{
+
+      const p =
+        getPosition(
+          memory
+        );
+
+
+      positions[
+        index * 3
+      ] =
+        p[0];
+
+      positions[
+        index * 3 + 1
+      ] =
+        p[1];
+
+      positions[
+        index * 3 + 2
+      ] =
+        p[2];
+
+
+      selected[index] =
+        memory.id ===
+        state.selectedId
+        ? 1
+        : 0;
+
+    }
   );
+
+
+  const geometry =
+    new THREE.BufferGeometry();
+
+
+  geometry.setAttribute(
+    'position',
+    new THREE.BufferAttribute(
+      positions,
+      3
+    )
+  );
+
+
+  geometry.setAttribute(
+    'aSelected',
+    new THREE.BufferAttribute(
+      selected,
+      1
+    )
+  );
+
+
+  const material =
+    new THREE.ShaderMaterial({
+
+      vertexShader,
+
+      fragmentShader,
+
+      transparent:true,
+
+      depthWrite:false,
+
+      blending:
+        THREE.AdditiveBlending
+
+    });
+
+
+  pointsMesh =
+    new THREE.Points(
+      geometry,
+      material
+    );
+
+
+  scene.add(
+    pointsMesh
+  );
+
 }
 
 
 /* =========================================================
-   MEMORY CREATION
+   SEMANTIC EDGES
 ========================================================= */
 
-async function createMemory(){
+function rebuildLinks(){
 
-  if(saving){
-    return;
+  while(
+    linesGroup.children.length
+  ){
+
+    const object =
+      linesGroup
+        .children
+        .pop();
+
+
+    disposeObject(
+      object
+    );
+
   }
 
 
-  const textarea =
-    document.getElementById(
-      'memoryText'
-    );
-
-
-  const text =
-    textarea.value.trim();
-
-
-  if(!text){
-
-    toast(
-      'Bitte zuerst Text eingeben.',
-      true
-    );
-
-    textarea.focus();
+  if(
+    !state.showLinks ||
+    state.memories.length < 2
+  ){
 
     return;
+
   }
 
 
-  if(!modelReady){
-
-    toast(
-      'Embedding Engine noch nicht bereit.',
-      true
-    );
-
-    return;
-  }
-
-
-  saving = true;
-
-
-  const button =
-    document.getElementById(
-      'saveBtn'
-    );
-
-
-  const original =
-    button.textContent;
-
-
-  button.disabled = true;
-
-  button.textContent =
-    'ENCODING / SAVING ...';
-
-
-  setStatus(
-    'WRITING MEMORY',
-    'yellow'
-  );
-
-
-  try{
-
-    const type =
-      document.getElementById(
-        'memoryType'
-      ).value;
-
-
-    const tags =
-      document.getElementById(
-        'memoryTags'
-      ).value
-        .split(',')
-        .map(
-          x => x.trim()
-        )
-        .filter(Boolean);
-
-
-    log(
-      'Semantic encoding ...'
-    );
-
-
-    const vector =
-      await embed(
-        text,
-        'passage'
-      );
-
-
-    document.getElementById(
-      'embeddingStatus'
-    ).textContent =
-      `${DIM}D vector generated.`;
-
-
-    const memory = {
-
-      id:
-        nextMemoryId(),
-
-      text,
-
-      type,
-
-      tags,
-
-      vector,
-
-      pos3d:null,
-
-      anchors:[],
-
-      positionLocked:false,
-
-      createdAt:
-        new Date()
-          .toISOString()
-    };
-
-
-    /*
-     * Position wird ausschließlich
-     * anhand bereits existierender
-     * Nodes erzeugt.
-     */
-
-    placeNewMemory(
-      memory
-    );
-
-
-    /*
-     * WICHTIG:
-     *
-     * Erst IndexedDB.
-     * Danach RAM.
-     */
-
-    await saveMemory(
-      memory
-    );
-
-
-    memories.push(
-      memory
-    );
-
-
-    /*
-     * Hypergraph relation
-     */
-
-    await createAutomaticHyperedge(
-      memory
-    );
-
-
-    textarea.value = '';
-
-    document.getElementById(
-      'memoryTags'
-    ).value = '';
-
-
-    selectedId =
-      memory.id;
-
-
-    activeContext =
-      new Set([
-        memory.id
-      ]);
-
-
-    refreshAll();
-
-    renderScene();
-
-
-    setStatus(
-      'CORE ONLINE',
-      'green'
-    );
-
-
-    log(
-      `${memory.id} persistent gespeichert.`,
-      'ok'
-    );
-
-
-    log(
-      `LOCKED ${formatVec3(memory.pos3d)}`,
-      'ok'
-    );
-
-
-    toast(
-      `${memory.id} gespeichert.`
-    );
-
-
-  }catch(error){
-
-    console.error(error);
-
-
-    setStatus(
-      'SAVE ERROR',
-      'red'
-    );
-
-
-    log(
-      'SPEICHERFEHLER: ' +
-      error.message,
-      'error'
-    );
-
-
-    toast(
-      'Speichern fehlgeschlagen.',
-      true
-    );
-
-
-  }finally{
-
-    saving = false;
-
-    button.disabled = false;
-
-    button.textContent =
-      original;
-  }
-}
-
-
-/* =========================================================
-   PAIR EDGES
-========================================================= */
-
-function getPairEdges(){
-
-  const edges = [];
+  const positions = [];
 
 
   for(
     let i=0;
-    i<memories.length;
+    i<state.memories.length;
     i++
   ){
 
+    const a =
+      state.memories[i];
+
+
     for(
       let j=i+1;
-      j<memories.length;
+      j<state.memories.length;
       j++
     ){
 
-      const a =
-        memories[i];
-
       const b =
-        memories[j];
+        state.memories[j];
 
 
       const similarity =
         cosine(
-          a.vector,
-          b.vector
+          getVector(a),
+          getVector(b)
         );
 
 
       if(
         similarity >=
-        PAIR_THRESHOLD
+        CONFIG.EDGE_THRESHOLD
       ){
 
-        edges.push({
+        const pa =
+          getPosition(a);
 
-          a,
+        const pb =
+          getPosition(b);
 
-          b,
 
-          similarity
+        positions.push(
 
-        });
+          pa[0],
+          pa[1],
+          pa[2],
+
+          pb[0],
+          pb[1],
+          pb[2]
+
+        );
+
       }
+
     }
+
   }
 
 
-  return edges;
-}
+  if(!positions.length){
+
+    return;
+
+  }
 
 
-function countPairEdges(){
+  const geometry =
+    new THREE.BufferGeometry();
 
-  return getPairEdges()
-    .length;
+
+  geometry.setAttribute(
+    'position',
+    new THREE.Float32BufferAttribute(
+      positions,
+      3
+    )
+  );
+
+
+  const material =
+    new THREE.LineBasicMaterial({
+
+      color:
+        0x00e5ff,
+
+      transparent:true,
+
+      opacity:.25,
+
+      depthWrite:false
+
+    });
+
+
+  linesGroup.add(
+    new THREE.LineSegments(
+      geometry,
+      material
+    )
+  );
+
 }
 
 
 /* =========================================================
-   HYPEREDGES
+   SCENE REBUILD
 ========================================================= */
 
-function hyperedgeKey(
-  nodeIds
-){
+function rebuildScene(){
 
-  return [
-    ...nodeIds
-  ]
-    .sort()
-    .join('|');
+  makePoints();
+
+  rebuildLinks();
+
+
+  $('hudStatus').textContent =
+    state.memories.length
+
+      ? `${state.memories.length} MEMORIES · ANCHORED R³`
+
+      : 'MEMORY SPACE EMPTY';
+
 }
 
 
-function hasHyperedge(
-  nodeIds
+/* =========================================================
+   RAYCASTING
+========================================================= */
+
+function getIntersections(
+  event
 ){
 
-  const key =
-    hyperedgeKey(
-      nodeIds
+  if(!pointsMesh){
+
+    return [];
+
+  }
+
+
+  const rect =
+    renderer.domElement
+      .getBoundingClientRect();
+
+
+  mouse.x =
+    (
+      (event.clientX - rect.left)
+      /
+      rect.width
+    ) * 2 - 1;
+
+
+  mouse.y =
+    -(
+      (event.clientY - rect.top)
+      /
+      rect.height
+    ) * 2 + 1;
+
+
+  raycaster.setFromCamera(
+    mouse,
+    camera
+  );
+
+
+  return raycaster.intersectObject(
+    pointsMesh
+  );
+
+}
+
+
+function onPointerDown(
+  event
+){
+
+  if(
+    event.button !== 0
+  ){
+
+    return;
+
+  }
+
+
+  const hits =
+    getIntersections(
+      event
     );
 
 
-  return hyperedges.some(
-    h =>
-      hyperedgeKey(
-        h.nodeIds
-      ) === key
+  if(!hits.length)return;
+
+
+  const index =
+    hits[0].index;
+
+
+  if(
+    index == null ||
+    !state.memories[index]
+  ){
+
+    return;
+
+  }
+
+
+  selectMemory(
+    state.memories[index].id
   );
+
 }
 
 
-async function createAutomaticHyperedge(
-  memory
+function onDoubleClick(
+  event
 ){
 
-  const neighbors =
-    nearestNeighbors(
-      memory.vector
-    )
-      .filter(
-        n =>
-          n.similarity >=
-          HYPER_THRESHOLD
+  const hits =
+    getIntersections(
+      event
+    );
+
+
+  if(!hits.length)return;
+
+
+  const index =
+    hits[0].index;
+
+
+  if(
+    index == null ||
+    !state.memories[index]
+  ){
+
+    return;
+
+  }
+
+
+  const memory =
+    state.memories[index];
+
+
+  const p =
+    getPosition(
+      memory
+    );
+
+
+  controls.target.set(
+    p[0],
+    p[1],
+    p[2]
+  );
+
+
+  const direction =
+    new THREE.Vector3()
+      .subVectors(
+        camera.position,
+        controls.target
       )
-      .slice(
-        0,
-        MAX_HYPER_MEMBERS-1
-      );
+      .normalize();
 
 
-  if(
-    neighbors.length < 2
-  ){
-
-    return;
-  }
-
-
-  const nodeIds = [
-
-    memory.id,
-
-    ...neighbors.map(
-      n =>
-        n.memory.id
+  camera.position
+    .copy(
+      controls.target
     )
-
-  ];
-
-
-  if(
-    hasHyperedge(
-      nodeIds
-    )
-  ){
-
-    return;
-  }
+    .addScaledVector(
+      direction,
+      4
+    );
 
 
-  const score =
-    neighbors.reduce(
-      (sum,n) =>
-        sum+n.similarity,
-      0
-    ) /
-    neighbors.length;
+  controls.update();
 
-
-  const hyperedge = {
-
-    id:
-      nextHyperedgeId(),
-
-    nodeIds,
-
-    type:
-      'semantic-context',
-
-    label:
-      'COSINE CONTEXT',
-
-    score,
-
-    source:
-      'deterministic-cosine',
-
-    createdAt:
-      new Date()
-        .toISOString()
-  };
-
-
-  await saveHyperedge(
-    hyperedge
-  );
-
-
-  hyperedges.push(
-    hyperedge
-  );
-
-
-  log(
-    `${hyperedge.id} → semantic context.`,
-    'ok'
-  );
 }
 
 
-async function createManualHyperedge(){
+/* =========================================================
+   MEMORY LIST
+========================================================= */
 
-  const label =
-    document.getElementById(
-      'hyperedgeLabel'
-    ).value.trim() ||
-    'MANUAL CONTEXT';
+function renderMemoryList(){
 
-
-  const raw =
-    document.getElementById(
-      'hyperedgeMembers'
-    ).value;
+  const list =
+    $('memoryList');
 
 
-  const ids =
+  if(
+    !state.memories.length
+  ){
+
+    list.innerHTML =
+      `
+      <div
+        style="
+          color:#405861;
+          font-size:10px
+        "
+      >
+        VECTOR STORE EMPTY
+      </div>
+      `;
+
+    return;
+
+  }
+
+
+  list.innerHTML =
+    state.memories
+      .map(
+        memory => {
+
+          const vector =
+            getVector(
+              memory
+            );
+
+
+          return `
+            <div
+              class="memItem
+                ${
+                  memory.id ===
+                  state.selectedId
+                    ? 'selected'
+                    : ''
+                }"
+              data-id="${esc(memory.id)}"
+            >
+
+              <div class="memId">
+                ${esc(memory.id)}
+              </div>
+
+              <div class="memText">
+                ${esc(
+                  memory.content?.text ||
+                  memory.text ||
+                  ''
+                )}
+              </div>
+
+              <div class="memMeta">
+
+                ${
+                  memory.created_at
+                    ? new Date(
+                        memory.created_at
+                      ).toLocaleString(
+                        'de-DE'
+                      )
+                    : ''
+                }
+
+                · ${vector.length}D
+
+              </div>
+
+            </div>
+          `;
+
+        }
+      )
+      .join('');
+
+
+  list
+    .querySelectorAll(
+      '.memItem'
+    )
+    .forEach(
+      element => {
+
+        element.onclick =
+          () =>
+            selectMemory(
+              element.dataset.id
+            );
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   INSPECTOR
+========================================================= */
+
+function renderInspector(
+  memory,
+  score=null
+){
+
+  if(!memory){
+
+    $('inspector')
+      .classList
+      .remove('visible');
+
+    return;
+
+  }
+
+
+  const vector =
+    getVector(
+      memory
+    );
+
+
+  const position =
+    getPosition(
+      memory
+    );
+
+
+  const text =
+    memory.content?.text ||
+    memory.text ||
+    '';
+
+
+  const anchors =
+    Array.isArray(
+      memory.anchors
+    )
+      ? memory.anchors
+      : [];
+
+
+  $('inspector')
+    .classList
+    .add('visible');
+
+
+  $('inspId').textContent =
+    memory.id;
+
+
+  $('inspText').textContent =
+    text;
+
+
+  $('inspMeta').innerHTML = `
+
+    TYPE:
+    ${esc(
+      memory.type ||
+      'memory'
+    )}
+
+    <br>
+
+    SCHEMA:
+    ${esc(
+      memory.schema_version ||
+      '1.0'
+    )}
+
+    <br>
+
+    VECTOR:
+    ${vector.length}D
+
+    <br>
+
+    ‖v‖ =
+    ${norm(vector).toFixed(6)}
+
+    <br>
+
+    POS:
     [
-      ...new Set(
-        raw
-          .split(',')
+      ${position.map(
+        x => x.toFixed(3)
+      ).join(', ')}
+    ]
+
+    ${
+      score == null
+      ? ''
+      :
+      `<br>
+       cos(query,v) =
+       ${score.toFixed(6)}`
+    }
+
+  `;
+
+
+  $('inspAnchors').innerHTML =
+    anchors.length
+
+      ? `
+        ANCHORS:
+
+        ${anchors
           .map(
-            x => x.trim()
+            id =>
+              `<span class="tag">
+                ${esc(id)}
+              </span>`
           )
-          .filter(Boolean)
-      )
-    ];
+          .join('')
+        }
+      `
 
+      :
 
-  if(
-    ids.length < 3
-  ){
+      `
+        ANCHORS:
 
-    toast(
-      'Mindestens drei Nodes erforderlich.',
-      true
-    );
+        <span class="tag">
+          INITIAL FRAME
+        </span>
+      `;
 
-    return;
-  }
-
-
-  const missing =
-    ids.filter(
-      id =>
-        !memories.some(
-          m =>
-            m.id === id
-        )
-    );
-
-
-  if(
-    missing.length
-  ){
-
-    toast(
-      'Unbekannte ID: ' +
-      missing.join(', '),
-      true
-    );
-
-    return;
-  }
-
-
-  if(
-    hasHyperedge(ids)
-  ){
-
-    toast(
-      'Hyperedge existiert bereits.',
-      true
-    );
-
-    return;
-  }
-
-
-  const hyperedge = {
-
-    id:
-      nextHyperedgeId(),
-
-    nodeIds:
-      ids,
-
-    type:
-      'manual',
-
-    label,
-
-    score:null,
-
-    source:
-      'user',
-
-    createdAt:
-      new Date()
-        .toISOString()
-  };
-
-
-  try{
-
-    await saveHyperedge(
-      hyperedge
-    );
-
-
-    hyperedges.push(
-      hyperedge
-    );
-
-
-    document.getElementById(
-      'hyperedgeLabel'
-    ).value = '';
-
-    document.getElementById(
-      'hyperedgeMembers'
-    ).value = '';
-
-
-    refreshAll();
-
-    renderScene();
-
-
-    log(
-      `${hyperedge.id} gespeichert.`,
-      'ok'
-    );
-
-
-    toast(
-      `${hyperedge.id} erstellt.`
-    );
-
-
-  }catch(error){
-
-    log(
-      'Hyperedge-Fehler: ' +
-      error.message,
-      'error'
-    );
-
-
-    toast(
-      'Hyperedge konnte nicht gespeichert werden.',
-      true
-    );
-  }
 }
 
 
 /* =========================================================
-   CONTEXT
+   SELECT MEMORY
 ========================================================= */
 
-function activateContext(
+function selectMemory(
   id
 ){
 
   const memory =
-    memories.find(
-      m =>
-        m.id === id
+    state.memories.find(
+      item =>
+        item.id === id
     );
 
 
-  if(!memory){
-    return;
-  }
+  if(!memory)return;
 
 
-  const context =
-    new Set([
-      id
-    ]);
-
-
-  const neighbors =
-    nearestNeighbors(
-      memory.vector
-    )
-      .slice(
-        0,
-        MAX_CONTEXT_NEIGHBORS
-      );
-
-
-  for(
-    const neighbor
-    of neighbors
-  ){
-
-    context.add(
-      neighbor.memory.id
-    );
-  }
-
-
-  for(
-    const hyperedge
-    of hyperedges
-  ){
-
-    if(
-      hyperedge.nodeIds
-        .includes(id)
-    ){
-
-      for(
-        const memberId
-        of hyperedge.nodeIds
-      ){
-
-        context.add(
-          memberId
-        );
-      }
-    }
-  }
-
-
-  activeContext =
-    context;
-
-
-  selectedId =
+  state.selectedId =
     id;
 
 
-  refreshAll();
+  const vector =
+    getVector(
+      memory
+    );
 
-  renderScene();
-}
+
+  state.currentVector =
+    vector.slice();
 
 
-function clearContext(){
+  state.currentText =
+    memory.content?.text ||
+    memory.text ||
+    '';
 
-  activeContext.clear();
 
-  refreshAll();
+  $('textInput').value =
+    '';
 
-  renderScene();
+
+  $('vectorDim').textContent =
+    `d = ${vector.length}`;
+
+
+  $('vectorBox').textContent =
+    vector
+      .slice(0,24)
+      .map(
+        x =>
+          Number(x).toFixed(5)
+      )
+      .join(', ') +
+    ' …';
+
+
+  renderMemoryList();
+
+  renderInspector(
+    memory
+  );
+
+  rebuildScene();
+
+
+  const p =
+    getPosition(
+      memory
+    );
+
+
+  controls.target.set(
+    p[0],
+    p[1],
+    p[2]
+  );
+
+
+  $('hudStatus').textContent =
+    `${id} SELECTED`;
+
 }
 
 
@@ -4189,45 +4463,54 @@ function clearContext(){
    SEARCH
 ========================================================= */
 
-async function runQuery(){
+async function runSearch(){
 
-  const input =
-    document.getElementById(
-      'queryInput'
-    );
-
-
-  const text =
-    input.value.trim();
+  const query =
+    $('queryInput')
+      .value
+      .trim();
 
 
-  if(!text){
+  if(
+    !query ||
+    !state.memories.length
+  ){
+
     return;
+
   }
 
 
-  if(!modelReady){
+  stage(
+    'stageSearch',
+    'active'
+  );
 
-    toast(
-      'Embedding Engine nicht bereit.',
-      true
-    );
 
-    return;
-  }
+  error('');
+
+
+  log(
+    `Query: "${query}"`,
+    'info'
+  );
 
 
   try{
 
-    const vector =
+    const queryVector =
       await embed(
-        text,
+        query,
         'query'
       );
 
 
+    state.queryVector =
+      queryVector;
+
+
     const results =
-      memories
+      state.memories
 
         .map(
           memory => ({
@@ -4236,8 +4519,8 @@ async function runQuery(){
 
             score:
               cosine(
-                vector,
-                memory.vector
+                queryVector,
+                getVector(memory)
               )
 
           })
@@ -4247,1860 +4530,844 @@ async function runQuery(){
           (a,b) =>
             b.score -
             a.score
-        )
-
-        .slice(
-          0,
-          12
         );
 
 
-    const resultElement =
-      document.getElementById(
-        'queryResults'
-      );
-
-
-    if(!results.length){
-
-      resultElement.innerHTML =
-        `<div class="empty">
-          Keine Memories vorhanden.
-        </div>`;
-
-      return;
-    }
-
-
-    resultElement.innerHTML =
+    $('ranking').innerHTML =
       results
         .map(
-          result => `
+          (result,index)=>{
 
-            <div
-              class="result"
-              data-result-id="${escapeHtml(result.memory.id)}">
+            const percentage =
+              clamp(
+                (
+                  result.score + 1
+                ) / 2 * 100,
+                0,
+                100
+              );
 
-              <span>
-                ${escapeHtml(result.memory.id)}
-              </span>
 
-              <span class="score">
-                ${result.score.toFixed(3)}
-              </span>
+            const text =
+              result.memory
+                .content?.text ||
+              result.memory.text ||
+              '';
 
-              <div class="memory-text">
-                ${escapeHtml(result.memory.text)}
+
+            return `
+
+              <div
+                class="rankItem"
+                data-id="${esc(
+                  result.memory.id
+                )}"
+              >
+
+                <div class="rankScore">
+
+                  #${index + 1}
+                  · COS
+                  ${result.score.toFixed(6)}
+
+                </div>
+
+                <div class="rankText">
+
+                  ${esc(text)}
+
+                </div>
+
+                <div class="bar">
+
+                  <div
+                    class="barFill"
+                    style="
+                      width:${percentage}%
+                    "
+                  ></div>
+
+                </div>
+
               </div>
 
-            </div>
+            `;
 
-          `
+          }
         )
         .join('');
 
 
-    resultElement
+    $('ranking')
       .querySelectorAll(
-        '.result'
+        '.rankItem'
       )
       .forEach(
         element => {
 
-          element.addEventListener(
-            'click',
+          element.onclick =
             () => {
 
-              const id =
-                element.dataset
-                  .resultId;
-
-              selectedId =
-                id;
-
-              activeContext =
-                new Set(
-                  results
-                    .slice(
-                      0,
-                      8
-                    )
-                    .map(
-                      r =>
-                        r.memory.id
-                    )
+              const result =
+                results.find(
+                  item =>
+                    item.memory.id ===
+                    element.dataset.id
                 );
 
 
-              refreshAll();
+              if(!result)return;
 
-              renderScene();
-            }
-          );
+
+              selectMemory(
+                result.memory.id
+              );
+
+
+              renderInspector(
+                result.memory,
+                result.score
+              );
+
+            };
+
         }
       );
 
 
-    activeContext =
-      new Set(
-        results
-          .slice(
-            0,
-            8
-          )
-          .map(
-            r =>
-              r.memory.id
-          )
+    stage(
+      'stageSearch',
+      'done'
+    );
+
+
+    if(results[0]){
+
+      selectMemory(
+        results[0].memory.id
       );
 
 
-    refreshAll();
+      renderInspector(
+        results[0].memory,
+        results[0].score
+      );
 
-    renderScene();
+
+      log(
+        `Top-1: ${results[0].memory.id} · ${results[0].score.toFixed(6)}`,
+        'ok'
+      );
+
+    }
+
+  }catch(e){
+
+    stage(
+      'stageSearch',
+      null
+    );
+
+    error(
+      e?.message ||
+      String(e)
+    );
+
+    log(
+      `Search fehlgeschlagen: ${e?.message || e}`,
+      'err'
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   GENERATE EMBEDDING
+========================================================= */
+
+async function generate(){
+
+  const text =
+    $('textInput')
+      .value
+      .trim();
+
+
+  if(!text){
+
+    error(
+      'Bitte Text eingeben.'
+    );
+
+    return;
+
+  }
+
+
+  error('');
+
+  $('embedBtn').disabled =
+    true;
+
+  $('storeBtn').disabled =
+    true;
+
+
+  resetStages();
+
+
+  try{
+
+    stage(
+      'stageText',
+      'active'
+    );
+
+    log(
+      'Text empfangen.',
+      'info'
+    );
+
+
+    await sleep(80);
+
+
+    stage(
+      'stageText',
+      'done'
+    );
+
+
+    stage(
+      'stageToken',
+      'active'
+    );
+
+
+    await sleep(100);
+
+
+    stage(
+      'stageToken',
+      'done'
+    );
+
+
+    const vector =
+      await embed(
+        text,
+        'passage'
+      );
+
+
+    state.currentVector =
+      vector;
+
+
+    state.currentText =
+      text;
+
+
+    stage(
+      'stageVector',
+      'active'
+    );
+
+
+    $('vectorDim').textContent =
+      `d = ${vector.length}`;
+
+
+    $('vectorBox').textContent =
+      vector
+        .slice(0,24)
+        .map(
+          x =>
+            x.toFixed(5)
+        )
+        .join(', ') +
+      ' …';
+
+
+    await sleep(60);
+
+
+    stage(
+      'stageVector',
+      'done'
+    );
+
+
+    $('storeBtn').disabled =
+      false;
 
 
     log(
-      `Query: ${results.length} Treffer.`,
+      `384D Embedding erzeugt · ‖v‖=${norm(vector).toFixed(6)}`,
       'ok'
     );
 
 
-  }catch(error){
+  }catch(e){
+
+    error(
+      e?.message ||
+      String(e)
+    );
+
 
     log(
-      'Query-Fehler: ' +
-      error.message,
-      'error'
+      `Embedding fehlgeschlagen: ${e?.message || e}`,
+      'err'
     );
 
-    toast(
-      'Suche fehlgeschlagen.',
-      true
-    );
+
+  }finally{
+
+    $('embedBtn').disabled =
+      false;
+
   }
+
 }
 
 
 /* =========================================================
-   UI REFRESH
+   STORE
 ========================================================= */
 
-function refreshMemoryList(){
-
-  const element =
-    document.getElementById(
-      'memoryList'
-    );
-
-
-  if(!memories.length){
-
-    element.innerHTML =
-      `<div class="empty">
-        MEMORY BANK EMPTY
-      </div>`;
-
-    return;
-  }
-
-
-  const sorted =
-    [
-      ...memories
-    ].sort(
-      (a,b) =>
-        safeText(
-          b.createdAt
-        ).localeCompare(
-          safeText(
-            a.createdAt
-          )
-        )
-    );
-
-
-  element.innerHTML =
-    sorted
-      .map(
-        memory => `
-
-          <div
-            class="memory-item
-            ${
-              memory.id === selectedId
-                ? 'selected'
-                : ''
-            }"
-            data-memory-id="${escapeHtml(memory.id)}">
-
-            <div>
-
-              <span class="memory-id">
-                ${escapeHtml(memory.id)}
-              </span>
-
-              <span class="memory-type">
-                ${escapeHtml(memory.type)}
-              </span>
-
-            </div>
-
-            <div class="memory-text">
-              ${escapeHtml(memory.text)}
-            </div>
-
-          </div>
-
-        `
-      )
-      .join('');
-
-
-  element
-    .querySelectorAll(
-      '.memory-item'
-    )
-    .forEach(
-      item => {
-
-        item.addEventListener(
-          'click',
-          () => {
-
-            selectMemory(
-              item.dataset
-                .memoryId,
-              true
-            );
-          }
-        );
-      }
-    );
-}
-
-
-function selectMemory(
-  id,
-  focus=false
-){
-
-  const memory =
-    memories.find(
-      m =>
-        m.id === id
-    );
-
-
-  if(!memory){
-    return;
-  }
-
-
-  selectedId =
-    id;
-
-
-  activeContext =
-    new Set([
-      id
-    ]);
-
-
-  refreshAll();
-
-  renderScene();
-
-
-  if(focus){
-
-    focusMemory(
-      memory
-    );
-  }
-}
-
-
-function refreshInspector(){
-
-  const element =
-    document.getElementById(
-      'inspector'
-    );
-
-
-  if(!selectedId){
-
-    element.innerHTML =
-      `<div class="empty">
-        NODE NOT SELECTED
-      </div>`;
-
-    return;
-  }
-
-
-  const memory =
-    memories.find(
-      m =>
-        m.id ===
-        selectedId
-    );
-
-
-  if(!memory){
-
-    element.innerHTML =
-      `<div class="empty">
-        NODE NOT FOUND
-      </div>`;
-
-    return;
-  }
-
-
-  const memberships =
-    hyperedges.filter(
-      h =>
-        h.nodeIds
-          .includes(
-            memory.id
-          )
-    );
-
-
-  element.innerHTML = `
-
-    <div class="inspector-value inspector-id">
-      ${escapeHtml(memory.id)}
-    </div>
-
-    <div class="inspector-value">
-      TYPE / ${escapeHtml(memory.type)}
-    </div>
-
-    <hr>
-
-    <div class="inspector-value">
-      ${escapeHtml(memory.text)}
-    </div>
-
-    <hr>
-
-    <div class="position">
-      R³ / ${formatVec3(memory.pos3d)}
-    </div>
-
-    <div class="inspector-value locked">
-      POSITION / LOCKED
-    </div>
-
-    <div class="inspector-value">
-      VECTOR / ${memory.vector?.length || 0}D
-    </div>
-
-    <div class="inspector-value">
-      ANCHORS /
-      ${
-        memory.anchors?.length
-          ? memory.anchors
-              .map(
-                escapeHtml
-              )
-              .join(', ')
-          : '—'
-      }
-    </div>
-
-    <div class="inspector-value">
-      HYPEREDGES /
-      ${memberships.length}
-    </div>
-
-    <button
-      id="activateContextBtn"
-      class="btn pink">
-
-      ACTIVATE CONTEXT
-
-    </button>
-
-  `;
-
-
-  document
-    .getElementById(
-      'activateContextBtn'
-    )
-    ?.addEventListener(
-      'click',
-      () =>
-        activateContext(
-          memory.id
-        )
-    );
-}
-
-
-function refreshHypergraphPanel(){
-
-  const element =
-    document.getElementById(
-      'hypergraphList'
-    );
-
-
-  if(!hyperedges.length){
-
-    element.innerHTML =
-      `<div class="empty">
-        HYPERGRAPH EMPTY
-      </div>`;
-
-    return;
-  }
-
-
-  element.innerHTML =
-    hyperedges
-      .map(
-        h => `
-
-          <div class="hyperedge">
-
-            <div class="hyperedge-id">
-              ${escapeHtml(h.id)}
-            </div>
-
-            <div class="hyperedge-label">
-              ${escapeHtml(h.label)}
-            </div>
-
-            <div class="hyperedge-members">
-              ${h.nodeIds
-                .map(
-                  escapeHtml
-                )
-                .join(' · ')}
-            </div>
-
-          </div>
-
-        `
-      )
-      .join('');
-}
-
-
-function updateStats(){
-
-  document.getElementById(
-    'nodeCount'
-  ).textContent =
-    memories.length;
-
-
-  document.getElementById(
-    'edgeCount'
-  ).textContent =
-    getPairEdges().length;
-
-
-  document.getElementById(
-    'hyperedgeCount'
-  ).textContent =
-    hyperedges.length;
-
-
-  document.getElementById(
-    'activeCount'
-  ).textContent =
-    activeContext.size;
-}
-
-
-function refreshAll(){
-
-  refreshMemoryList();
-
-  refreshInspector();
-
-  refreshHypergraphPanel();
-
-  updateStats();
-}
-
-
-/* =========================================================
-   THREE INITIALIZATION
-========================================================= */
-
-function initThree(){
-
-  scene =
-    new THREE.Scene();
-
-
-  scene.background =
-    new THREE.Color(
-      '#010307'
-    );
-
-
-  scene.fog =
-    new THREE.Fog(
-      '#010307',
-      45,
-      190
-    );
-
-
-  camera =
-    new THREE.PerspectiveCamera(
-      55,
-      container.clientWidth /
-      container.clientHeight,
-      .1,
-      500
-    );
-
-
-  camera.position.set(
-    0,
-    5,
-    28
-  );
-
-
-  renderer =
-    new THREE.WebGLRenderer({
-      antialias:true,
-      alpha:false
-    });
-
-
-  renderer.setPixelRatio(
-    Math.min(
-      window.devicePixelRatio,
-      2
-    )
-  );
-
-
-  renderer.setSize(
-    container.clientWidth,
-    container.clientHeight
-  );
-
-
-  renderer.outputColorSpace =
-    THREE.SRGBColorSpace;
-
-
-  container.appendChild(
-    renderer.domElement
-  );
-
-
-  controls =
-    new OrbitControls(
-      camera,
-      renderer.domElement
-    );
-
-
-  controls.enableDamping =
-    true;
-
-  controls.dampingFactor =
-    .055;
-
-  controls.minDistance =
-    3;
-
-  controls.maxDistance =
-    170;
-
-
-  controls.target.set(
-    0,
-    0,
-    0
-  );
-
-
-  raycaster =
-    new THREE.Raycaster();
-
-
-  mouse =
-    new THREE.Vector2();
-
-
-  pairGroup =
-    new THREE.Group();
-
-  hyperGroup =
-    new THREE.Group();
-
-  anchorGroup =
-    new THREE.Group();
-
-
-  scene.add(
-    pairGroup
-  );
-
-  scene.add(
-    hyperGroup
-  );
-
-  scene.add(
-    anchorGroup
-  );
-
-
-  /*
-   * WICHTIG:
-   *
-   * Keine GridHelper-Fläche.
-   * Keine RingGeometry-Flächen.
-   *
-   * Der Raum bleibt frei.
-   */
-
-  createGrid();
-
-
-  renderer.domElement
-    .addEventListener(
-      'pointerdown',
-      onPointerDown
-    );
-
-
-  renderer.domElement
-    .addEventListener(
-      'pointermove',
-      onPointerMove
-    );
-
-
-  window.addEventListener(
-    'resize',
-    onResize
-  );
-
-
-  animate();
-}
-
-
-/* =========================================================
-   OBSERVATORY AXES
-========================================================= */
-
-function createGrid(){
-
-  /*
-   * Es wird absichtlich KEIN
-   * THREE.GridHelper erzeugt.
-   *
-   * Es wird auch keine RingGeometry
-   * erzeugt.
-   *
-   * Dadurch gibt es keine quadratische
-   * Bodenfläche und keine visuellen Ebenen
-   * im semantischen Raum.
-   */
-
-  const axes =
-    new THREE.AxesHelper(
-      9
-    );
-
-
-  axes.material.transparent =
-    true;
-
-  axes.material.opacity =
-    .035;
-
-
-  scene.add(
-    axes
-  );
-}
-
-
-/* =========================================================
-   NODE COLOR
-========================================================= */
-
-function typeColor(type){
-
-  switch(type){
-
-    case 'concept':
-      return new THREE.Color(
-        '#4ade80'
-      );
-
-    case 'claim':
-      return new THREE.Color(
-        '#f7d154'
-      );
-
-    case 'evidence':
-      return new THREE.Color(
-        '#ff187f'
-      );
-
-    case 'hypothesis':
-      return new THREE.Color(
-        '#b66cff'
-      );
-
-    default:
-      return new THREE.Color(
-        '#00f5ff'
-      );
-  }
-}
-
-
-/* =========================================================
-   DISPOSAL
-========================================================= */
-
-function disposeObject(
-  object
-){
-
-  if(!object){
-    return;
-  }
-
-
-  object.traverse(
-    child => {
-
-      if(child.geometry){
-        child.geometry.dispose();
-      }
-
-
-      if(child.material){
-
-        if(
-          Array.isArray(
-            child.material
-          )
-        ){
-
-          child.material.forEach(
-            material =>
-              material.dispose()
-          );
-
-        }else{
-
-          child.material.dispose();
-        }
-      }
-    }
-  );
-}
-
-
-/* =========================================================
-   POINT CLOUD
-========================================================= */
-
-function rebuildPoints(){
-
-  if(points){
-
-    scene.remove(
-      points
-    );
-
-    disposeObject(
-      points
-    );
-
-    points =
-      null;
-  }
-
-
-  if(!memories.length){
-    return;
-  }
-
-
-  const positions = [];
-
-  const colors = [];
-
-
-  for(
-    const memory
-    of memories
-  ){
-
-    const p =
-      memory.pos3d ||
-      [0,0,0];
-
-
-    positions.push(
-      p[0],
-      p[1],
-      p[2]
-    );
-
-
-    const color =
-      typeColor(
-        memory.type
-      );
-
-
-    let intensity = 1;
-
-
-    if(
-      activeContext.size > 0 &&
-      !activeContext.has(
-        memory.id
-      )
-    ){
-
-      intensity = .12;
-    }
-
-
-    if(
-      selectedId ===
-      memory.id
-    ){
-
-      color.set(
-        '#ff187f'
-      );
-
-      intensity = 1.45;
-    }
-
-
-    colors.push(
-      color.r *
-        intensity,
-
-      color.g *
-        intensity,
-
-      color.b *
-        intensity
-    );
-  }
-
-
-  pointGeometry =
-    new THREE.BufferGeometry();
-
-
-  pointGeometry.setAttribute(
-    'position',
-    new THREE.Float32BufferAttribute(
-      positions,
-      3
-    )
-  );
-
-
-  pointGeometry.setAttribute(
-    'color',
-    new THREE.Float32BufferAttribute(
-      colors,
-      3
-    )
-  );
-
-
-  /*
-   * KLEINE NODE-PUNKTE
-   *
-   * Vorher:
-   *   Desktop 2.8
-   *   Mobile 3.0
-   *
-   * Jetzt:
-   *   Desktop 0.75
-   *   Mobile 0.9
-   *
-   * Dadurch erscheinen die Nodes
-   * als kleine Punkte statt als große
-   * quadratische/flächenartige Elemente.
-   */
-
-  pointMaterial =
-    new THREE.PointsMaterial({
-
-      size:
-        window.innerWidth < 800
-          ? .9
-          : .75,
-
-      sizeAttenuation:
-        true,
-
-      vertexColors:
-        true,
-
-      transparent:
-        true,
-
-      opacity:
-        .95,
-
-      depthWrite:
-        false
-    });
-
-
-  points =
-    new THREE.Points(
-      pointGeometry,
-      pointMaterial
-    );
-
-
-  scene.add(
-    points
-  );
-}
-
-
-/* =========================================================
-   PAIR EDGES
-========================================================= */
-
-function rebuildPairLinks(){
-
-  disposeObject(
-    pairGroup
-  );
-
-
-  pairGroup =
-    new THREE.Group();
-
-
-  scene.add(
-    pairGroup
-  );
-
-
-  if(!showEdges){
-    return;
-  }
-
-
-  const edges =
-    getPairEdges();
-
-
-  const positions = [];
-
-
-  for(
-    const edge
-    of edges
-  ){
-
-    if(
-      activeContext.size > 0 &&
-      !activeContext.has(
-        edge.a.id
-      ) &&
-      !activeContext.has(
-        edge.b.id
-      )
-    ){
-
-      continue;
-    }
-
-
-    positions.push(
-      ...edge.a.pos3d,
-      ...edge.b.pos3d
-    );
-  }
-
-
-  if(!positions.length){
-    return;
-  }
-
-
-  const geometry =
-    new THREE.BufferGeometry();
-
-
-  geometry.setAttribute(
-    'position',
-    new THREE.Float32BufferAttribute(
-      positions,
-      3
-    )
-  );
-
-
-  const material =
-    new THREE.LineBasicMaterial({
-
-      color:
-        0x008fa0,
-
-      transparent:
-        true,
-
-      opacity:
-        activeContext.size
-          ? .28
-          : .13
-    });
-
-
-  pairGroup.add(
-    new THREE.LineSegments(
-      geometry,
-      material
-    )
-  );
-}
-
-
-/* =========================================================
-   HYPEREDGES
-========================================================= */
-
-function rebuildHyperedges(){
-
-  disposeObject(
-    hyperGroup
-  );
-
-
-  hyperGroup =
-    new THREE.Group();
-
-
-  scene.add(
-    hyperGroup
-  );
-
-
-  if(!showHyperedges){
-    return;
-  }
-
-
-  for(
-    const hyperedge
-    of hyperedges
-  ){
-
-    const nodes =
-      hyperedge.nodeIds
-
-        .map(
-          id =>
-            memories.find(
-              m =>
-                m.id === id
-            )
-        )
-
-        .filter(Boolean)
-
-        .filter(
-          m =>
-            validVec3(
-              m.pos3d
-            )
-        );
-
-
-    if(
-      nodes.length < 3
-    ){
-
-      continue;
-    }
-
-
-    if(
-      activeContext.size > 0 &&
-      !nodes.some(
-        node =>
-          activeContext.has(
-            node.id
-          )
-      )
-    ){
-
-      continue;
-    }
-
-
-    let center =
-      [0,0,0];
-
-
-    for(
-      const node
-      of nodes
-    ){
-
-      center =
-        add3(
-          center,
-          node.pos3d
-        );
-    }
-
-
-    center =
-      scale3(
-        center,
-        1/nodes.length
-      );
-
-
-    const positions = [];
-
-
-    for(
-      const node
-      of nodes
-    ){
-
-      positions.push(
-        ...center,
-        ...node.pos3d
-      );
-    }
-
-
-    const geometry =
-      new THREE.BufferGeometry();
-
-
-    geometry.setAttribute(
-      'position',
-      new THREE.Float32BufferAttribute(
-        positions,
-        3
-      )
-    );
-
-
-    const material =
-      new THREE.LineBasicMaterial({
-
-        color:
-          0xb66cff,
-
-        transparent:
-          true,
-
-        opacity:
-          hyperedge.source ===
-          'user'
-            ? .55
-            : .24
-      });
-
-
-    hyperGroup.add(
-      new THREE.LineSegments(
-        geometry,
-        material
-      )
-    );
-
-
-    /*
-     * Hyperedge HUB
-     */
-
-    const hubGeometry =
-      new THREE.SphereGeometry(
-        .105,
-        12,
-        12
-      );
-
-
-    const hubMaterial =
-      new THREE.MeshBasicMaterial({
-
-        color:
-          0xb66cff,
-
-        transparent:
-          true,
-
-        opacity:
-          .8
-      });
-
-
-    const hub =
-      new THREE.Mesh(
-        hubGeometry,
-        hubMaterial
-      );
-
-
-    hub.position.set(
-      center[0],
-      center[1],
-      center[2]
-    );
-
-
-    hyperGroup.add(
-      hub
-    );
-  }
-}
-
-
-/* =========================================================
-   ANCHOR VISUALIZATION
-========================================================= */
-
-function rebuildAnchors(){
-
-  disposeObject(
-    anchorGroup
-  );
-
-
-  anchorGroup =
-    new THREE.Group();
-
-
-  scene.add(
-    anchorGroup
-  );
-
-
-  if(!showAnchors){
-    return;
-  }
-
-
-  const positions = [];
-
-
-  for(
-    const memory
-    of memories
-  ){
-
-    for(
-      const anchorId
-      of memory.anchors || []
-    ){
-
-      const anchor =
-        memories.find(
-          m =>
-            m.id ===
-            anchorId
-        );
-
-
-      if(!anchor){
-        continue;
-      }
-
-
-      positions.push(
-        ...memory.pos3d,
-        ...anchor.pos3d
-      );
-    }
-  }
-
-
-  if(!positions.length){
-    return;
-  }
-
-
-  const geometry =
-    new THREE.BufferGeometry();
-
-
-  geometry.setAttribute(
-    'position',
-    new THREE.Float32BufferAttribute(
-      positions,
-      3
-    )
-  );
-
-
-  const material =
-    new THREE.LineBasicMaterial({
-
-      color:
-        0x4ade80,
-
-      transparent:
-        true,
-
-      opacity:
-        .13
-    });
-
-
-  anchorGroup.add(
-    new THREE.LineSegments(
-      geometry,
-      material
-    )
-  );
-}
-
-
-/* =========================================================
-   RENDER
-========================================================= */
-
-function renderScene(){
-
-  rebuildPoints();
-
-  rebuildPairLinks();
-
-  rebuildHyperedges();
-
-  rebuildAnchors();
-
-  updateStats();
-}
-
-
-/* =========================================================
-   CAMERA FOCUS
-========================================================= */
-
-function focusMemory(
-  memory
-){
-
-  if(!memory){
-    return;
-  }
-
-
-  const target =
-    new THREE.Vector3(
-      ...memory.pos3d
-    );
-
-
-  const direction =
-    new THREE.Vector3(
-      .8,
-      .45,
-      1
-    ).normalize();
-
-
-  camera.position.copy(
-    target.clone().add(
-      direction.multiplyScalar(
-        8
-      )
-    )
-  );
-
-
-  controls.target.copy(
-    target
-  );
-
-
-  controls.update();
-}
-
-
-/* =========================================================
-   POINTER
-========================================================= */
-
-function updateMouse(
-  event
-){
-
-  const rect =
-    renderer.domElement
-      .getBoundingClientRect();
-
-
-  mouse.x =
-    (
-      (event.clientX -
-       rect.left) /
-      rect.width
-    ) * 2 - 1;
-
-
-  mouse.y =
-    -(
-      (event.clientY -
-       rect.top) /
-      rect.height
-    ) * 2 + 1;
-}
-
-
-function findPointIntersection(){
-
-  if(!points){
-    return null;
-  }
-
-
-  /*
-   * Kleine Nodes benötigen eine
-   * etwas größere unsichtbare
-   * Interaktionsfläche.
-   *
-   * Der sichtbare Punkt bleibt
-   * trotzdem klein.
-   */
-
-  raycaster.params.Points.threshold =
-    .28;
-
-
-  raycaster.setFromCamera(
-    mouse,
-    camera
-  );
-
-
-  const intersections =
-    raycaster.intersectObject(
-      points
-    );
-
+async function store(){
 
   if(
-    !intersections.length
+    !state.currentVector
   ){
 
-    return null;
+    return;
+
   }
 
 
-  const index =
-    intersections[0].index;
+  const text =
+    state.currentText.trim();
 
 
-  return memories[index] ||
-    null;
-}
+  if(!text){
 
-
-function onPointerDown(
-  event
-){
-
-  updateMouse(
-    event
-  );
-
-
-  const memory =
-    findPointIntersection();
-
-
-  if(memory){
-
-    selectMemory(
-      memory.id,
-      false
+    error(
+      'Kein Text zum Speichern vorhanden.'
     );
+
+    return;
+
   }
-}
 
 
-function onPointerMove(
-  event
-){
-
-  updateMouse(
-    event
-  );
+  $('storeBtn').disabled =
+    true;
 
 
-  const memory =
-    findPointIntersection();
+  try{
+
+    stage(
+      'stageStore',
+      'active'
+    );
 
 
-  renderer.domElement.style.cursor =
-    memory
-      ? 'pointer'
-      : 'default';
+    const record =
+      await insertMemory(
+        text,
+        state.currentVector
+      );
+
+
+    stage(
+      'stageStore',
+      'done'
+    );
+
+
+    state.selectedId =
+      record.id;
+
+
+    renderMemoryList();
+
+    renderInspector(
+      record
+    );
+
+
+    rebuildScene();
+
+
+    $('memoryCount').textContent =
+      state.memories.length;
+
+
+    state.queryVector =
+      null;
+
+
+    log(
+      `${record.id} gespeichert. ` +
+      (
+        record.anchors?.length
+          ? `Anker: ${record.anchors.join(', ')}`
+          : 'Initial frame.'
+      ),
+      'ok'
+    );
+
+
+    state.currentVector =
+      null;
+
+    state.currentText =
+      '';
+
+    $('textInput').value =
+      '';
+
+
+  }catch(e){
+
+    $('storeBtn').disabled =
+      false;
+
+
+    error(
+      e?.message ||
+      String(e)
+    );
+
+
+    log(
+      `Speichern fehlgeschlagen: ${e?.message || e}`,
+      'err'
+    );
+
+  }
+
 }
 
 
 /* =========================================================
-   ANIMATION
+   CAMERA
 ========================================================= */
 
-function animate(){
+$('resetCamBtn').onclick =
+  () => {
 
-  requestAnimationFrame(
-    animate
-  );
+    camera.position.set(
+      8,
+      6,
+      10
+    );
 
+    controls.target.set(
+      0,
+      0,
+      0
+    );
 
-  controls.update();
+    controls.update();
 
-
-  renderer.render(
-    scene,
-    camera
-  );
-}
-
-
-function onResize(){
-
-  if(!renderer){
-    return;
-  }
+  };
 
 
-  const width =
-    container.clientWidth;
+$('toggleLinksBtn').onclick =
+  () => {
 
-  const height =
-    container.clientHeight;
-
-
-  camera.aspect =
-    width/height;
+    state.showLinks =
+      !state.showLinks;
 
 
-  camera.updateProjectionMatrix();
+    $('toggleLinksBtn')
+      .textContent =
+        state.showLinks
+          ? 'LINKS ON'
+          : 'LINKS OFF';
 
 
-  renderer.setSize(
-    width,
-    height
-  );
+    rebuildLinks();
 
-
-  /*
-   * Nodes bleiben vollständig
-   * positionsstabil.
-   */
-}
+  };
 
 
 /* =========================================================
    EVENTS
 ========================================================= */
 
-document
-  .getElementById(
-    'saveBtn'
-  )
+$('embedBtn')
   .addEventListener(
     'click',
-    createMemory
+    generate
   );
 
 
-document
-  .getElementById(
-    'createHyperedgeBtn'
-  )
+$('storeBtn')
   .addEventListener(
     'click',
-    createManualHyperedge
+    store
   );
 
 
-document
-  .getElementById(
-    'queryBtn'
-  )
+$('searchBtn')
   .addEventListener(
     'click',
-    runQuery
+    runSearch
   );
 
 
-document
-  .getElementById(
-    'queryInput'
-  )
+$('queryInput')
   .addEventListener(
     'keydown',
     event => {
 
       if(
-        event.key ===
-        'Enter'
+        event.key === 'Enter'
       ){
 
-        event.preventDefault();
+        runSearch();
 
-        runQuery();
       }
+
     }
   );
 
 
-document
-  .getElementById(
-    'clearContextBtn'
-  )
+$('textInput')
   .addEventListener(
-    'click',
-    clearContext
-  );
-
-
-document
-  .getElementById(
-    'toggleEdges'
-  )
-  .addEventListener(
-    'click',
+    'keydown',
     event => {
 
-      showEdges =
-        !showEdges;
+      if(
+        event.ctrlKey &&
+        event.key === 'Enter'
+      ){
 
+        generate();
 
-      event.currentTarget
-        .classList.toggle(
-          'active',
-          showEdges
-        );
+      }
 
-
-      renderScene();
-    }
-  );
-
-
-document
-  .getElementById(
-    'toggleHyper'
-  )
-  .addEventListener(
-    'click',
-    event => {
-
-      showHyperedges =
-        !showHyperedges;
-
-
-      event.currentTarget
-        .classList.toggle(
-          'active',
-          showHyperedges
-        );
-
-
-      renderScene();
-    }
-  );
-
-
-document
-  .getElementById(
-    'toggleAnchors'
-  )
-  .addEventListener(
-    'click',
-    event => {
-
-      showAnchors =
-        !showAnchors;
-
-
-      event.currentTarget
-        .classList.toggle(
-          'active',
-          showAnchors
-        );
-
-
-      renderScene();
     }
   );
 
 
 /* =========================================================
-   KEYBOARD
+   RESTORE DATABASE
 ========================================================= */
 
-document.addEventListener(
-  'keydown',
-  event => {
+async function restore(){
+
+  log(
+    'Lese NEURAL MEMORY aus IndexedDB …',
+    'info'
+  );
+
+
+  const memories =
+    await dbGetAll();
+
+
+  state.memories =
+    Array.isArray(memories)
+      ? memories
+      : [];
+
+
+  state.memories.sort(
+    (a,b) =>
+      String(a.id)
+        .localeCompare(
+          String(b.id),
+          undefined,
+          {
+            numeric:true
+          }
+        )
+  );
+
+
+  /*
+     Normalize older records.
+
+     Alte Struktur:
+
+       text
+       vector
+       pos3d
+
+     Neue Struktur:
+
+       content.text
+       semantic.embedding.vector
+       geometry.pos3d
+  */
+
+  for(
+    const memory
+    of state.memories
+  ){
+
+    const vector =
+      getVector(memory);
+
+
+    const position =
+      getPosition(memory);
+
 
     if(
-      (event.ctrlKey ||
-       event.metaKey) &&
-      event.key === 'Enter'
+      !memory.schema_version
     ){
 
-      event.preventDefault();
+      memory.schema_version =
+        '1.1';
 
-      createMemory();
     }
 
 
     if(
-      event.key ===
-      'Escape'
+      !memory.type
     ){
 
-      clearContext();
+      memory.type =
+        'memory';
+
     }
+
+
+    if(
+      !memory.content
+    ){
+
+      memory.content = {
+
+        title:
+          (
+            memory.text ||
+            ''
+          ).slice(0,80),
+
+        text:
+          memory.text ||
+          ''
+
+      };
+
+    }
+
+
+    if(
+      !memory.semantic
+    ){
+
+      memory.semantic = {};
+
+    }
+
+
+    if(
+      !memory.semantic.embedding
+    ){
+
+      memory.semantic.embedding = {
+
+        model:
+          CONFIG.MODEL,
+
+        dimensions:
+          vector.length,
+
+        vector:
+          vector.slice()
+
+      };
+
+    }
+
+
+    if(
+      !memory.geometry
+    ){
+
+      memory.geometry = {};
+
+    }
+
+
+    memory.geometry.pos3d =
+      position.slice();
+
+
+    if(
+      !Array.isArray(
+        memory.anchors
+      )
+    ){
+
+      memory.anchors = [];
+
+    }
+
+
+    memory.positionLocked =
+      true;
+
   }
-);
 
 
-/* =========================================================
-   APPLICATION INIT
-========================================================= */
+  /*
+     Restore next deterministic ID.
+  */
 
-async function init(){
+  if(
+    state.memories.length
+  ){
 
-  try{
-
-    setStatus(
-      'DATABASE',
-      'yellow'
-    );
-
-
-    log(
-      'Opening Neural Memory Core ...'
-    );
-
-
-    await openDB();
-
-
-    memories =
-      await loadMemories();
-
-
-    hyperedges =
-      await loadHyperedges();
-
-
-    await repairLegacyPositions();
-
-
-    /*
-     * Nur valide Hyperedges laden.
-     */
-
-    hyperedges =
-      hyperedges.filter(
-        h =>
-          Array.isArray(
-            h.nodeIds
-          ) &&
-          h.nodeIds.length >= 3 &&
-          h.nodeIds.every(
-            id =>
-              memories.some(
-                m =>
-                  m.id === id
-              )
-          )
+    const numbers =
+      state.memories.map(
+        memory =>
+          Number(
+            String(memory.id)
+              .split('-')
+              .pop()
+          ) || 0
       );
 
 
-    initThree();
+    state.nextId =
+      Math.max(
+        ...numbers
+      ) + 1;
 
-
-    refreshAll();
-
-    renderScene();
-
-
-    log(
-      `${memories.length} Nodes restored.`,
-      'ok'
-    );
-
-
-    log(
-      `${hyperedges.length} Hyperedges restored.`,
-      'ok'
-    );
-
-
-    setStatus(
-      'LOADING MODEL',
-      'yellow'
-    );
-
-
-    await loadModel();
-
-
-  }catch(error){
-
-    console.error(
-      error
-    );
-
-
-    setStatus(
-      'INIT ERROR',
-      'red'
-    );
-
-
-    log(
-      'Initialization error: ' +
-      error.message,
-      'error'
-    );
-
-
-    toast(
-      'Initialisierung fehlgeschlagen.',
-      true
-    );
   }
+
+
+  /*
+     If old records had no real frame,
+     reconstruct only when necessary.
+  */
+
+  const needsFrame =
+    state.memories.length > 0 &&
+    state.memories.every(
+      memory => {
+
+        const p =
+          getPosition(memory);
+
+        return p.every(
+          Number.isFinite
+        );
+
+      }
+    ) &&
+    state.memories.some(
+      memory =>
+        getPosition(memory)
+          .some(
+            value =>
+              Math.abs(value) > 1e-9
+          )
+    ) === false;
+
+
+  if(needsFrame){
+
+    seedInitialFrame();
+
+    await persistAll();
+
+    log(
+      'Initial 3D frame rekonstruiert.',
+      'ok'
+    );
+
+  }
+
+
+  $('memoryCount').textContent =
+    state.memories.length;
+
+
+  $('dimension').textContent =
+    state.memories.length
+      ? CONFIG.DIM
+      : '—';
+
+
+  renderMemoryList();
+
+  rebuildScene();
+
+
+  log(
+    `${state.memories.length} Memories aus IndexedDB geladen.`,
+    'ok'
+  );
+
 }
 
 
-init();
+/* =========================================================
+   BOOT
+========================================================= */
+
+initThree();
+
+
+(async()=>{
+
+  log(
+    'NEURAL MEMORY — Semantic Memory Core initialisiert.',
+    'ok'
+  );
+
+
+  log(
+    'Rendering: WebGL custom point shader.',
+    'info'
+  );
+
+
+  log(
+    'Semantik: 384D cosine, nicht 3D-Distanz.',
+    'info'
+  );
+
+
+  log(
+    `Embedding: ${CONFIG.MODEL}`,
+    'info'
+  );
+
+
+  await restore();
+
+
+  const modelReady =
+    await loadModel();
+
+
+  $('searchBtn').disabled =
+    !(
+      modelReady &&
+      state.memories.length > 0
+    );
+
+
+  log(
+    'NEURAL MEMORY CORE ONLINE.',
+    'ok'
+  );
+
+
+})();
 
 </script>
 
