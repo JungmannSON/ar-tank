@@ -5633,7 +5633,2174 @@ renderEvolutionUI();
    remain mutually exclusive. */
 const originalSelectMemory=selectMemory;
 selectMemory=function(id){state.selectedVersionId=null; originalSelectMemory(id); renderVersions();};
+/* =========================================================
+   BLOCK STRUCTURE / DATEISTRUKTUR-HYPEREDGE
+   ---------------------------------------------------------
+   dateistruktur-hyperedge
+          |
+          +--> versionsnode:1
+                    |
+                    +--> blocknode:1
+                    +--> blocknode:2
+                    +--> blocknode:3
+                    +--> ...
+   Jeder Block besitzt sein eigenes 384D-Embedding und
+   eine daraus abgeleitete 3D-Position.
+========================================================= */
 
+state.blockNodes = [];
+state.blockStructure = null;
+state.selectedBlockId = null;
+
+
+/* ---------------------------------------------------------
+   BALANCED BLOCK EXTRACTION
+--------------------------------------------------------- */
+
+function findBalancedBlock(source, openIndex){
+  let depth = 0;
+  let quote = null;
+  let escaped = false;
+  let lineComment = false;
+  let blockComment = false;
+
+  for(let i=openIndex;i<source.length;i++){
+    const c = source[i];
+    const n = source[i+1];
+
+    if(lineComment){
+      if(c === '\n') lineComment = false;
+      continue;
+    }
+
+    if(blockComment){
+      if(c === '*' && n === '/'){
+        blockComment = false;
+        i++;
+      }
+      continue;
+    }
+
+    if(quote){
+      if(escaped){
+        escaped = false;
+        continue;
+      }
+
+      if(c === '\\'){
+        escaped = true;
+        continue;
+      }
+
+      if(c === quote){
+        quote = null;
+      }
+
+      continue;
+    }
+
+    if(c === '/' && n === '/'){
+      lineComment = true;
+      i++;
+      continue;
+    }
+
+    if(c === '/' && n === '*'){
+      blockComment = true;
+      i++;
+      continue;
+    }
+
+    if(c === '"' || c === "'" || c === '`'){
+      quote = c;
+      continue;
+    }
+
+    if(c === '{'){
+      depth++;
+      continue;
+    }
+
+    if(c === '}'){
+      depth--;
+
+      if(depth === 0){
+        return i + 1;
+      }
+    }
+  }
+
+  return source.length;
+}
+
+
+/* ---------------------------------------------------------
+   SOURCE → FUNKTIONSBLÖCKE
+--------------------------------------------------------- */
+
+function extractFunctionBlocks(source){
+
+  const blocks = [];
+  const seen = new Set();
+
+  const patterns = [
+
+    {
+      type:'function',
+      regex:/\b(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*$begin:math:text$\[\^\)\]\*$end:math:text$\s*\{/g
+    },
+
+    {
+      type:'class',
+      regex:/\bclass\s+([A-Za-z_$][\w$]*)[^{]*\{/g
+    },
+
+    {
+      type:'arrow',
+      regex:/\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?(?:$begin:math:text$\[\^\)\]\*$end:math:text$|[A-Za-z_$][\w$]*)\s*=>\s*\{/g
+    }
+  ];
+
+  for(const pattern of patterns){
+
+    let match;
+
+    while((match = pattern.regex.exec(source))){
+
+      const name = match[1];
+      const open = source.indexOf('{',match.index);
+
+      if(open < 0) continue;
+
+      const end = findBalancedBlock(source,open);
+
+      const key =
+        `${pattern.type}:${name}:${match.index}`;
+
+      if(seen.has(key)) continue;
+      seen.add(key);
+
+      const content =
+        source.slice(match.index,end);
+
+      const startLine =
+        source.slice(0,match.index).split('\n').length;
+
+      const endLine =
+        source.slice(0,end).split('\n').length;
+
+      blocks.push({
+        type:pattern.type,
+        name,
+        content,
+        startOffset:match.index,
+        endOffset:end,
+        startLine,
+        endLine
+      });
+    }
+  }
+
+
+  /*
+     Fallback:
+     Wenn keine Funktionen erkannt werden, zerlegen wir
+     die Datei in echte zusammenhängende Codeblöcke.
+  */
+
+  if(!blocks.length){
+
+    const lines = source.split('\n');
+    const chunkSize = 40;
+
+    for(let i=0;i<lines.length;i+=chunkSize){
+
+      const chunk =
+        lines
+          .slice(i,i+chunkSize)
+          .join('\n');
+
+      if(!chunk.trim()) continue;
+
+      blocks.push({
+        type:'source_chunk',
+        name:`source:${i+1}`,
+        content:chunk,
+        startLine:i+1,
+        endLine:Math.min(
+          lines.length,
+          i+chunkSize
+        )
+      });
+    }
+  }
+
+
+  /*
+     Stabil sortieren.
+  */
+
+  blocks.sort(
+    (a,b)=>
+      a.startOffset - b.startOffset
+  );
+
+
+  return blocks;
+}
+
+
+/* ---------------------------------------------------------
+   DETERMINISTIC BLOCK POSITION
+--------------------------------------------------------- */
+
+function makeBlockPosition(
+  vector,
+  version,
+  index,
+  total
+){
+
+  const parent =
+    getPosition(version);
+
+  let semanticPosition =
+    parent.slice();
+
+  /*
+     Bestehende 3D-Embedding-Geometrie verwenden.
+     Wir benutzen dieselbe mathematische Pipeline wie
+     die vorhandenen Memory-/Version-Nodes.
+  */
+
+  const anchors =
+    [
+      ...state.memories,
+      ...codeVersions()
+    ]
+      .filter(
+        node =>
+          getVector(node).length === CONFIG.DIM
+      )
+      .sort(
+        (a,b)=>
+          cosine(vector,getVector(b)) -
+          cosine(vector,getVector(a))
+      )
+      .slice(0,CONFIG.ANCHOR_COUNT);
+
+
+  if(anchors.length >= 2){
+
+    semanticPosition =
+      solveLocalPosition(
+        vector,
+        anchors
+      );
+  }
+
+
+  /*
+     Leichte deterministische Streuung um den
+     Versionsknoten, damit identische/nahe Funktionen
+     nicht exakt aufeinander liegen.
+  */
+
+  const angle =
+    (index / Math.max(total,1)) *
+    Math.PI * 2;
+
+  const radius =
+    1.15 +
+    Math.min(
+      3.5,
+      Math.sqrt(total) * .22
+    );
+
+  const radial = [
+    Math.cos(angle) * radius,
+    Math.sin(angle) * radius * .65,
+    Math.cos(angle * 1.7) * radius * .45
+  ];
+
+
+  /*
+     70% semantische Position
+     30% lokale Strukturposition
+  */
+
+  return [
+    semanticPosition[0] * .70 +
+      (parent[0] + radial[0]) * .30,
+
+    semanticPosition[1] * .70 +
+      (parent[1] + radial[1]) * .30,
+
+    semanticPosition[2] * .70 +
+      (parent[2] + radial[2]) * .30
+  ];
+}
+
+
+/* ---------------------------------------------------------
+   BLOCK STRUCTURE BUILD
+--------------------------------------------------------- */
+
+async function buildBlockStructure(){
+
+  const version =
+    state.versions.find(
+      v => v.id === state.selectedVersionId
+    ) ||
+    codeVersions().at(-1);
+
+
+  const source =
+    version?.version?.source ||
+    $('projectSourceInput')?.dataset?.source ||
+    '';
+
+
+  if(!source.trim()){
+
+    error(
+      'Keine Projektquelle vorhanden. ' +
+      'Bitte zuerst eine echte Projektversion importieren.'
+    );
+
+    return null;
+  }
+
+
+  const versionNodeId =
+    'versionsnode:1';
+
+  const structureId =
+    'dateistruktur-hyperedge';
+
+
+  log(
+    'Baue komplette Blockstruktur …',
+    'info'
+  );
+
+
+  /*
+     Alte Blockstruktur entfernen.
+  */
+
+  const oldRecords =
+    await dbGetAll();
+
+  const oldBlocks =
+    oldRecords.filter(
+      r =>
+        r.type === 'blocknode' ||
+        r.type === 'dateistruktur-hyperedge'
+    );
+
+
+  for(const record of oldBlocks){
+    await dbDelete(record.id);
+  }
+
+
+  /*
+     Source → Funktionen
+  */
+
+  const extracted =
+    extractFunctionBlocks(source);
+
+
+  if(!extracted.length){
+
+    error(
+      'Keine Funktions-/Strukturblöcke erkannt.'
+    );
+
+    return null;
+  }
+
+
+  /*
+     Embeddings erzeugen.
+  */
+
+  await loadModel();
+
+
+  const blockNodes = [];
+
+
+  for(
+    let i=0;
+    i<extracted.length;
+    i++
+  ){
+
+    const block =
+      extracted[i];
+
+    const semanticText =
+      [
+        'code block',
+        block.type,
+        block.name,
+        block.content
+      ].join(': ');
+
+
+    const vector =
+      await embed(
+        semanticText,
+        'passage'
+      );
+
+
+    const id =
+      `blocknode:${i+1}`;
+
+
+    const record = {
+
+      id,
+
+      type:'blocknode',
+
+      schema_version:'1.0',
+
+      content:{
+        title:block.name,
+        text:block.content
+      },
+
+      block:{
+        name:block.name,
+        type:block.type,
+        sourceRange:{
+          startLine:block.startLine,
+          endLine:block.endLine,
+          startOffset:block.startOffset,
+          endOffset:block.endOffset
+        }
+      },
+
+      semantic:{
+        embedding:{
+          model:CONFIG.MODEL,
+          dimensions:CONFIG.DIM,
+          vector:vector.slice()
+        }
+      },
+
+      geometry:{
+        pos3d:
+          makeBlockPosition(
+            vector,
+            version,
+            i,
+            extracted.length
+          )
+      },
+
+      parentId:
+        versionNodeId,
+
+      sourceVersionId:
+        version?.id || null,
+
+      hyperedge:{
+        id:
+          `hyperedge:${versionNodeId}:${id}`,
+
+        type:'contains',
+
+        source:
+          versionNodeId,
+
+        targets:[
+          id
+        ]
+      },
+
+      created_at:now(),
+
+      positionLocked:true
+    };
+
+
+    blockNodes.push(record);
+
+    log(
+      `${id} ← ${block.name}`,
+      'info'
+    );
+  }
+
+
+  /*
+     Versionsnode.
+  */
+
+  const versionNode = {
+
+    id:versionNodeId,
+
+    type:'versionsnode',
+
+    schema_version:'1.0',
+
+    content:{
+      title:'VERSION 1',
+      text:
+        version?.version?.message ||
+        'Project version 1'
+    },
+
+    geometry:{
+      pos3d:
+        getPosition(version)
+          .slice()
+    },
+
+    sourceVersionId:
+      version?.id || null,
+
+    hyperedges:
+      blockNodes.map(
+        block => ({
+          id:
+            `hyperedge:${versionNodeId}:${block.id}`,
+
+          type:'contains',
+
+          source:
+            versionNodeId,
+
+          targets:[
+            block.id
+          ]
+        })
+      ),
+
+    positionLocked:true
+  };
+
+
+  /*
+     Root Hyperedge.
+  */
+
+  const structure = {
+
+    id:structureId,
+
+    type:'dateistruktur-hyperedge',
+
+    schema_version:'1.0',
+
+    content:{
+      title:'DATEISTRUKTUR HYPEREDGE',
+
+      text:
+        `${blockNodes.length} Funktionsblöcke`
+    },
+
+    geometry:{
+      pos3d:[
+        getPosition(version)[0],
+        getPosition(version)[1] + 1.2,
+        getPosition(version)[2]
+      ]
+    },
+
+    hyperedges:[
+
+      {
+        id:
+          `hyperedge:${structureId}:${versionNodeId}`,
+
+        type:'contains-version',
+
+        source:
+          structureId,
+
+        targets:[
+          versionNodeId
+        ]
+      },
+
+      ...versionNode.hyperedges
+    ],
+
+    versionNodeId,
+
+    sourceVersionId:
+      version?.id || null,
+
+    blockCount:
+      blockNodes.length,
+
+    created_at:now()
+  };
+
+
+  /*
+     Semantische Block↔Block-Kanten.
+  */
+
+  for(let i=0;i<blockNodes.length;i++){
+
+    const a =
+      blockNodes[i];
+
+    const neighbors =
+      blockNodes
+        .filter(
+          (_,j)=>j!==i
+        )
+        .map(
+          b => ({
+            node:b,
+            score:
+              cosine(
+                getVector(a),
+                getVector(b)
+              )
+          })
+        )
+        .filter(
+          x =>
+            x.score >=
+            CONFIG.EDGE_THRESHOLD
+        )
+        .sort(
+          (x,y)=>
+            y.score-x.score
+        )
+        .slice(0,4);
+
+
+    a.hyperedges.semantic =
+      neighbors.map(
+        x => ({
+          id:
+            `semantic:${a.id}:${x.node.id}`,
+
+          type:'semantic',
+
+          source:a.id,
+
+          targets:[
+            x.node.id
+          ],
+
+          similarity:
+            x.score
+        })
+      );
+  }
+
+
+  /*
+     Persistenz.
+  */
+
+  await dbPutMany([
+    structure,
+    versionNode,
+    ...blockNodes
+  ]);
+
+
+  state.blockStructure =
+    structure;
+
+  state.blockNodes =
+    blockNodes;
+
+  state.selectedBlockId =
+    null;
+
+
+  /*
+     JSON für Upload / GitHub.
+  */
+
+  const json = {
+
+    schema_version:'1.0',
+
+    type:'dateistruktur-hyperedge',
+
+    id:structureId,
+
+    versionNode,
+
+    blocks:blockNodes,
+
+    hyperedges:
+      structure.hyperedges,
+
+    generated_at:now(),
+
+    sourceVersion:{
+      id:version?.id || null,
+      hash:
+        version?.version?.hash ||
+        null
+    }
+  };
+
+
+  state.blockStructure.export =
+    json;
+
+
+  rebuildScene();
+
+  renderBlockStructureUI();
+
+
+  log(
+    `BLOCK GRAPH ONLINE · ${blockNodes.length} BLOCKNODES · ${structure.hyperedges.length} HYPEREDGES`,
+    'ok'
+  );
+
+
+  return json;
+}
+
+
+/* ---------------------------------------------------------
+   INSPECTOR FOR BLOCKNODE
+--------------------------------------------------------- */
+
+function selectBlockNode(id){
+
+  const block =
+    state.blockNodes.find(
+      x => x.id === id
+    );
+
+  if(!block)return;
+
+
+  state.selectedBlockId =
+    id;
+
+  state.selectedId =
+    null;
+
+  state.selectedVersionId =
+    null;
+
+
+  const vector =
+    getVector(block);
+
+  const p =
+    getPosition(block);
+
+
+  $('inspector')
+    .classList
+    .add('visible');
+
+
+  const h =
+    $('inspector')
+      .querySelector('h3');
+
+  if(h){
+    h.textContent =
+      'BLOCKNODE INSPECTOR';
+  }
+
+
+  $('inspId').textContent =
+    block.id;
+
+
+  $('inspText').textContent =
+    block.content?.text ||
+    '';
+
+
+  $('inspMeta').innerHTML = `
+
+    TYPE:
+    ${esc(block.block?.type || 'function')}
+
+    <br>
+
+    NAME:
+    ${esc(block.block?.name || '')}
+
+    <br>
+
+    VERSION:
+    ${esc(block.parentId || '')}
+
+    <br>
+
+    SOURCE:
+    L${block.block?.sourceRange?.startLine || '?'}
+    →
+    L${block.block?.sourceRange?.endLine || '?'}
+
+    <br>
+
+    VECTOR:
+    ${vector.length}D
+
+    <br>
+
+    POS:
+    [
+      ${p.map(
+        x => Number(x).toFixed(3)
+      ).join(', ')}
+    ]
+
+  `;
+
+
+  $('inspAnchors').innerHTML = `
+
+    <span class="tag">
+      BLOCKNODE
+    </span>
+
+    <span class="tag">
+      EMBEDDED FUNCTION
+    </span>
+
+    <span class="tag">
+      ${vector.length}D
+    </span>
+
+    <button
+      id="copyBlockBtn"
+      class="green"
+    >
+      COPY BLOCK
+    </button>
+
+  `;
+
+
+  $('copyBlockBtn').onclick =
+    async()=>{
+      await navigator.clipboard.writeText(
+        block.content?.text || ''
+      );
+
+      log(
+        `${block.id} kopiert.`,
+        'ok'
+      );
+    };
+
+
+  rebuildScene();
+
+
+  controls.target.set(
+    p[0],
+    p[1],
+    p[2]
+  );
+
+
+  $('hudStatus').textContent =
+    `${block.id} SELECTED`;
+}
+
+
+/* ---------------------------------------------------------
+   3D GRAPH NODES
+--------------------------------------------------------- */
+
+graphNodes=function(){
+
+  const nodes = [
+
+    ...state.memories.map(
+      data => ({
+        kind:'memory',
+        data
+      })
+    ),
+
+    ...codeVersions().map(
+      data => ({
+        kind:'version',
+        data
+      })
+    ),
+
+    ...(state.blockStructure
+      ? [{
+          kind:'structure',
+          data:state.blockStructure
+        }]
+      : []),
+
+    ...(state.blockStructure
+      ? [{
+          kind:'versionNode',
+          data:{
+            id:'versionsnode:1',
+            type:'versionsnode',
+
+            geometry:{
+              pos3d:
+                getPosition(
+                  state.blockStructure
+                    .versionNode || {}
+                )
+            },
+
+            semantic:{
+              embedding:{
+                vector:
+                  state.blockStructure
+                    .versionNode
+                    ?.semantic
+                    ?.embedding
+                    ?.vector ||
+                  []
+              }
+            }
+          }
+        }]
+      : []),
+
+    ...state.blockNodes.map(
+      data => ({
+        kind:'block',
+        data
+      })
+    )
+  ];
+
+
+  return nodes;
+};
+
+
+/* ---------------------------------------------------------
+   3D POINT CLOUD
+--------------------------------------------------------- */
+
+makePoints=function(){
+
+  if(pointsMesh){
+
+    scene.remove(pointsMesh);
+
+    disposeObject(pointsMesh);
+
+    pointsMesh=null;
+  }
+
+
+  const nodes =
+    graphNodes();
+
+
+  if(!nodes.length)return;
+
+
+  const positions =
+    new Float32Array(
+      nodes.length * 3
+    );
+
+  const selected =
+    new Float32Array(
+      nodes.length
+    );
+
+  const kind =
+    new Float32Array(
+      nodes.length
+    );
+
+
+  nodes.forEach(
+    (node,i)=>{
+
+      const p =
+        getPosition(
+          node.data
+        );
+
+
+      positions[i*3] =
+        p[0];
+
+      positions[i*3+1] =
+        p[1];
+
+      positions[i*3+2] =
+        p[2];
+
+
+      kind[i] =
+        node.kind === 'version'
+          ? 1
+          : node.kind === 'block'
+            ? 2
+            : node.kind === 'structure'
+              ? 3
+              : node.kind === 'versionNode'
+                ? 1
+                : 0;
+
+
+      selected[i] =
+        (
+          node.kind === 'memory'
+            ? node.data.id === state.selectedId
+
+          : node.kind === 'version'
+            ? node.data.id === state.selectedVersionId
+
+          : node.kind === 'block'
+            ? node.data.id === state.selectedBlockId
+
+          : false
+        )
+        ? 1
+        : 0;
+    }
+  );
+
+
+  const geometry =
+    new THREE.BufferGeometry();
+
+
+  geometry.setAttribute(
+    'position',
+    new THREE.BufferAttribute(
+      positions,
+      3
+    )
+  );
+
+
+  geometry.setAttribute(
+    'aSelected',
+    new THREE.BufferAttribute(
+      selected,
+      1
+    )
+  );
+
+
+  geometry.setAttribute(
+    'aKind',
+    new THREE.BufferAttribute(
+      kind,
+      1
+    )
+  );
+
+
+  const material =
+    new THREE.ShaderMaterial({
+
+      vertexShader:`
+
+        attribute float aSelected;
+        attribute float aKind;
+
+        varying float vSelected;
+        varying float vKind;
+
+        void main(){
+
+          vSelected =
+            aSelected;
+
+          vKind =
+            aKind;
+
+          vec4 mv =
+            modelViewMatrix *
+            vec4(position,1.0);
+
+          gl_Position =
+            projectionMatrix *
+            mv;
+
+          float size =
+            aKind > 1.5
+              ? 7.5
+              : aKind > .5
+                ? 10.0
+                : 6.5;
+
+          gl_PointSize =
+            size *
+            (
+              260.0 /
+              max(
+                40.0,
+                -mv.z
+              )
+            );
+        }
+
+      `,
+
+      fragmentShader:`
+
+        varying float vSelected;
+        varying float vKind;
+
+        void main(){
+
+          vec2 p =
+            gl_PointCoord -
+            .5;
+
+          float r =
+            length(p);
+
+          if(r > .5)
+            discard;
+
+          float glow =
+            1.0 -
+            smoothstep(
+              .10,
+              .5,
+              r
+            );
+
+          float core =
+            1.0 -
+            smoothstep(
+              .02,
+              .23,
+              r
+            );
+
+          vec3 cyan =
+            vec3(
+              0.0,
+              .9,
+              1.0
+            );
+
+          vec3 pink =
+            vec3(
+              1.0,
+              .18,
+              .58
+            );
+
+          vec3 green =
+            vec3(
+              0.0,
+              1.0,
+              .62
+            );
+
+          vec3 yellow =
+            vec3(
+              1.0,
+              .9,
+              0.0
+            );
+
+          vec3 color;
+
+          if(vSelected > .5){
+
+            color =
+              yellow;
+
+          }else if(vKind > 2.5){
+
+            color =
+              green;
+
+          }else if(vKind > 1.5){
+
+            color =
+              cyan;
+
+          }else{
+
+            color =
+              pink;
+          }
+
+
+          gl_FragColor =
+            vec4(
+              color,
+              max(
+                core,
+                glow*.65
+              )
+            );
+        }
+
+      `,
+
+      transparent:true,
+
+      depthWrite:false,
+
+      blending:
+        THREE.AdditiveBlending
+    });
+
+
+  pointsMesh =
+    new THREE.Points(
+      geometry,
+      material
+    );
+
+
+  pointsMesh.userData.nodes =
+    nodes;
+
+
+  scene.add(
+    pointsMesh
+  );
+};
+
+
+/* ---------------------------------------------------------
+   HYPEREDGES + SEMANTIC EDGES
+--------------------------------------------------------- */
+
+rebuildLinks=function(){
+
+  while(
+    linesGroup.children.length
+  ){
+
+    const object =
+      linesGroup
+        .children
+        .pop();
+
+    disposeObject(
+      object
+    );
+  }
+
+
+  if(!state.showLinks)
+    return;
+
+
+  const addLines =
+    (
+      positions,
+      color,
+      opacity
+    )=>{
+
+      if(!positions.length)
+        return;
+
+      const geometry =
+        new THREE.BufferGeometry();
+
+      geometry.setAttribute(
+        'position',
+        new THREE.Float32BufferAttribute(
+          positions,
+          3
+        )
+      );
+
+
+      linesGroup.add(
+        new THREE.LineSegments(
+
+          geometry,
+
+          new THREE.LineBasicMaterial({
+
+            color,
+
+            transparent:true,
+
+            opacity,
+
+            depthWrite:false
+          })
+        )
+      );
+    };
+
+
+  /*
+     Bestehende Memory-Semantik.
+  */
+
+  const semantic = [];
+
+
+  for(
+    let i=0;
+    i<state.memories.length;
+    i++
+  ){
+
+    for(
+      let j=i+1;
+      j<state.memories.length;
+      j++
+    ){
+
+      const a =
+        state.memories[i];
+
+      const b =
+        state.memories[j];
+
+
+      if(
+        cosine(
+          getVector(a),
+          getVector(b)
+        ) >=
+        CONFIG.EDGE_THRESHOLD
+      ){
+
+        semantic.push(
+          ...getPosition(a),
+          ...getPosition(b)
+        );
+      }
+    }
+  }
+
+
+  addLines(
+    semantic,
+    0x00e5ff,
+    .20
+  );
+
+
+  /*
+     Version timeline.
+  */
+
+  const versions =
+    codeVersions();
+
+  const temporal=[];
+
+
+  for(
+    let i=1;
+    i<versions.length;
+    i++
+  ){
+
+    temporal.push(
+      ...getPosition(
+        versions[i-1]
+      ),
+
+      ...getPosition(
+        versions[i]
+      )
+    );
+  }
+
+
+  addLines(
+    temporal,
+    0xff2d95,
+    .80
+  );
+
+
+  /*
+     dateistruktur-hyperedge:
+     structure → versionsnode:1
+  */
+
+  if(
+    state.blockStructure
+  ){
+
+    const structurePosition =
+      getPosition(
+        state.blockStructure
+      );
+
+
+    const versionPosition =
+      getPosition(
+        state.blockStructure
+          .versionNode
+      );
+
+
+    addLines(
+      [
+        ...structurePosition,
+        ...versionPosition
+      ],
+      0x00ff9d,
+      .95
+    );
+
+
+    /*
+       versionsnode:1 → blocknodes
+    */
+
+    const containment=[];
+
+
+    for(
+      const block
+      of state.blockNodes
+    ){
+
+      containment.push(
+        ...versionPosition,
+        ...getPosition(block)
+      );
+    }
+
+
+    addLines(
+      containment,
+      0xff2d95,
+      .72
+    );
+
+
+    /*
+       Block → Block semantische Kanten
+    */
+
+    const blockSemantic=[];
+
+
+    for(
+      let i=0;
+      i<state.blockNodes.length;
+      i++
+    ){
+
+      const a =
+        state.blockNodes[i];
+
+
+      for(
+        let j=i+1;
+        j<state.blockNodes.length;
+        j++
+      ){
+
+        const b =
+          state.blockNodes[j];
+
+
+        if(
+          cosine(
+            getVector(a),
+            getVector(b)
+          ) >=
+          CONFIG.EDGE_THRESHOLD
+        ){
+
+          blockSemantic.push(
+            ...getPosition(a),
+            ...getPosition(b)
+          );
+        }
+      }
+    }
+
+
+    addLines(
+      blockSemantic,
+      0x00e5ff,
+      .34
+    );
+  }
+};
+
+
+/* ---------------------------------------------------------
+   REBUILD
+--------------------------------------------------------- */
+
+rebuildScene=function(){
+
+  makePoints();
+
+  rebuildLinks();
+
+
+  const total =
+    state.memories.length +
+    state.versions.length +
+    state.blockNodes.length;
+
+
+  $('hudStatus').textContent =
+    total
+      ? `${total} NODES · SEMANTIC R³ · BLOCK HYPERGRAPH`
+      : 'MEMORY SPACE EMPTY';
+};
+
+
+/* ---------------------------------------------------------
+   POINTER SELECTION
+--------------------------------------------------------- */
+
+getIntersections=function(event){
+
+  if(!pointsMesh)
+    return [];
+
+
+  const rect =
+    renderer
+      .domElement
+      .getBoundingClientRect();
+
+
+  mouse.x =
+    (
+      (event.clientX - rect.left) /
+      rect.width
+    ) * 2 - 1;
+
+
+  mouse.y =
+    -(
+      (event.clientY - rect.top) /
+      rect.height
+    ) * 2 + 1;
+
+
+  raycaster.setFromCamera(
+    mouse,
+    camera
+  );
+
+
+  return raycaster.intersectObject(
+    pointsMesh
+  );
+};
+
+
+onPointerDown=function(event){
+
+  if(event.button !== 0)
+    return;
+
+
+  const hits =
+    getIntersections(event);
+
+
+  if(!hits.length)
+    return;
+
+
+  const node =
+    pointsMesh
+      .userData
+      .nodes[hits[0].index];
+
+
+  if(!node)
+    return;
+
+
+  if(node.kind === 'memory'){
+
+    selectMemory(
+      node.data.id
+    );
+
+  }else if(node.kind === 'version'){
+
+    selectVersion(
+      node.data.id
+    );
+
+  }else if(node.kind === 'block'){
+
+    selectBlockNode(
+      node.data.id
+    );
+
+  }else if(
+    node.kind === 'structure'
+  ){
+
+    $('inspId').textContent =
+      node.data.id;
+
+    $('inspText').textContent =
+      node.data.content?.text ||
+      '';
+
+    $('inspector')
+      .classList
+      .add('visible');
+
+    $('inspector')
+      .querySelector('h3')
+      .textContent =
+        'DATEISTRUKTUR HYPEREDGE';
+
+    $('inspMeta').innerHTML =
+      `
+      TYPE: dateistruktur-hyperedge
+      <br>
+      VERSION NODE: versionsnode:1
+      <br>
+      BLOCKS: ${state.blockNodes.length}
+      `;
+
+  }else if(
+    node.kind === 'versionNode'
+  ){
+
+    $('inspId').textContent =
+      'versionsnode:1';
+
+    $('inspText').textContent =
+      'Project Version Node 1';
+
+    $('inspector')
+      .classList
+      .add('visible');
+
+    $('inspector')
+      .querySelector('h3')
+      .textContent =
+        'VERSIONSNODE INSPECTOR';
+
+    $('inspMeta').innerHTML =
+      `
+      TYPE: versionsnode
+      <br>
+      BLOCKS: ${state.blockNodes.length}
+      `;
+  }
+};
+
+
+onDoubleClick=function(event){
+
+  const hits =
+    getIntersections(event);
+
+
+  if(!hits.length)
+    return;
+
+
+  const node =
+    pointsMesh
+      .userData
+      .nodes[hits[0].index];
+
+
+  if(!node)
+    return;
+
+
+  const p =
+    getPosition(
+      node.data
+    );
+
+
+  controls.target.set(
+    p[0],
+    p[1],
+    p[2]
+  );
+
+
+  const direction =
+    new THREE.Vector3()
+      .subVectors(
+        camera.position,
+        controls.target
+      )
+      .normalize();
+
+
+  camera.position
+    .copy(
+      controls.target
+    )
+    .addScaledVector(
+      direction,
+      4
+    );
+
+
+  controls.update();
+
+
+  if(node.kind === 'memory')
+    selectMemory(node.data.id);
+
+  else if(node.kind === 'version')
+    selectVersion(node.data.id);
+
+  else if(node.kind === 'block')
+    selectBlockNode(node.data.id);
+};
+
+
+/* ---------------------------------------------------------
+   RESTORE BLOCK STRUCTURE
+--------------------------------------------------------- */
+
+const originalBlockRestore =
+  restore;
+
+
+restore=async function(){
+
+  await originalBlockRestore();
+
+
+  const records =
+    await dbGetAll();
+
+
+  state.blockNodes =
+    records
+      .filter(
+        r => r.type === 'blocknode'
+      );
+
+
+  state.blockStructure =
+    records.find(
+      r =>
+        r.type ===
+        'dateistruktur-hyperedge'
+    ) ||
+    null;
+
+
+  state.selectedBlockId =
+    null;
+
+
+  rebuildScene();
+};
+
+
+/* ---------------------------------------------------------
+   JSON / IPHONE SHARE
+--------------------------------------------------------- */
+
+async function exportBlockStructure(){
+
+  if(
+    !state.blockStructure?.export
+  ){
+
+    error(
+      'Noch keine Blockstruktur erzeugt.'
+    );
+
+    return;
+  }
+
+
+  const json =
+    JSON.stringify(
+      state.blockStructure.export,
+      null,
+      2
+    );
+
+
+  /*
+     Copyable list.
+  */
+
+  const list =
+    state.blockNodes
+      .map(
+        block =>
+          `${block.id} · ${block.block.name} · ` +
+          `${block.block.type} · ` +
+          `L${block.block.sourceRange.startLine}-` +
+          `L${block.block.sourceRange.endLine}`
+      )
+      .join('\n');
+
+
+  $('blockListOutput').value =
+    list;
+
+
+  const file =
+    new File(
+      [
+        json
+      ],
+      'projektversions-node-1.json',
+      {
+        type:
+          'application/json'
+      }
+    );
+
+
+  /*
+     iPhone / Share Sheet.
+     Wenn die GitHub-App als Share-Ziel angeboten wird,
+     kann die Datei direkt dorthin weitergegeben werden.
+  */
+
+  try{
+
+    if(
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({
+        files:[file]
+      })
+    ){
+
+      await navigator.share({
+
+        title:
+          'projektversions-node:1',
+
+        text:
+          'Blockstruktur / dateistruktur-hyperedge',
+
+        files:[
+          file
+        ]
+      });
+
+
+      log(
+        'Blockstruktur über iOS Share Sheet bereitgestellt.',
+        'ok'
+      );
+
+      return;
+    }
+
+  }catch(e){
+
+    if(e?.name === 'AbortError')
+      return;
+  }
+
+
+  /*
+     Fallback: normaler Download.
+  */
+
+  const url =
+    URL.createObjectURL(
+      file
+    );
+
+
+  const a =
+    document.createElement('a');
+
+  a.href = url;
+
+  a.download =
+    'projektversions-node-1.json';
+
+  document.body.appendChild(a);
+
+  a.click();
+
+  a.remove();
+
+  setTimeout(
+    () =>
+      URL.revokeObjectURL(url),
+    1000
+  );
+
+
+  log(
+    'JSON exportiert.',
+    'ok'
+  );
+}
+
+
+/* ---------------------------------------------------------
+   COPY BLOCK LIST
+--------------------------------------------------------- */
+
+async function copyBlockList(){
+
+  const text =
+    state.blockNodes
+      .map(
+        block =>
+          `${block.id} · ${block.block.name}`
+      )
+      .join('\n');
+
+
+  await navigator.clipboard.writeText(
+    text
+  );
+
+
+  log(
+    `${state.blockNodes.length} Blocknodes kopiert.`,
+    'ok'
+  );
+}
+
+
+/* ---------------------------------------------------------
+   UI
+--------------------------------------------------------- */
+
+const originalEvolutionUI =
+  renderEvolutionUI;
+
+
+renderEvolutionUI=function(){
+
+  originalEvolutionUI();
+
+
+  if(
+    $('blockStructurePanel')
+  )
+    return;
+
+
+  const panel =
+    document.createElement('div');
+
+
+  panel.id =
+    'blockStructurePanel';
+
+
+  panel.className =
+    'panel evoPanel';
+
+
+  panel.innerHTML = `
+
+    <div class="evoHead">
+
+      <strong>
+        BLOCK HYPERGRAPH
+      </strong>
+
+      <span id="blockCount">
+        0 BLOCKS
+      </span>
+
+    </div>
+
+
+    <div class="evoBody">
+
+      <div
+        style="
+          color:var(--muted);
+          font-size:8px;
+          line-height:1.5;
+          margin-bottom:7px;
+        "
+      >
+
+        dateistruktur-hyperedge
+        →
+        versionsnode:1
+        →
+        blocknodes
+
+        <br>
+
+        Jeder Funktionsblock besitzt
+        sein eigenes 384D-Embedding
+        und eine 3D-Position.
+
+      </div>
+
+
+      <button
+        id="buildBlockGraphBtn"
+        class="green"
+      >
+        BUILD BLOCK STRUCTURE · 3D GRAPH
+      </button>
+
+
+      <button
+        id="uploadBlockStructureBtn"
+        class="pink"
+      >
+        HOCHLADEN · JSON / IPHONE
+      </button>
+
+
+      <button
+        id="copyBlockListBtn"
+      >
+        COPY BLOCK NODE LIST
+      </button>
+
+
+      <textarea
+        id="blockListOutput"
+        readonly
+        style="
+          min-height:100px;
+          max-height:180px;
+          margin-top:7px;
+          font-size:8px;
+        "
+        placeholder="blocknode-Liste erscheint hier …"
+      ></textarea>
+
+    </div>
+  `;
+
+
+  const right =
+    document.querySelectorAll(
+      '.col'
+    )[1];
+
+
+  if(right){
+
+    right.appendChild(
+      panel
+    );
+  }
+
+
+  $('buildBlockGraphBtn')
+    .onclick =
+      async()=>{
+
+        const button =
+          $('buildBlockGraphBtn');
+
+        button.disabled =
+          true;
+
+        try{
+
+          const json =
+            await buildBlockStructure();
+
+
+          if(json){
+
+            $('blockCount')
+              .textContent =
+                `${state.blockNodes.length} BLOCKS`;
+
+            $('blockListOutput')
+              .value =
+                state.blockNodes
+                  .map(
+                    block =>
+                      `${block.id} · ` +
+                      `${block.block.name} · ` +
+                      `${block.block.type}`
+                  )
+                  .join('\n');
+          }
+
+        }catch(e){
+
+          error(
+            e?.message ||
+            String(e)
+          );
+
+          log(
+            `Blockstruktur fehlgeschlagen: ${e?.message || e}`,
+            'err'
+          );
+
+        }finally{
+
+          button.disabled =
+            false;
+        }
+      };
+
+
+  $('uploadBlockStructureBtn')
+    .onclick =
+      exportBlockStructure;
+
+
+  $('copyBlockListBtn')
+    .onclick =
+      copyBlockList;
+};
+
+
+/* ---------------------------------------------------------
+   EXISTING VERSION INSPECTOR PATCH
+--------------------------------------------------------- */
+
+const originalSelectVersion =
+  selectVersion;
+
+
+selectVersion=function(id){
+
+  state.selectedBlockId =
+    null;
+
+  originalSelectVersion(id);
+};
+
+
+/* ---------------------------------------------------------
+   STARTUP STATUS
+--------------------------------------------------------- */
+
+log(
+  'Block Hypergraph Layer bereit.',
+  'ok'
+);
 /* Make the version timeline visible in the scene after every selection. */
 
 /* =========================================================
