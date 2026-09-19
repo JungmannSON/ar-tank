@@ -6193,7 +6193,8 @@ async function buildBlockStructure(){
   */
 
   const structure = {
-
+  structure.versionNodePosition =
+  getPosition(version).slice();
     id:structureId,
 
     type:'dateistruktur-hyperedge',
