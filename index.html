@@ -6556,12 +6556,11 @@ graphNodes=function(){
             type:'versionsnode',
 
             geometry:{
-              pos3d:
-                getPosition(
-                  state.blockStructure
-                    .versionNode || {}
-                )
-            },
+  pos3d:
+    state.blockStructure?.versionNodePosition ||
+    state.blockStructure?.geometry?.pos3d ||
+    [0,0,0]
+},
 
             semantic:{
               embedding:{
