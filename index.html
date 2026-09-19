@@ -5433,10 +5433,10 @@ function renderEvolutionUI(){
     .evoPanel{border-top:1px solid var(--border);background:rgba(7,13,18,.96)}
     .evoSource{margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}.evoSource label{display:block;color:var(--muted);font-size:7px;letter-spacing:1px;margin-bottom:4px}.evoSource input[type=file]{width:100%;font-size:9px}.evoSourceNote{font-size:7px;color:var(--muted);line-height:1.35;margin-top:4px}.evoSource button{width:100%}.evoMetric{font-size:7px;color:var(--muted);margin-top:4px}.evoHead{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border)}
     .evoHead strong{color:var(--pink);font-size:9px;letter-spacing:2px}.evoHead span{color:var(--muted);font-size:8px;margin-left:auto}
-    .evoBody{padding:9px}.evoGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.evoBody input{margin:0}.evoBody button{margin-top:6px}.evoTimeline{display:flex;gap:8px;overflow-x:auto;padding:8px 2px 4px;touch-action:pan-x;white-space:nowrap}.evoCard{flex:0 0 120px;border:1px solid #53203c;background:#100914;color:#ff77b7;padding:6px;cursor:pointer}.evoCard.selected{border-color:var(--yellow);box-shadow:0 0 12px rgba(255,230,0,.18)}.evoCard b{display:block;font-size:8px}.evoCard small{display:block;color:var(--muted);font-size:7px;margin-top:3px;overflow:hidden;text-overflow:ellipsis}.evoActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px}.evoDiff{display:none;position:fixed;inset:10px;z-index:100;background:rgba(5,8,12,.98);border:1px solid var(--pink);padding:10px;overflow:auto}.evoDiff.visible{display:block}.evoDiff h3{color:var(--pink);font-size:10px;letter-spacing:2px;margin-bottom:8px}.evoDiff pre{white-space:pre-wrap;font:8px/1.4 ui-monospace,monospace}.evoDiff .add{color:var(--green)}.evoDiff .del{color:var(--danger)}.evoSceneTimeline{position:absolute;left:10px;right:10px;bottom:10px;height:52px;z-index:16;display:flex;gap:7px;align-items:center;overflow-x:auto;background:rgba(5,8,12,.84);border:1px solid var(--border);padding:6px;touch-action:pan-x}.evoSceneCard{flex:0 0 105px;height:38px;background:#100914;border:1px solid #53203c;color:var(--pink);padding:5px;cursor:pointer}.evoSceneCard.selected{border-color:var(--yellow);color:var(--yellow)}.evoSceneCard b{font-size:7px}.evoSceneCard small{display:block;font-size:6px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+    .evoBody{padding:9px}.evoGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.evoBody input{margin:0}.evoBody button{margin-top:6px}.evoTimeline{display:flex;gap:8px;overflow-x:auto;padding:8px 2px 4px;touch-action:pan-x;white-space:nowrap}.evoCard{flex:0 0 120px;border:1px solid #53203c;background:#100914;color:#ff77b7;padding:6px;cursor:pointer}.evoCard.selected{border-color:var(--yellow);box-shadow:0 0 12px rgba(255,230,0,.18)}.evoCard b{display:block;font-size:8px}.evoCard small{display:block;color:var(--muted);font-size:7px;margin-top:3px;overflow:hidden;text-overflow:ellipsis}.evoActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px}.evoDiff{display:none;position:fixed;inset:10px;z-index:100;background:rgba(5,8,12,.98);border:1px solid var(--pink);padding:10px;overflow:auto}.evoDiff.visible{display:block}.evoDiff h3{color:var(--pink);font-size:10px;letter-spacing:2px;margin-bottom:8px}.evoDiff pre{white-space:pre-wrap;font:8px/1.4 ui-monospace,monospace}.evoDiff .add{color:var(--green)}.evoDiff .del{color:var(--danger)}
     .memDelete{float:right;width:auto!important;margin:0!important;padding:3px 5px!important;border-color:var(--danger)!important;color:var(--danger)!important;font-size:7px!important}
     .rankTopK{display:flex;gap:6px;align-items:center;margin-bottom:6px}.rankTopK label{color:var(--muted);font-size:8px;white-space:nowrap}.rankTopK input{margin:0;width:70px}
-    @media(max-width:700px){.evoGrid{grid-template-columns:1fr}.evoActions{grid-template-columns:1fr 1fr}.evoSceneTimeline{bottom:8px}}
+    @media(max-width:700px){.evoGrid{grid-template-columns:1fr}.evoActions{grid-template-columns:1fr 1fr}}
   `;
   document.head.appendChild(style);
 
@@ -5449,7 +5449,6 @@ function renderEvolutionUI(){
   overlay.innerHTML=`<h3 id="diffTitle">CODE DIFF</h3><button id="closeDiffBtn">CLOSE DIFF</button><pre id="diffBody"></pre>`; document.body.appendChild(overlay);
 
   const scene=document.getElementById('scene');
-  const rail=document.createElement('div'); rail.id='versionTimelineOverlay'; rail.className='evoSceneTimeline'; scene.appendChild(rail);
 
   const q=document.getElementById('queryInput');
   if(q && !document.getElementById('topKInput')){
@@ -5498,7 +5497,8 @@ function renderVersions(){
   $('evoCount').textContent=`${versions.length} VERSION${versions.length===1?'':'S'}`;
   const html=versions.length?versions.map(v=>{const x=v.version||{};return `<button class="evoCard ${v.id===state.selectedVersionId?'selected':''}" data-id="${esc(v.id)}"><b>${esc(x.hash||v.id)}</b><small>${esc(x.message||'')}</small><small>+${x.diff?.added||0} / -${x.diff?.removed||0} · ${new Date(x.timestamp||v.created_at).toLocaleString('de-DE')}</small></button>`}).join(''):'<span style="color:var(--muted);font-size:8px">NO CODE HISTORY</span>';
   $('evoTimeline').innerHTML=html;
-  $('versionTimelineOverlay').innerHTML=versions.map(v=>{const x=v.version||{};return `<button class="evoSceneCard ${v.id===state.selectedVersionId?'selected':''}" data-id="${esc(v.id)}"><b>${esc(x.hash||v.id)}</b><small>${esc(x.message||'')}</small></button>`}).join('');
+  const overlay=document.getElementById('versionTimelineOverlay');
+  if(overlay){ overlay.innerHTML=versions.map(v=>{const x=v.version||{};return `<button class="evoSceneCard ${v.id===state.selectedVersionId?'selected':''}" data-id="${esc(v.id)}"><b>${esc(x.hash||v.id)}</b><small>${esc(x.message||'')}</small></button>`}).join(''); }
   document.querySelectorAll('.evoCard,.evoSceneCard').forEach(el=>el.onclick=()=>selectVersion(el.dataset.id));
 }
 
