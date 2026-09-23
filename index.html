@@ -5314,6 +5314,2495 @@ async function restore(){
 }
 
 
+
+/* =========================================================
+   CODE EVOLUTION LAYER — merged on top of 85f2a16 memory core
+   Memory architecture remains the source of truth.
+========================================================= */
+
+state.versions = [];
+state.selectedVersionId = null;
+state.diffA = null;
+state.diffB = null;
+
+/* Open the existing database without forcing a lower version. This keeps
+   older NEURAL_MEMORY databases usable and only creates the existing store
+   when the database is created for the first time. */
+openDB = function(){
+  if(state.db) return Promise.resolve(state.db);
+  return new Promise((resolve,reject)=>{
+    const request = indexedDB.open(CONFIG.DB_NAME);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if(!db.objectStoreNames.contains(CONFIG.DB_STORE)){
+        db.createObjectStore(CONFIG.DB_STORE,{keyPath:'id'});
+      }
+    };
+    request.onsuccess = () => {
+      state.db = request.result;
+      state.db.onversionchange = () => { try{state.db.close();}catch{} state.db=null; };
+      resolve(state.db);
+    };
+    request.onerror = () => reject(request.error);
+  });
+};
+
+function codeVersions(){
+  return state.versions.slice().sort((a,b)=>String(a.version?.timestamp||a.created_at||'').localeCompare(String(b.version?.timestamp||b.created_at||'')));
+}
+
+function graphNodes(){
+  return [
+    ...state.memories.map(data=>({kind:'memory',data})),
+    ...codeVersions().map(data=>({kind:'version',data}))
+  ];
+}
+
+function versionPosition(v){
+  return getPosition(v);
+}
+
+function codeSemanticNeighbors(vector){
+  return graphNodes()
+    .filter(node=>node.data?.semantic?.embedding?.vector && node.data?.semantic?.embedding?.vector.length)
+    .map(node=>({memory:node.data,score:cosine(vector,getVector(node.data)),distance:angularDistance(vector,getVector(node.data))}))
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,CONFIG.K_NEIGHBORS);
+}
+
+function makeVersionPosition(vector,parent){
+  const semanticAnchors=codeSemanticNeighbors(vector||[]);
+  if(semanticAnchors.length>=2){
+    const anchors=chooseAnchors(semanticAnchors);
+    return solveLocalPosition(vector,anchors);
+  }
+  if(parent){
+    const pp=getPosition(parent);
+    return [pp[0]+1.8,pp[1],pp[2]];
+  }
+  return [0,0,0];
+}
+
+function buildCodeSnapshot(){
+  const html=document.documentElement.cloneNode(true);
+  html.querySelectorAll('#codeEvolutionPanel,#codeDiffPanel,#versionTimelineOverlay').forEach(el=>el.remove());
+  html.querySelectorAll('#memoryList,#ranking,#log').forEach(el=>el.innerHTML='');
+  html.querySelectorAll('input,textarea').forEach(el=>el.value='');
+  return '<!DOCTYPE html>\n'+html.outerHTML;
+}
+
+function diffSnapshots(a,b){
+  const A=(a||'').split('\n'), B=(b||'').split('\n');
+  if(!a) return {added:B.length,removed:0,summary:`+${B.length} / -0`,lines:B.map((x,i)=>({type:'add',n:i+1,text:x}))};
+  let prefix=0; while(prefix< A.length && prefix<B.length && A[prefix]===B[prefix]) prefix++;
+  let suffix=0; while(suffix< A.length-prefix && suffix<B.length-prefix && A[A.length-1-suffix]===B[B.length-1-suffix]) suffix++;
+  const oldMid=A.slice(prefix,A.length-suffix), newMid=B.slice(prefix,B.length-suffix);
+  const lines=[];
+  oldMid.forEach((text,i)=>lines.push({type:'del',n:prefix+i+1,text}));
+  newMid.forEach((text,i)=>lines.push({type:'add',n:prefix+i+1,text}));
+  return {added:newMid.length,removed:oldMid.length,summary:`+${newMid.length} / -${oldMid.length}`,lines};
+}
+
+function addVersion({hash='',message='',source=null}={}){
+  const versions=codeVersions();
+  const parent=versions.at(-1)||null;
+  const timestamp=now();
+  const snapshot=source||buildCodeSnapshot();
+  const diff=diffSnapshots(parent?.version?.source||'',snapshot);
+  const semanticText=[`code version ${hash||'local'}`,message||'Code snapshot',`parent ${parent?.version?.hash||'none'}`,`diff ${diff.summary}`].join(' · ');
+  return embed(semanticText,'passage').then(vector=>{
+    const id=`VER-${String(state.versions.length+1).padStart(6,'0')}`;
+    const record={
+      id,type:'code_version',schema_version:'1.0',
+      content:{title:(message||'Code snapshot').slice(0,100),text:semanticText},
+      semantic:{embedding:{model:CONFIG.MODEL,dimensions:CONFIG.DIM,vector:vector.slice()}},
+      geometry:{pos3d:makeVersionPosition(vector,parent)},
+      positionLocked:true,created_at:timestamp,
+      version:{hash:hash||`local-${String(state.versions.length+1).padStart(3,'0')}`,message:message||'Code snapshot',timestamp,parentId:parent?.id||null,parentHash:parent?.version?.hash||null,diff,source:snapshot}
+    };
+    state.versions.push(record); state.selectedVersionId=id;
+    return dbPut(record).then(()=>record);
+  });
+}
+
+function renderEvolutionUI(){
+  if($('codeEvolutionPanel')) return;
+  const style=document.createElement('style');
+  style.id='codeEvolutionStyle';
+  style.textContent=`
+    .evoPanel{border-top:1px solid var(--border);background:rgba(7,13,18,.96)}
+    .evoSource{margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}.evoSource label{display:block;color:var(--muted);font-size:7px;letter-spacing:1px;margin-bottom:4px}.evoSource input[type=file]{width:100%;font-size:9px}.evoSourceNote{font-size:7px;color:var(--muted);line-height:1.35;margin-top:4px}.evoSource button{width:100%}.evoMetric{font-size:7px;color:var(--muted);margin-top:4px}.evoHead{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border)}
+    .evoHead strong{color:var(--pink);font-size:9px;letter-spacing:2px}.evoHead span{color:var(--muted);font-size:8px;margin-left:auto}
+    .evoBody{padding:9px}.evoGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.evoBody input{margin:0}.evoBody button{margin-top:6px}.evoTimeline{display:flex;gap:8px;overflow-x:auto;padding:8px 2px 4px;touch-action:pan-x;white-space:nowrap}.evoCard{flex:0 0 120px;border:1px solid #53203c;background:#100914;color:#ff77b7;padding:6px;cursor:pointer}.evoCard.selected{border-color:var(--yellow);box-shadow:0 0 12px rgba(255,230,0,.18)}.evoCard b{display:block;font-size:8px}.evoCard small{display:block;color:var(--muted);font-size:7px;margin-top:3px;overflow:hidden;text-overflow:ellipsis}.evoActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px}.evoDiff{display:none;position:fixed;inset:10px;z-index:100;background:rgba(5,8,12,.98);border:1px solid var(--pink);padding:10px;overflow:auto}.evoDiff.visible{display:block}.evoDiff h3{color:var(--pink);font-size:10px;letter-spacing:2px;margin-bottom:8px}.evoDiff pre{white-space:pre-wrap;font:8px/1.4 ui-monospace,monospace}.evoDiff .add{color:var(--green)}.evoDiff .del{color:var(--danger)}
+    .memDelete{float:right;width:auto!important;margin:0!important;padding:3px 5px!important;border-color:var(--danger)!important;color:var(--danger)!important;font-size:7px!important}
+    .rankTopK{display:flex;gap:6px;align-items:center;margin-bottom:6px}.rankTopK label{color:var(--muted);font-size:8px;white-space:nowrap}.rankTopK input{margin:0;width:70px}
+    @media(max-width:700px){.evoGrid{grid-template-columns:1fr}.evoActions{grid-template-columns:1fr 1fr}}
+  `;
+  document.head.appendChild(style);
+
+  const right=document.querySelector('.rightCol')||document.querySelectorAll('.col')[1]||document.querySelector('.col');
+  const panel=document.createElement('div'); panel.id='codeEvolutionPanel'; panel.className='panel evoPanel';
+  panel.innerHTML=`<div class="evoHead"><strong>CODE EVOLUTION</strong><span id="evoCount">0 VERSIONS</span></div><div class="evoBody"><div class="evoGrid"><input id="commitHashInput" placeholder="commit · 85f2a16"><input id="commitMsgInput" placeholder="message · Update memory core"></div><div class="evoSource"><label>REAL PROJECT SOURCE — VERSION TO VISUALIZE</label><input id="projectSourceInput" type="file" accept=".html,.htm,.js,.mjs,.ts,.tsx,.jsx,.css,.json,.md,.txt,.py,.yaml,.yml"><div id="projectSourceNote" class="evoSourceNote">Wähle die echte Projektdatei dieser Commit-Version. Der Snapshot wird als Code-Version gespeichert — nicht als laufender DOM.</div><button id="importVersionBtn" class="pink">IMPORT PROJECT VERSION</button><div id="evoSourceMetric" class="evoMetric"></div></div><button id="commitBtn">CREATE LOCAL SNAPSHOT</button><div id="evoTimeline" class="evoTimeline"></div><div class="evoActions"><button id="diffABtn">SET DIFF A</button><button id="diffBBtn">SET DIFF B</button><button id="showDiffBtn" class="pink">SHOW DIFF</button></div></div>`;
+  right.appendChild(panel);
+
+  const overlay=document.createElement('div'); overlay.id='codeDiffPanel'; overlay.className='evoDiff';
+  overlay.innerHTML=`<h3 id="diffTitle">CODE DIFF</h3><button id="closeDiffBtn">CLOSE DIFF</button><pre id="diffBody"></pre>`; document.body.appendChild(overlay);
+
+  const scene=document.getElementById('scene');
+
+  const q=document.getElementById('queryInput');
+  if(q && !document.getElementById('topKInput')){
+    const wrap=document.createElement('div'); wrap.className='rankTopK'; wrap.innerHTML='<label>TOP-K</label><input id="topKInput" type="number" min="1" max="50" value="5">'; q.parentNode.insertBefore(wrap,q);
+  }
+
+  $('projectSourceInput').onchange=async()=>{
+    const file=$('projectSourceInput').files?.[0];
+    if(!file)return;
+    try{
+      const source=await file.text();
+      $('evoSourceMetric').textContent=`SOURCE: ${file.name} · ${source.length.toLocaleString('de-DE')} Zeichen · ${source.split('\n').length.toLocaleString('de-DE')} Zeilen`;
+      $('projectSourceInput').dataset.source=source;
+      if(!$('commitMsgInput').value.trim()) $('commitMsgInput').value=`Import ${file.name}`;
+      log(`Projektquelle geladen: ${file.name}`,'info');
+    }catch(e){error(`Quelldatei konnte nicht gelesen werden: ${e?.message||e}`);}
+  };
+  $('importVersionBtn').onclick=async()=>{
+    const source=$('projectSourceInput').dataset.source||'';
+    if(!source){error('Bitte zuerst die echte Projektdatei dieser Version auswählen.');return;}
+    $('importVersionBtn').disabled=true;
+    try{
+      const hash=$('commitHashInput').value.trim();
+      const message=$('commitMsgInput').value.trim();
+      const v=await addVersion({hash,message,source});
+      renderVersions(); rebuildScene(); selectVersion(v.id);
+      $('commitHashInput').value=''; $('commitMsgInput').value=''; $('projectSourceInput').value=''; delete $('projectSourceInput').dataset.source; $('evoSourceMetric').textContent='';
+      log(`${v.version.hash} · echte Projektversion visualisiert · ${v.version.diff.summary}`,'ok');
+    }catch(e){error(`Import fehlgeschlagen: ${e?.message||e}`);log(`Import fehlgeschlagen: ${e?.message||e}`,'err');}
+    finally{$('importVersionBtn').disabled=false;}
+  };
+  $('commitBtn').onclick=async()=>{
+    $('commitBtn').disabled=true;
+    try{const v=await addVersion({hash:$('commitHashInput').value.trim(),message:$('commitMsgInput').value.trim()}); renderVersions(); rebuildScene(); selectVersion(v.id); $('commitHashInput').value=''; $('commitMsgInput').value=''; log(`${v.version.hash} gespeichert · ${v.version.diff.summary}`,'ok');}
+    catch(e){error(`Snapshot fehlgeschlagen: ${e?.message||e}`);log(`Snapshot fehlgeschlagen: ${e?.message||e}`,'err');}
+    finally{$('commitBtn').disabled=false;}
+  };
+  $('diffABtn').onclick=()=>{if(state.selectedVersionId){state.diffA=state.selectedVersionId; renderVersions(); log(`DIFF A = ${state.diffA}`,'info')}};
+  $('diffBBtn').onclick=()=>{if(state.selectedVersionId){state.diffB=state.selectedVersionId; renderVersions(); log(`DIFF B = ${state.diffB}`,'info')}};
+  $('showDiffBtn').onclick=showDiff;
+  $('closeDiffBtn').onclick=()=>$('codeDiffPanel').classList.remove('visible');
+}
+
+function renderVersions(){
+  const versions=codeVersions();
+  $('evoCount').textContent=`${versions.length} VERSION${versions.length===1?'':'S'}`;
+  const html=versions.length?versions.map(v=>{const x=v.version||{};return `<button class="evoCard ${v.id===state.selectedVersionId?'selected':''}" data-id="${esc(v.id)}"><b>${esc(x.hash||v.id)}</b><small>${esc(x.message||'')}</small><small>+${x.diff?.added||0} / -${x.diff?.removed||0} · ${new Date(x.timestamp||v.created_at).toLocaleString('de-DE')}</small></button>`}).join(''):'<span style="color:var(--muted);font-size:8px">NO CODE HISTORY</span>';
+  $('evoTimeline').innerHTML=html;
+  const overlay=document.getElementById('versionTimelineOverlay');
+  if(overlay){ overlay.innerHTML=versions.map(v=>{const x=v.version||{};return `<button class="evoSceneCard ${v.id===state.selectedVersionId?'selected':''}" data-id="${esc(v.id)}"><b>${esc(x.hash||v.id)}</b><small>${esc(x.message||'')}</small></button>`}).join(''); }
+  document.querySelectorAll('.evoCard,.evoSceneCard').forEach(el=>el.onclick=()=>selectVersion(el.dataset.id));
+}
+
+function selectVersion(id){
+  const v=state.versions.find(x=>x.id===id); if(!v)return;
+  state.selectedVersionId=id; state.selectedId=null;
+  renderVersions(); renderMemoryList(); renderVersionInspector(v); rebuildScene();
+}
+
+function renderVersionInspector(v){
+  const x=v.version||{};
+  $('inspector').classList.add('visible');
+  const h=$('inspector').querySelector('h3'); if(h)h.textContent='CODE VERSION INSPECTOR';
+  $('inspId').textContent=`${x.hash||v.id}`;
+  $('inspText').textContent=x.message||v.content?.text||'';
+  const p=getPosition(v);
+  const sourceLines=(x.source||'').split('\n').length;
+  $('inspMeta').innerHTML=`TYPE: code_version<br>VERSION: ${esc(x.hash||v.id)}<br>TIME: ${esc(x.timestamp||v.created_at||'')}<br>PARENT: ${esc(x.parentHash||'—')}<br>CHANGES: +${x.diff?.added||0} / -${x.diff?.removed||0}<br>SOURCE: ${sourceLines.toLocaleString('de-DE')} lines / ${(x.source||'').length.toLocaleString('de-DE')} chars<br>POSITION: [${p.map(n=>Number(n).toFixed(3)).join(', ')}]<br>DIFF A: ${esc(state.diffA||'—')}<br>DIFF B: ${esc(state.diffB||'—')}`;
+  $('inspAnchors').innerHTML=`<button id="deleteVersionBtn" style="border-color:var(--danger);color:var(--danger)">DELETE VERSION</button>`;
+  $('deleteVersionBtn').onclick=()=>deleteVersion(v.id);
+}
+
+async function deleteVersion(id){
+  const v=state.versions.find(x=>x.id===id); if(!v)return;
+  if(!confirm(`Code-Version ${v.version?.hash||id} löschen?`))return;
+  state.versions=state.versions.filter(x=>x.id!==id);
+  if(state.diffA===id)state.diffA=null; if(state.diffB===id)state.diffB=null;
+  if(state.selectedVersionId===id)state.selectedVersionId=null;
+  await dbDelete(id); renderVersions(); rebuildScene(); $('inspector').classList.remove('visible'); log(`${id} gelöscht.`,'warn');
+}
+
+async function deleteMemory(id){
+  const m=state.memories.find(x=>x.id===id); if(!m)return;
+  if(!confirm(`Memory ${id} löschen?`))return;
+  state.memories=state.memories.filter(x=>x.id!==id);
+  await dbDelete(id);
+  state.selectedId=null;
+  renderMemoryList(); $('memoryCount').textContent=state.memories.length; rebuildScene(); $('inspector').classList.remove('visible'); log(`${id} gelöscht.`,'warn');
+}
+
+async function dbDelete(id){
+  const db=await openDB();
+  return new Promise((resolve,reject)=>{const tx=db.transaction(CONFIG.DB_STORE,'readwrite');tx.objectStore(CONFIG.DB_STORE).delete(id);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);});
+}
+
+function showDiff(){
+  if(!state.diffA||!state.diffB||state.diffA===state.diffB){error('Bitte zwei unterschiedliche Versionen für DIFF A und DIFF B setzen.');return;}
+  const a=state.versions.find(v=>v.id===state.diffA), b=state.versions.find(v=>v.id===state.diffB); if(!a||!b)return;
+  const da=diffSnapshots(a.version?.source||'',b.version?.source||'');
+  $('diffTitle').textContent=`DIFF ${a.version?.hash||a.id} → ${b.version?.hash||b.id} · ${da.summary}`;
+  const lines=da.lines.length?da.lines.map(x=>`<span class="${x.type}">${x.type==='add'?'+':'-'} ${esc(x.text)}</span>`).join('\n'):'NO CHANGES';
+  $('diffBody').innerHTML=lines;
+  $('codeDiffPanel').classList.add('visible');
+}
+
+/* Existing memory inspector gets a destructive node action without changing
+   the original memory record schema. */
+const originalRenderInspector=renderInspector;
+renderInspector=function(memory,score=null){
+  originalRenderInspector(memory,score);
+  if(!memory)return;
+  const host=$('inspAnchors');
+  if(!host)return;
+  host.innerHTML += `<button id="deleteMemoryBtn" class="memDelete">DELETE NODE</button>`;
+  $('deleteMemoryBtn').onclick=()=>deleteMemory(memory.id);
+  const h=$('inspector').querySelector('h3'); if(h)h.textContent='MEMORY INSPECTOR';
+};
+
+/* Top-K retrieval: same 384D cosine metric, but only the requested K are
+   surfaced as retrieval results. */
+runSearch=async function(){
+  const query=$('queryInput').value.trim(); if(!query||!state.memories.length)return;
+  const k=Math.max(1,Math.min(50,Number($('topKInput')?.value)||5));
+  $('topKInput').value=k; state.queryVector=null; stage('stageSearch','active'); error('');
+  try{
+    const qv=await embed(query,'query'); state.queryVector=qv;
+    const all=state.memories.map(memory=>({memory,score:cosine(qv,getVector(memory))})).sort((a,b)=>b.score-a.score);
+    const results=all.slice(0,k);
+    $('ranking').innerHTML=results.map((r,i)=>{const pct=clamp(((r.score+1)/2)*100,0,100);const text=r.memory.content?.text||r.memory.text||'';return `<div class="rankItem" data-id="${esc(r.memory.id)}"><div class="rankScore">#${i+1} · COS ${r.score.toFixed(6)}</div><div class="rankText">${esc(text)}</div><div class="bar"><div class="barFill" style="width:${pct}%"></div></div></div>`}).join('');
+    $('ranking').querySelectorAll('.rankItem').forEach(el=>el.onclick=()=>{const r=results.find(x=>x.memory.id===el.dataset.id);if(r){selectMemory(r.memory.id);renderInspector(r.memory,r.score);}});
+    stage('stageSearch','done');
+    if(results[0]){selectMemory(results[0].memory.id);renderInspector(results[0].memory,results[0].score);log(`TOP-${k}: ${results.map(x=>x.memory.id).join(', ')}`,'ok');}
+  }catch(e){stage('stageSearch',null);error(e?.message||String(e));log(`Search fehlgeschlagen: ${e?.message||e}`,'err');}
+};
+
+/* Combined point cloud: cyan memory nodes + pink code nodes in the SAME
+   anchored R³ scene. */
+makePoints=function(){
+  if(pointsMesh){scene.remove(pointsMesh);disposeObject(pointsMesh);pointsMesh=null;}
+  const nodes=graphNodes(); if(!nodes.length)return;
+  const positions=new Float32Array(nodes.length*3),selected=new Float32Array(nodes.length),kind=new Float32Array(nodes.length);
+  nodes.forEach((node,i)=>{const p=getPosition(node.data);positions[i*3]=p[0];positions[i*3+1]=p[1];positions[i*3+2]=p[2];kind[i]=node.kind==='version'?1:0;selected[i]=(node.kind==='memory'?node.data.id===state.selectedId:node.data.id===state.selectedVersionId)?1:0;});
+  const geometry=new THREE.BufferGeometry(); geometry.setAttribute('position',new THREE.BufferAttribute(positions,3)); geometry.setAttribute('aSelected',new THREE.BufferAttribute(selected,1)); geometry.setAttribute('aKind',new THREE.BufferAttribute(kind,1));
+  const material=new THREE.ShaderMaterial({vertexShader:`attribute float aSelected;attribute float aKind;varying float vSelected;varying float vKind;void main(){vSelected=aSelected;vKind=aKind;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;gl_PointSize=(aKind>.5?9.:7.)*(260./max(40.,-mv.z));}`,fragmentShader:`varying float vSelected;varying float vKind;void main(){vec2 p=gl_PointCoord-.5;float r=length(p);if(r>.5)discard;float glow=1.-smoothstep(.10,.5,r);float core=1.-smoothstep(.02,.23,r);vec3 cyan=vec3(0.,.9,1.);vec3 pink=vec3(1.,.18,.58);vec3 yellow=vec3(1.,.9,0.);vec3 c=vKind>.5?(vSelected>.5?yellow:pink):(vSelected>.5?yellow:cyan);gl_FragColor=vec4(c,max(core,glow*.65));}`,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});
+  pointsMesh=new THREE.Points(geometry,material); pointsMesh.userData.nodes=nodes; scene.add(pointsMesh);
+};
+
+rebuildLinks=function(){
+  while(linesGroup.children.length){const o=linesGroup.children.pop();disposeObject(o);}
+  if(!state.showLinks)return;
+  const sem=[];
+  for(let i=0;i<state.memories.length;i++)for(let j=i+1;j<state.memories.length;j++){const a=state.memories[i],b=state.memories[j];if(cosine(getVector(a),getVector(b))>=CONFIG.EDGE_THRESHOLD){const pa=getPosition(a),pb=getPosition(b);sem.push(...pa,...pb);}}
+  if(sem.length){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(sem,3));linesGroup.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x00e5ff,transparent:true,opacity:.24,depthWrite:false})));}
+  const vs=codeVersions(); const temporal=[];
+  for(let i=1;i<vs.length;i++){const a=getPosition(vs[i-1]),b=getPosition(vs[i]);temporal.push(...a,...b);}
+  if(temporal.length){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(temporal,3));linesGroup.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0xff2d95,transparent:true,opacity:.82,depthWrite:false})));}
+};
+
+rebuildScene=function(){makePoints();rebuildLinks();$('hudStatus').textContent=(state.memories.length||state.versions.length)?`${state.memories.length} MEM · ${state.versions.length} CODE VERSIONS · SEMANTIC R³ + TEMPORAL PATH`:'MEMORY SPACE EMPTY';};
+
+getIntersections=function(event){if(!pointsMesh)return[];const rect=renderer.domElement.getBoundingClientRect();mouse.x=((event.clientX-rect.left)/rect.width)*2-1;mouse.y=-((event.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(mouse,camera);return raycaster.intersectObject(pointsMesh);};
+onPointerDown=function(event){if(event.button!==0)return;const hits=getIntersections(event);if(!hits.length)return;const node=pointsMesh.userData.nodes[hits[0].index];if(node.kind==='memory')selectMemory(node.data.id);else selectVersion(node.data.id);};
+onDoubleClick=function(event){const hits=getIntersections(event);if(!hits.length)return;const node=pointsMesh.userData.nodes[hits[0].index];const p=getPosition(node.data);controls.target.set(p[0],p[1],p[2]);const dir=new THREE.Vector3().subVectors(camera.position,controls.target).normalize();camera.position.copy(controls.target).addScaledVector(dir,4);controls.update();if(node.kind==='memory')selectMemory(node.data.id);else selectVersion(node.data.id);};
+
+/* Restore both record types from the same IndexedDB object store. */
+restore=async function(){
+  log('Lese NEURAL MEMORY + CODE EVOLUTION aus IndexedDB …','info');
+  const records=await dbGetAll();
+  state.memories=records.filter(r=>r.type==='memory'||!r.type); state.versions=records.filter(r=>r.type==='code_version'||r.type==='code-version');
+  state.memories.sort((a,b)=>String(a.id).localeCompare(String(b.id),undefined,{numeric:true}));
+  state.versions.sort((a,b)=>String(a.version?.timestamp||a.created_at||'').localeCompare(String(b.version?.timestamp||b.created_at||'')));
+  for(const memory of state.memories){const vector=getVector(memory),position=getPosition(memory);if(!memory.schema_version)memory.schema_version='1.1';if(!memory.type)memory.type='memory';if(!memory.content)memory.content={title:(memory.text||'').slice(0,80),text:memory.text||''};if(!memory.semantic)memory.semantic={};if(!memory.semantic.embedding)memory.semantic.embedding={model:CONFIG.MODEL,dimensions:vector.length,vector:vector.slice()};if(!memory.geometry)memory.geometry={};memory.geometry.pos3d=position.slice();if(!Array.isArray(memory.anchors))memory.anchors=[];memory.positionLocked=true;}
+  if(state.memories.length){state.nextId=Math.max(...state.memories.map(m=>Number(String(m.id).split('-').pop())||0))+1;}
+  $('memoryCount').textContent=state.memories.length; $('dimension').textContent=state.memories.length?CONFIG.DIM:'—'; renderMemoryList(); renderVersions(); rebuildScene();
+  log(`${state.memories.length} Memories · ${state.versions.length} Code-Versionen geladen.`,'ok');
+};
+
+/* Boot-time UI additions. */
+renderEvolutionUI();
+
+/* Patch existing memory selection so version selection and memory selection
+   remain mutually exclusive. */
+const originalSelectMemory=selectMemory;
+selectMemory=function(id){state.selectedVersionId=null; originalSelectMemory(id); renderVersions();};
+/* =========================================================
+   BLOCK STRUCTURE / DATEISTRUKTUR-HYPEREDGE
+   ---------------------------------------------------------
+   dateistruktur-hyperedge
+          |
+          +--> versionsnode:1
+                    |
+                    +--> blocknode:1
+                    +--> blocknode:2
+                    +--> blocknode:3
+                    +--> ...
+   Jeder Block besitzt sein eigenes 384D-Embedding und
+   eine daraus abgeleitete 3D-Position.
+========================================================= */
+
+state.blockNodes = [];
+state.blockStructure = null;
+state.selectedBlockId = null;
+
+
+/* ---------------------------------------------------------
+   BALANCED BLOCK EXTRACTION
+--------------------------------------------------------- */
+
+function findBalancedBlock(source, openIndex){
+  let depth = 0;
+  let quote = null;
+  let escaped = false;
+  let lineComment = false;
+  let blockComment = false;
+
+  for(let i=openIndex;i<source.length;i++){
+    const c = source[i];
+    const n = source[i+1];
+
+    if(lineComment){
+      if(c === '\n') lineComment = false;
+      continue;
+    }
+
+    if(blockComment){
+      if(c === '*' && n === '/'){
+        blockComment = false;
+        i++;
+      }
+      continue;
+    }
+
+    if(quote){
+      if(escaped){
+        escaped = false;
+        continue;
+      }
+
+      if(c === '\\'){
+        escaped = true;
+        continue;
+      }
+
+      if(c === quote){
+        quote = null;
+      }
+
+      continue;
+    }
+
+    if(c === '/' && n === '/'){
+      lineComment = true;
+      i++;
+      continue;
+    }
+
+    if(c === '/' && n === '*'){
+      blockComment = true;
+      i++;
+      continue;
+    }
+
+    if(c === '"' || c === "'" || c === '`'){
+      quote = c;
+      continue;
+    }
+
+    if(c === '{'){
+      depth++;
+      continue;
+    }
+
+    if(c === '}'){
+      depth--;
+
+      if(depth === 0){
+        return i + 1;
+      }
+    }
+  }
+
+  return source.length;
+}
+
+
+/* ---------------------------------------------------------
+   SOURCE → FUNKTIONSBLÖCKE
+--------------------------------------------------------- */
+
+function extractFunctionBlocks(source){
+
+  const blocks = [];
+  const seen = new Set();
+
+  const patterns = [
+
+    {
+      type:'function',
+      regex:/\b(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*$begin:math:text$\[\^\)\]\*$end:math:text$\s*\{/g
+    },
+
+    {
+      type:'class',
+      regex:/\bclass\s+([A-Za-z_$][\w$]*)[^{]*\{/g
+    },
+
+    {
+      type:'arrow',
+      regex:/\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?(?:$begin:math:text$\[\^\)\]\*$end:math:text$|[A-Za-z_$][\w$]*)\s*=>\s*\{/g
+    }
+  ];
+
+  for(const pattern of patterns){
+
+    let match;
+
+    while((match = pattern.regex.exec(source))){
+
+      const name = match[1];
+      const open = source.indexOf('{',match.index);
+
+      if(open < 0) continue;
+
+      const end = findBalancedBlock(source,open);
+
+      const key =
+        `${pattern.type}:${name}:${match.index}`;
+
+      if(seen.has(key)) continue;
+      seen.add(key);
+
+      const content =
+        source.slice(match.index,end);
+
+      const startLine =
+        source.slice(0,match.index).split('\n').length;
+
+      const endLine =
+        source.slice(0,end).split('\n').length;
+
+      blocks.push({
+        type:pattern.type,
+        name,
+        content,
+        startOffset:match.index,
+        endOffset:end,
+        startLine,
+        endLine
+      });
+    }
+  }
+
+
+  /*
+     Fallback:
+     Wenn keine Funktionen erkannt werden, zerlegen wir
+     die Datei in echte zusammenhängende Codeblöcke.
+  */
+
+  if(!blocks.length){
+
+    const lines = source.split('\n');
+    const chunkSize = 40;
+
+    for(let i=0;i<lines.length;i+=chunkSize){
+
+      const chunk =
+        lines
+          .slice(i,i+chunkSize)
+          .join('\n');
+
+      if(!chunk.trim()) continue;
+
+      blocks.push({
+        type:'source_chunk',
+        name:`source:${i+1}`,
+        content:chunk,
+        startLine:i+1,
+        endLine:Math.min(
+          lines.length,
+          i+chunkSize
+        )
+      });
+    }
+  }
+
+
+  /*
+     Stabil sortieren.
+  */
+
+  blocks.sort(
+    (a,b)=>
+      a.startOffset - b.startOffset
+  );
+
+
+  return blocks;
+}
+
+
+/* ---------------------------------------------------------
+   DETERMINISTIC BLOCK POSITION
+--------------------------------------------------------- */
+
+function makeBlockPosition(
+  vector,
+  version,
+  index,
+  total
+){
+
+  const parent =
+    getPosition(version);
+
+  let semanticPosition =
+    parent.slice();
+
+  /*
+     Bestehende 3D-Embedding-Geometrie verwenden.
+     Wir benutzen dieselbe mathematische Pipeline wie
+     die vorhandenen Memory-/Version-Nodes.
+  */
+
+  const anchors =
+    [
+      ...state.memories,
+      ...codeVersions()
+    ]
+      .filter(
+        node =>
+          getVector(node).length === CONFIG.DIM
+      )
+      .sort(
+        (a,b)=>
+          cosine(vector,getVector(b)) -
+          cosine(vector,getVector(a))
+      )
+      .slice(0,CONFIG.ANCHOR_COUNT);
+
+
+  if(anchors.length >= 2){
+
+    semanticPosition =
+      solveLocalPosition(
+        vector,
+        anchors
+      );
+  }
+
+
+  /*
+     Leichte deterministische Streuung um den
+     Versionsknoten, damit identische/nahe Funktionen
+     nicht exakt aufeinander liegen.
+  */
+
+  const angle =
+    (index / Math.max(total,1)) *
+    Math.PI * 2;
+
+  const radius =
+    1.15 +
+    Math.min(
+      3.5,
+      Math.sqrt(total) * .22
+    );
+
+  const radial = [
+    Math.cos(angle) * radius,
+    Math.sin(angle) * radius * .65,
+    Math.cos(angle * 1.7) * radius * .45
+  ];
+
+
+  /*
+     70% semantische Position
+     30% lokale Strukturposition
+  */
+
+  return [
+    semanticPosition[0] * .70 +
+      (parent[0] + radial[0]) * .30,
+
+    semanticPosition[1] * .70 +
+      (parent[1] + radial[1]) * .30,
+
+    semanticPosition[2] * .70 +
+      (parent[2] + radial[2]) * .30
+  ];
+}
+
+
+/* ---------------------------------------------------------
+   BLOCK STRUCTURE BUILD
+--------------------------------------------------------- */
+
+async function buildBlockStructure(){
+
+  const version =
+    state.versions.find(
+      v => v.id === state.selectedVersionId
+    ) ||
+    codeVersions().at(-1);
+
+
+  const source =
+    version?.version?.source ||
+    $('projectSourceInput')?.dataset?.source ||
+    '';
+
+
+  if(!source.trim()){
+
+    error(
+      'Keine Projektquelle vorhanden. ' +
+      'Bitte zuerst eine echte Projektversion importieren.'
+    );
+
+    return null;
+  }
+
+
+  const versionNodeId =
+    'versionsnode:1';
+
+  const structureId =
+    'dateistruktur-hyperedge';
+
+
+  log(
+    'Baue komplette Blockstruktur …',
+    'info'
+  );
+
+
+  /*
+     Alte Blockstruktur entfernen.
+  */
+
+  const oldRecords =
+    await dbGetAll();
+
+  const oldBlocks =
+    oldRecords.filter(
+      r =>
+        r.type === 'blocknode' ||
+        r.type === 'dateistruktur-hyperedge'
+    );
+
+
+  for(const record of oldBlocks){
+    await dbDelete(record.id);
+  }
+
+
+  /*
+     Source → Funktionen
+  */
+
+  const extracted =
+    extractFunctionBlocks(source);
+
+
+  if(!extracted.length){
+
+    error(
+      'Keine Funktions-/Strukturblöcke erkannt.'
+    );
+
+    return null;
+  }
+
+
+  /*
+     Embeddings erzeugen.
+  */
+
+  await loadModel();
+
+
+  const blockNodes = [];
+
+
+  for(
+    let i=0;
+    i<extracted.length;
+    i++
+  ){
+
+    const block =
+      extracted[i];
+
+    const semanticText =
+      [
+        'code block',
+        block.type,
+        block.name,
+        block.content
+      ].join(': ');
+
+
+    const vector =
+      await embed(
+        semanticText,
+        'passage'
+      );
+
+
+    const id =
+      `blocknode:${i+1}`;
+
+
+    const record = {
+
+      id,
+
+      type:'blocknode',
+
+      schema_version:'1.0',
+
+      content:{
+        title:block.name,
+        text:block.content
+      },
+
+      block:{
+        name:block.name,
+        type:block.type,
+        sourceRange:{
+          startLine:block.startLine,
+          endLine:block.endLine,
+          startOffset:block.startOffset,
+          endOffset:block.endOffset
+        }
+      },
+
+      semantic:{
+        embedding:{
+          model:CONFIG.MODEL,
+          dimensions:CONFIG.DIM,
+          vector:vector.slice()
+        }
+      },
+
+      geometry:{
+        pos3d:
+          makeBlockPosition(
+            vector,
+            version,
+            i,
+            extracted.length
+          )
+      },
+
+      parentId:
+        versionNodeId,
+
+      sourceVersionId:
+        version?.id || null,
+
+      hyperedge:{
+        id:
+          `hyperedge:${versionNodeId}:${id}`,
+
+        type:'contains',
+
+        source:
+          versionNodeId,
+
+        targets:[
+          id
+        ]
+      },
+
+      created_at:now(),
+
+      positionLocked:true
+    };
+
+
+    blockNodes.push(record);
+
+    log(
+      `${id} ← ${block.name}`,
+      'info'
+    );
+  }
+
+
+  /*
+     Versionsnode.
+  */
+
+  const versionNode = {
+
+    id:versionNodeId,
+
+    type:'versionsnode',
+
+    schema_version:'1.0',
+
+    content:{
+      title:'VERSION 1',
+      text:
+        version?.version?.message ||
+        'Project version 1'
+    },
+
+    geometry:{
+      pos3d:
+        getPosition(version)
+          .slice()
+    },
+
+    sourceVersionId:
+      version?.id || null,
+
+    hyperedges:
+      blockNodes.map(
+        block => ({
+          id:
+            `hyperedge:${versionNodeId}:${block.id}`,
+
+          type:'contains',
+
+          source:
+            versionNodeId,
+
+          targets:[
+            block.id
+          ]
+        })
+      ),
+
+    positionLocked:true
+  };
+
+
+  /*
+     Root Hyperedge.
+  */
+
+  const structure = {
+
+    id:structureId,
+
+    type:'dateistruktur-hyperedge',
+
+    schema_version:'1.0',
+
+    content:{
+      title:'DATEISTRUKTUR HYPEREDGE',
+
+      text:
+        `${blockNodes.length} Funktionsblöcke`
+    },
+
+    geometry:{
+      pos3d:[
+        getPosition(version)[0],
+        getPosition(version)[1] + 1.2,
+        getPosition(version)[2]
+      ]
+    },
+
+    hyperedges:[
+
+      {
+        id:
+          `hyperedge:${structureId}:${versionNodeId}`,
+
+        type:'contains-version',
+
+        source:
+          structureId,
+
+        targets:[
+          versionNodeId
+        ]
+      },
+
+      ...versionNode.hyperedges
+    ],
+
+    versionNodeId,
+
+    sourceVersionId:
+      version?.id || null,
+
+    blockCount:
+      blockNodes.length,
+
+    created_at:now()
+  };
+
+
+  /*
+     Semantische Block↔Block-Kanten.
+  */
+
+  for(let i=0;i<blockNodes.length;i++){
+
+    const a =
+      blockNodes[i];
+
+    const neighbors =
+      blockNodes
+        .filter(
+          (_,j)=>j!==i
+        )
+        .map(
+          b => ({
+            node:b,
+            score:
+              cosine(
+                getVector(a),
+                getVector(b)
+              )
+          })
+        )
+        .filter(
+          x =>
+            x.score >=
+            CONFIG.EDGE_THRESHOLD
+        )
+        .sort(
+          (x,y)=>
+            y.score-x.score
+        )
+        .slice(0,4);
+
+
+    a.hyperedges.semantic =
+      neighbors.map(
+        x => ({
+          id:
+            `semantic:${a.id}:${x.node.id}`,
+
+          type:'semantic',
+
+          source:a.id,
+
+          targets:[
+            x.node.id
+          ],
+
+          similarity:
+            x.score
+        })
+      );
+  }
+
+
+  /*
+     Persistenz.
+  */
+
+  await dbPutMany([
+    structure,
+    versionNode,
+    ...blockNodes
+  ]);
+
+
+  state.blockStructure =
+    structure;
+
+  state.blockNodes =
+    blockNodes;
+
+  state.selectedBlockId =
+    null;
+
+
+  /*
+     JSON für Upload / GitHub.
+  */
+
+  const json = {
+
+    schema_version:'1.0',
+
+    type:'dateistruktur-hyperedge',
+
+    id:structureId,
+
+    versionNode,
+
+    blocks:blockNodes,
+
+    hyperedges:
+      structure.hyperedges,
+
+    generated_at:now(),
+
+    sourceVersion:{
+      id:version?.id || null,
+      hash:
+        version?.version?.hash ||
+        null
+    }
+  };
+
+
+  state.blockStructure.export =
+    json;
+
+
+  rebuildScene();
+
+  renderBlockStructureUI();
+
+
+  log(
+    `BLOCK GRAPH ONLINE · ${blockNodes.length} BLOCKNODES · ${structure.hyperedges.length} HYPEREDGES`,
+    'ok'
+  );
+
+
+  return json;
+}
+
+
+/* ---------------------------------------------------------
+   INSPECTOR FOR BLOCKNODE
+--------------------------------------------------------- */
+
+function selectBlockNode(id){
+
+  const block =
+    state.blockNodes.find(
+      x => x.id === id
+    );
+
+  if(!block)return;
+
+
+  state.selectedBlockId =
+    id;
+
+  state.selectedId =
+    null;
+
+  state.selectedVersionId =
+    null;
+
+
+  const vector =
+    getVector(block);
+
+  const p =
+    getPosition(block);
+
+
+  $('inspector')
+    .classList
+    .add('visible');
+
+
+  const h =
+    $('inspector')
+      .querySelector('h3');
+
+  if(h){
+    h.textContent =
+      'BLOCKNODE INSPECTOR';
+  }
+
+
+  $('inspId').textContent =
+    block.id;
+
+
+  $('inspText').textContent =
+    block.content?.text ||
+    '';
+
+
+  $('inspMeta').innerHTML = `
+
+    TYPE:
+    ${esc(block.block?.type || 'function')}
+
+    <br>
+
+    NAME:
+    ${esc(block.block?.name || '')}
+
+    <br>
+
+    VERSION:
+    ${esc(block.parentId || '')}
+
+    <br>
+
+    SOURCE:
+    L${block.block?.sourceRange?.startLine || '?'}
+    →
+    L${block.block?.sourceRange?.endLine || '?'}
+
+    <br>
+
+    VECTOR:
+    ${vector.length}D
+
+    <br>
+
+    POS:
+    [
+      ${p.map(
+        x => Number(x).toFixed(3)
+      ).join(', ')}
+    ]
+
+  `;
+
+
+  $('inspAnchors').innerHTML = `
+
+    <span class="tag">
+      BLOCKNODE
+    </span>
+
+    <span class="tag">
+      EMBEDDED FUNCTION
+    </span>
+
+    <span class="tag">
+      ${vector.length}D
+    </span>
+
+    <button
+      id="copyBlockBtn"
+      class="green"
+    >
+      COPY BLOCK
+    </button>
+
+  `;
+
+
+  $('copyBlockBtn').onclick =
+    async()=>{
+      await navigator.clipboard.writeText(
+        block.content?.text || ''
+      );
+
+      log(
+        `${block.id} kopiert.`,
+        'ok'
+      );
+    };
+
+
+  rebuildScene();
+
+
+  controls.target.set(
+    p[0],
+    p[1],
+    p[2]
+  );
+
+
+  $('hudStatus').textContent =
+    `${block.id} SELECTED`;
+}
+
+
+/* ---------------------------------------------------------
+   3D GRAPH NODES
+--------------------------------------------------------- */
+
+graphNodes=function(){
+
+  const nodes = [
+
+    ...state.memories.map(
+      data => ({
+        kind:'memory',
+        data
+      })
+    ),
+
+    ...codeVersions().map(
+      data => ({
+        kind:'version',
+        data
+      })
+    ),
+
+    ...(state.blockStructure
+      ? [{
+          kind:'structure',
+          data:state.blockStructure
+        }]
+      : []),
+
+    ...(state.blockStructure
+      ? [{
+          kind:'versionNode',
+          data:{
+            id:'versionsnode:1',
+            type:'versionsnode',
+
+            geometry:{
+              pos3d:
+                getPosition(
+                  state.blockStructure
+                    .versionNode || {}
+                )
+            },
+
+            semantic:{
+              embedding:{
+                vector:
+                  state.blockStructure
+                    .versionNode
+                    ?.semantic
+                    ?.embedding
+                    ?.vector ||
+                  []
+              }
+            }
+          }
+        }]
+      : []),
+
+    ...state.blockNodes.map(
+      data => ({
+        kind:'block',
+        data
+      })
+    )
+  ];
+
+
+  return nodes;
+};
+
+
+/* ---------------------------------------------------------
+   3D POINT CLOUD
+--------------------------------------------------------- */
+
+makePoints=function(){
+
+  if(pointsMesh){
+
+    scene.remove(pointsMesh);
+
+    disposeObject(pointsMesh);
+
+    pointsMesh=null;
+  }
+
+
+  const nodes =
+    graphNodes();
+
+
+  if(!nodes.length)return;
+
+
+  const positions =
+    new Float32Array(
+      nodes.length * 3
+    );
+
+  const selected =
+    new Float32Array(
+      nodes.length
+    );
+
+  const kind =
+    new Float32Array(
+      nodes.length
+    );
+
+
+  nodes.forEach(
+    (node,i)=>{
+
+      const p =
+        getPosition(
+          node.data
+        );
+
+
+      positions[i*3] =
+        p[0];
+
+      positions[i*3+1] =
+        p[1];
+
+      positions[i*3+2] =
+        p[2];
+
+
+      kind[i] =
+        node.kind === 'version'
+          ? 1
+          : node.kind === 'block'
+            ? 2
+            : node.kind === 'structure'
+              ? 3
+              : node.kind === 'versionNode'
+                ? 1
+                : 0;
+
+
+      selected[i] =
+        (
+          node.kind === 'memory'
+            ? node.data.id === state.selectedId
+
+          : node.kind === 'version'
+            ? node.data.id === state.selectedVersionId
+
+          : node.kind === 'block'
+            ? node.data.id === state.selectedBlockId
+
+          : false
+        )
+        ? 1
+        : 0;
+    }
+  );
+
+
+  const geometry =
+    new THREE.BufferGeometry();
+
+
+  geometry.setAttribute(
+    'position',
+    new THREE.BufferAttribute(
+      positions,
+      3
+    )
+  );
+
+
+  geometry.setAttribute(
+    'aSelected',
+    new THREE.BufferAttribute(
+      selected,
+      1
+    )
+  );
+
+
+  geometry.setAttribute(
+    'aKind',
+    new THREE.BufferAttribute(
+      kind,
+      1
+    )
+  );
+
+
+  const material =
+    new THREE.ShaderMaterial({
+
+      vertexShader:`
+
+        attribute float aSelected;
+        attribute float aKind;
+
+        varying float vSelected;
+        varying float vKind;
+
+        void main(){
+
+          vSelected =
+            aSelected;
+
+          vKind =
+            aKind;
+
+          vec4 mv =
+            modelViewMatrix *
+            vec4(position,1.0);
+
+          gl_Position =
+            projectionMatrix *
+            mv;
+
+          float size =
+            aKind > 1.5
+              ? 7.5
+              : aKind > .5
+                ? 10.0
+                : 6.5;
+
+          gl_PointSize =
+            size *
+            (
+              260.0 /
+              max(
+                40.0,
+                -mv.z
+              )
+            );
+        }
+
+      `,
+
+      fragmentShader:`
+
+        varying float vSelected;
+        varying float vKind;
+
+        void main(){
+
+          vec2 p =
+            gl_PointCoord -
+            .5;
+
+          float r =
+            length(p);
+
+          if(r > .5)
+            discard;
+
+          float glow =
+            1.0 -
+            smoothstep(
+              .10,
+              .5,
+              r
+            );
+
+          float core =
+            1.0 -
+            smoothstep(
+              .02,
+              .23,
+              r
+            );
+
+          vec3 cyan =
+            vec3(
+              0.0,
+              .9,
+              1.0
+            );
+
+          vec3 pink =
+            vec3(
+              1.0,
+              .18,
+              .58
+            );
+
+          vec3 green =
+            vec3(
+              0.0,
+              1.0,
+              .62
+            );
+
+          vec3 yellow =
+            vec3(
+              1.0,
+              .9,
+              0.0
+            );
+
+          vec3 color;
+
+          if(vSelected > .5){
+
+            color =
+              yellow;
+
+          }else if(vKind > 2.5){
+
+            color =
+              green;
+
+          }else if(vKind > 1.5){
+
+            color =
+              cyan;
+
+          }else{
+
+            color =
+              pink;
+          }
+
+
+          gl_FragColor =
+            vec4(
+              color,
+              max(
+                core,
+                glow*.65
+              )
+            );
+        }
+
+      `,
+
+      transparent:true,
+
+      depthWrite:false,
+
+      blending:
+        THREE.AdditiveBlending
+    });
+
+
+  pointsMesh =
+    new THREE.Points(
+      geometry,
+      material
+    );
+
+
+  pointsMesh.userData.nodes =
+    nodes;
+
+
+  scene.add(
+    pointsMesh
+  );
+};
+
+
+/* ---------------------------------------------------------
+   HYPEREDGES + SEMANTIC EDGES
+--------------------------------------------------------- */
+
+rebuildLinks=function(){
+
+  while(
+    linesGroup.children.length
+  ){
+
+    const object =
+      linesGroup
+        .children
+        .pop();
+
+    disposeObject(
+      object
+    );
+  }
+
+
+  if(!state.showLinks)
+    return;
+
+
+  const addLines =
+    (
+      positions,
+      color,
+      opacity
+    )=>{
+
+      if(!positions.length)
+        return;
+
+      const geometry =
+        new THREE.BufferGeometry();
+
+      geometry.setAttribute(
+        'position',
+        new THREE.Float32BufferAttribute(
+          positions,
+          3
+        )
+      );
+
+
+      linesGroup.add(
+        new THREE.LineSegments(
+
+          geometry,
+
+          new THREE.LineBasicMaterial({
+
+            color,
+
+            transparent:true,
+
+            opacity,
+
+            depthWrite:false
+          })
+        )
+      );
+    };
+
+
+  /*
+     Bestehende Memory-Semantik.
+  */
+
+  const semantic = [];
+
+
+  for(
+    let i=0;
+    i<state.memories.length;
+    i++
+  ){
+
+    for(
+      let j=i+1;
+      j<state.memories.length;
+      j++
+    ){
+
+      const a =
+        state.memories[i];
+
+      const b =
+        state.memories[j];
+
+
+      if(
+        cosine(
+          getVector(a),
+          getVector(b)
+        ) >=
+        CONFIG.EDGE_THRESHOLD
+      ){
+
+        semantic.push(
+          ...getPosition(a),
+          ...getPosition(b)
+        );
+      }
+    }
+  }
+
+
+  addLines(
+    semantic,
+    0x00e5ff,
+    .20
+  );
+
+
+  /*
+     Version timeline.
+  */
+
+  const versions =
+    codeVersions();
+
+  const temporal=[];
+
+
+  for(
+    let i=1;
+    i<versions.length;
+    i++
+  ){
+
+    temporal.push(
+      ...getPosition(
+        versions[i-1]
+      ),
+
+      ...getPosition(
+        versions[i]
+      )
+    );
+  }
+
+
+  addLines(
+    temporal,
+    0xff2d95,
+    .80
+  );
+
+
+  /*
+     dateistruktur-hyperedge:
+     structure → versionsnode:1
+  */
+
+  if(
+    state.blockStructure
+  ){
+
+    const structurePosition =
+      getPosition(
+        state.blockStructure
+      );
+
+
+    const versionPosition =
+      getPosition(
+        state.blockStructure
+          .versionNode
+      );
+
+
+    addLines(
+      [
+        ...structurePosition,
+        ...versionPosition
+      ],
+      0x00ff9d,
+      .95
+    );
+
+
+    /*
+       versionsnode:1 → blocknodes
+    */
+
+    const containment=[];
+
+
+    for(
+      const block
+      of state.blockNodes
+    ){
+
+      containment.push(
+        ...versionPosition,
+        ...getPosition(block)
+      );
+    }
+
+
+    addLines(
+      containment,
+      0xff2d95,
+      .72
+    );
+
+
+    /*
+       Block → Block semantische Kanten
+    */
+
+    const blockSemantic=[];
+
+
+    for(
+      let i=0;
+      i<state.blockNodes.length;
+      i++
+    ){
+
+      const a =
+        state.blockNodes[i];
+
+
+      for(
+        let j=i+1;
+        j<state.blockNodes.length;
+        j++
+      ){
+
+        const b =
+          state.blockNodes[j];
+
+
+        if(
+          cosine(
+            getVector(a),
+            getVector(b)
+          ) >=
+          CONFIG.EDGE_THRESHOLD
+        ){
+
+          blockSemantic.push(
+            ...getPosition(a),
+            ...getPosition(b)
+          );
+        }
+      }
+    }
+
+
+    addLines(
+      blockSemantic,
+      0x00e5ff,
+      .34
+    );
+  }
+};
+
+
+/* ---------------------------------------------------------
+   REBUILD
+--------------------------------------------------------- */
+
+rebuildScene=function(){
+
+  makePoints();
+
+  rebuildLinks();
+
+
+  const total =
+    state.memories.length +
+    state.versions.length +
+    state.blockNodes.length;
+
+
+  $('hudStatus').textContent =
+    total
+      ? `${total} NODES · SEMANTIC R³ · BLOCK HYPERGRAPH`
+      : 'MEMORY SPACE EMPTY';
+};
+
+
+/* ---------------------------------------------------------
+   POINTER SELECTION
+--------------------------------------------------------- */
+
+getIntersections=function(event){
+
+  if(!pointsMesh)
+    return [];
+
+
+  const rect =
+    renderer
+      .domElement
+      .getBoundingClientRect();
+
+
+  mouse.x =
+    (
+      (event.clientX - rect.left) /
+      rect.width
+    ) * 2 - 1;
+
+
+  mouse.y =
+    -(
+      (event.clientY - rect.top) /
+      rect.height
+    ) * 2 + 1;
+
+
+  raycaster.setFromCamera(
+    mouse,
+    camera
+  );
+
+
+  return raycaster.intersectObject(
+    pointsMesh
+  );
+};
+
+
+onPointerDown=function(event){
+
+  if(event.button !== 0)
+    return;
+
+
+  const hits =
+    getIntersections(event);
+
+
+  if(!hits.length)
+    return;
+
+
+  const node =
+    pointsMesh
+      .userData
+      .nodes[hits[0].index];
+
+
+  if(!node)
+    return;
+
+
+  if(node.kind === 'memory'){
+
+    selectMemory(
+      node.data.id
+    );
+
+  }else if(node.kind === 'version'){
+
+    selectVersion(
+      node.data.id
+    );
+
+  }else if(node.kind === 'block'){
+
+    selectBlockNode(
+      node.data.id
+    );
+
+  }else if(
+    node.kind === 'structure'
+  ){
+
+    $('inspId').textContent =
+      node.data.id;
+
+    $('inspText').textContent =
+      node.data.content?.text ||
+      '';
+
+    $('inspector')
+      .classList
+      .add('visible');
+
+    $('inspector')
+      .querySelector('h3')
+      .textContent =
+        'DATEISTRUKTUR HYPEREDGE';
+
+    $('inspMeta').innerHTML =
+      `
+      TYPE: dateistruktur-hyperedge
+      <br>
+      VERSION NODE: versionsnode:1
+      <br>
+      BLOCKS: ${state.blockNodes.length}
+      `;
+
+  }else if(
+    node.kind === 'versionNode'
+  ){
+
+    $('inspId').textContent =
+      'versionsnode:1';
+
+    $('inspText').textContent =
+      'Project Version Node 1';
+
+    $('inspector')
+      .classList
+      .add('visible');
+
+    $('inspector')
+      .querySelector('h3')
+      .textContent =
+        'VERSIONSNODE INSPECTOR';
+
+    $('inspMeta').innerHTML =
+      `
+      TYPE: versionsnode
+      <br>
+      BLOCKS: ${state.blockNodes.length}
+      `;
+  }
+};
+
+
+onDoubleClick=function(event){
+
+  const hits =
+    getIntersections(event);
+
+
+  if(!hits.length)
+    return;
+
+
+  const node =
+    pointsMesh
+      .userData
+      .nodes[hits[0].index];
+
+
+  if(!node)
+    return;
+
+
+  const p =
+    getPosition(
+      node.data
+    );
+
+
+  controls.target.set(
+    p[0],
+    p[1],
+    p[2]
+  );
+
+
+  const direction =
+    new THREE.Vector3()
+      .subVectors(
+        camera.position,
+        controls.target
+      )
+      .normalize();
+
+
+  camera.position
+    .copy(
+      controls.target
+    )
+    .addScaledVector(
+      direction,
+      4
+    );
+
+
+  controls.update();
+
+
+  if(node.kind === 'memory')
+    selectMemory(node.data.id);
+
+  else if(node.kind === 'version')
+    selectVersion(node.data.id);
+
+  else if(node.kind === 'block')
+    selectBlockNode(node.data.id);
+};
+
+
+/* ---------------------------------------------------------
+   RESTORE BLOCK STRUCTURE
+--------------------------------------------------------- */
+
+const originalBlockRestore =
+  restore;
+
+
+restore=async function(){
+
+  await originalBlockRestore();
+
+
+  const records =
+    await dbGetAll();
+
+
+  state.blockNodes =
+    records
+      .filter(
+        r => r.type === 'blocknode'
+      );
+
+
+  state.blockStructure =
+    records.find(
+      r =>
+        r.type ===
+        'dateistruktur-hyperedge'
+    ) ||
+    null;
+
+
+  state.selectedBlockId =
+    null;
+
+
+  rebuildScene();
+};
+
+
+/* ---------------------------------------------------------
+   JSON / IPHONE SHARE
+--------------------------------------------------------- */
+
+async function exportBlockStructure(){
+
+  if(
+    !state.blockStructure?.export
+  ){
+
+    error(
+      'Noch keine Blockstruktur erzeugt.'
+    );
+
+    return;
+  }
+
+
+  const json =
+    JSON.stringify(
+      state.blockStructure.export,
+      null,
+      2
+    );
+
+
+  /*
+     Copyable list.
+  */
+
+  const list =
+    state.blockNodes
+      .map(
+        block =>
+          `${block.id} · ${block.block.name} · ` +
+          `${block.block.type} · ` +
+          `L${block.block.sourceRange.startLine}-` +
+          `L${block.block.sourceRange.endLine}`
+      )
+      .join('\n');
+
+
+  $('blockListOutput').value =
+    list;
+
+
+  const file =
+    new File(
+      [
+        json
+      ],
+      'projektversions-node-1.json',
+      {
+        type:
+          'application/json'
+      }
+    );
+
+
+  /*
+     iPhone / Share Sheet.
+     Wenn die GitHub-App als Share-Ziel angeboten wird,
+     kann die Datei direkt dorthin weitergegeben werden.
+  */
+
+  try{
+
+    if(
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({
+        files:[file]
+      })
+    ){
+
+      await navigator.share({
+
+        title:
+          'projektversions-node:1',
+
+        text:
+          'Blockstruktur / dateistruktur-hyperedge',
+
+        files:[
+          file
+        ]
+      });
+
+
+      log(
+        'Blockstruktur über iOS Share Sheet bereitgestellt.',
+        'ok'
+      );
+
+      return;
+    }
+
+  }catch(e){
+
+    if(e?.name === 'AbortError')
+      return;
+  }
+
+
+  /*
+     Fallback: normaler Download.
+  */
+
+  const url =
+    URL.createObjectURL(
+      file
+    );
+
+
+  const a =
+    document.createElement('a');
+
+  a.href = url;
+
+  a.download =
+    'projektversions-node-1.json';
+
+  document.body.appendChild(a);
+
+  a.click();
+
+  a.remove();
+
+  setTimeout(
+    () =>
+      URL.revokeObjectURL(url),
+    1000
+  );
+
+
+  log(
+    'JSON exportiert.',
+    'ok'
+  );
+}
+
+
+/* ---------------------------------------------------------
+   COPY BLOCK LIST
+--------------------------------------------------------- */
+
+async function copyBlockList(){
+
+  const text =
+    state.blockNodes
+      .map(
+        block =>
+          `${block.id} · ${block.block.name}`
+      )
+      .join('\n');
+
+
+  await navigator.clipboard.writeText(
+    text
+  );
+
+
+  log(
+    `${state.blockNodes.length} Blocknodes kopiert.`,
+    'ok'
+  );
+}
+
+
+/* ---------------------------------------------------------
+   UI
+--------------------------------------------------------- */
+
+const originalEvolutionUI =
+  renderEvolutionUI;
+
+
+renderEvolutionUI=function(){
+
+  originalEvolutionUI();
+
+
+  if(
+    $('blockStructurePanel')
+  )
+    return;
+
+
+  const panel =
+    document.createElement('div');
+
+
+  panel.id =
+    'blockStructurePanel';
+
+
+  panel.className =
+    'panel evoPanel';
+
+
+  panel.innerHTML = `
+
+    <div class="evoHead">
+
+      <strong>
+        BLOCK HYPERGRAPH
+      </strong>
+
+      <span id="blockCount">
+        0 BLOCKS
+      </span>
+
+    </div>
+
+
+    <div class="evoBody">
+
+      <div
+        style="
+          color:var(--muted);
+          font-size:8px;
+          line-height:1.5;
+          margin-bottom:7px;
+        "
+      >
+
+        dateistruktur-hyperedge
+        →
+        versionsnode:1
+        →
+        blocknodes
+
+        <br>
+
+        Jeder Funktionsblock besitzt
+        sein eigenes 384D-Embedding
+        und eine 3D-Position.
+
+      </div>
+
+
+      <button
+        id="buildBlockGraphBtn"
+        class="green"
+      >
+        BUILD BLOCK STRUCTURE · 3D GRAPH
+      </button>
+
+
+      <button
+        id="uploadBlockStructureBtn"
+        class="pink"
+      >
+        HOCHLADEN · JSON / IPHONE
+      </button>
+
+
+      <button
+        id="copyBlockListBtn"
+      >
+        COPY BLOCK NODE LIST
+      </button>
+
+
+      <textarea
+        id="blockListOutput"
+        readonly
+        style="
+          min-height:100px;
+          max-height:180px;
+          margin-top:7px;
+          font-size:8px;
+        "
+        placeholder="blocknode-Liste erscheint hier …"
+      ></textarea>
+
+    </div>
+  `;
+
+
+  const right =
+    document.querySelectorAll(
+      '.col'
+    )[1];
+
+
+  if(right){
+
+    right.appendChild(
+      panel
+    );
+  }
+
+
+  $('buildBlockGraphBtn')
+    .onclick =
+      async()=>{
+
+        const button =
+          $('buildBlockGraphBtn');
+
+        button.disabled =
+          true;
+
+        try{
+
+          const json =
+            await buildBlockStructure();
+
+
+          if(json){
+
+            $('blockCount')
+              .textContent =
+                `${state.blockNodes.length} BLOCKS`;
+
+            $('blockListOutput')
+              .value =
+                state.blockNodes
+                  .map(
+                    block =>
+                      `${block.id} · ` +
+                      `${block.block.name} · ` +
+                      `${block.block.type}`
+                  )
+                  .join('\n');
+          }
+
+        }catch(e){
+
+          error(
+            e?.message ||
+            String(e)
+          );
+
+          log(
+            `Blockstruktur fehlgeschlagen: ${e?.message || e}`,
+            'err'
+          );
+
+        }finally{
+
+          button.disabled =
+            false;
+        }
+      };
+
+
+  $('uploadBlockStructureBtn')
+    .onclick =
+      exportBlockStructure;
+
+
+  $('copyBlockListBtn')
+    .onclick =
+      copyBlockList;
+};
+
+
+/* ---------------------------------------------------------
+   EXISTING VERSION INSPECTOR PATCH
+--------------------------------------------------------- */
+
+const originalSelectVersion =
+  selectVersion;
+
+
+selectVersion=function(id){
+
+  state.selectedBlockId =
+    null;
+
+  originalSelectVersion(id);
+};
+
+
+/* ---------------------------------------------------------
+   STARTUP STATUS
+--------------------------------------------------------- */
+
+log(
+  'Block Hypergraph Layer bereit.',
+  'ok'
+);
+/* Make the version timeline visible in the scene after every selection. */
+
 /* =========================================================
    BOOT
 ========================================================= */
