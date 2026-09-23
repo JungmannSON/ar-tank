@@ -1,487 +1,5375 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>NEURAL MEMORY — CORE / PROJECT MEMORY</title>
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
+>
+
+<title>NEURAL MEMORY — Semantic Memory Core</title>
 
 <script type="importmap">
 {
-  "imports":{
-    "three":"https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
-    "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+  "imports": {
+    "three":
+      "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+
+    "three/addons/":
+      "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
   }
 }
 </script>
 
 <style>
+
 :root{
-  --bg:#010307;--panel:#071019;--panel2:#0a141e;
-  --cyan:#00f5ff;--cyan2:#00a8ff;--green:#4ade80;
-  --pink:#ff187f;--purple:#b66cff;--yellow:#f7d154;
-  --red:#ff5575;--text:#dce8ee;--muted:#687b86;--dim:#33444e;
-  --border:rgba(0,245,255,.13);--line:rgba(255,255,255,.055);
+  --bg:#05080c;
+  --panel:#0a1016;
+  --panel2:#070d12;
+  --border:#1a2a36;
+
+  --cyan:#00e5ff;
+  --pink:#ff2d95;
+  --green:#00ff9d;
+  --yellow:#ffe600;
+  --danger:#ff4d6a;
+
+  --text:#b8d4e3;
+  --muted:#405861;
+
+  --header-height:52px;
 }
-*{box-sizing:border-box}
-html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text);
-font-family:Inter,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-button,input,textarea,select{font:inherit}
-button{cursor:pointer}
-body:before{content:"";position:fixed;inset:0;z-index:999;pointer-events:none;opacity:.018;
-background:repeating-linear-gradient(0deg,#fff 0 1px,transparent 1px 4px);mix-blend-mode:screen}
-#app{height:100%;display:grid;grid-template-rows:62px 1fr}
-header{display:flex;align-items:center;justify-content:space-between;padding:0 18px;
-border-bottom:1px solid var(--border);background:linear-gradient(#061018f5,#02060bf2);z-index:20}
-.brand{display:flex;align-items:center;gap:12px}.logo{width:35px;height:35px;display:grid;place-items:center;
-border:1px solid #00f5ff77;color:var(--cyan);box-shadow:0 0 22px #00f5ff18;position:relative}
-.logo:after{content:"";width:5px;height:5px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan);position:absolute}
-.title{font-size:13px;letter-spacing:3px}.sub{font-size:7px;letter-spacing:1.5px;color:var(--muted);margin-top:4px}
-.status{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:8px;letter-spacing:1px}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--yellow);box-shadow:0 0 12px currentColor}
-.main{min-height:0;display:grid;grid-template-columns:300px minmax(0,1fr) 360px}
-.panel{min-height:0;overflow:auto;background:linear-gradient(180deg,#071019f2,#02060af2);border-right:1px solid var(--border)}
-.right{border-right:0;border-left:1px solid var(--border)}
-.section{padding:13px;border-bottom:1px solid var(--line);position:relative}.section:before{content:"";position:absolute;left:0;top:0;width:24px;height:1px;background:var(--cyan);opacity:.35}
-.section-title{color:var(--cyan);font-size:8px;letter-spacing:2px;margin-bottom:10px}
-label{display:block;color:var(--muted);font-size:7px;letter-spacing:1.2px;margin:9px 0 4px}
-input,textarea,select{width:100%;border:1px solid #ffffff10;background:#02070cf0;color:var(--text);padding:8px;border-radius:2px;outline:0}
-textarea{min-height:90px;resize:vertical;line-height:1.45}
-input:focus,textarea:focus,select:focus{border-color:#00f5ff66;box-shadow:0 0 15px #00f5ff08}
-.row{display:flex;gap:5px}.row>*{flex:1}
-.btn,.toggle{border:1px solid #00f5ff45;background:#00f5ff08;color:var(--cyan);padding:8px 9px;font-size:7px;letter-spacing:1.1px}
-.btn{width:100%;margin-top:8px}.btn:hover,.toggle:hover{border-color:var(--cyan);background:#00f5ff12}
-.btn.green{color:var(--green);border-color:#4ade8050;background:#4ade8007}.btn.pink{color:var(--pink);border-color:#ff187f50}
-.btn.red{color:var(--red);border-color:#ff557550}.btn.small{width:auto;margin:0}.btn:disabled{opacity:.45;cursor:wait}
-.help,.meta{font-size:7px;line-height:1.55;color:#566873;margin-top:7px}
-.viewport{position:relative;min-width:0;min-height:0;overflow:hidden;background:radial-gradient(circle,#00f5ff07,transparent 50%),#010307}
-#scene{position:absolute;inset:0}.hud{position:absolute;top:15px;left:17px;z-index:5;pointer-events:none}
-.hud b{font-size:9px;letter-spacing:2px}.hud div{font-size:7px;color:#40525d;margin-top:5px;letter-spacing:1px}
-.stats{position:absolute;right:17px;top:15px;z-index:5;display:grid;grid-template-columns:auto auto;gap:4px 15px;text-align:right;font-size:7px;color:#50616b}
-.stats strong{color:#b9cbd3;font-size:9px;font-weight:normal;margin-left:4px}
-.legend{position:absolute;left:16px;bottom:16px;padding:8px;background:#02060acc;border:1px solid #ffffff0a;font-size:7px;color:#60727d;z-index:5}
-.legend div{margin:4px 0}.sw{display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:6px}
-.toolbar{position:absolute;right:16px;bottom:16px;z-index:5;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
-.toggle.active{color:var(--cyan);border-color:#00f5ff55;background:#00f5ff0b}
-.list{max-height:260px;overflow:auto}.item{padding:8px;border:1px solid transparent;margin:2px 0;background:#ffffff03;cursor:pointer}
-.item:hover{border-color:#00f5ff18}.item.selected{border-color:#00f5ff35;background:#00f5ff08}
-.id{color:var(--cyan);font-size:8px}.type{float:right;color:#50616b;font-size:7px}
-.text{margin-top:4px;color:#8da0aa;font-size:7px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
-.result{padding:7px 2px;border-bottom:1px solid #ffffff08;cursor:pointer;font-size:7px}.score{float:right;color:var(--green)}
-.empty{color:#354650;font-size:7px;padding:7px 0}.ins{font-size:7px;line-height:1.6;color:#7f929d}.ins b{color:#bcd0d8;font-weight:normal}
-.code{font-family:inherit;font-size:7px;line-height:1.45;white-space:pre;overflow:auto;max-height:190px;background:#02060a;border:1px solid #ffffff08;padding:8px}
-.diff-add{background:#4ade8010;color:#8ff0a9}.diff-del{background:#ff557510;color:#ff8ca1}
-.commit{padding:7px 0;border-bottom:1px solid #ffffff08}.commit .hash{color:var(--purple);font-size:7px}.commit .msg{color:#9db0ba;font-size:8px;margin-top:3px}
-#toast{position:absolute;left:50%;bottom:26px;z-index:100;transform:translate(-50%,15px);opacity:0;
-padding:8px 12px;background:#03080df2;border:1px solid #00f5ff55;color:var(--cyan);font-size:7px;transition:.2s;pointer-events:none}
-#toast.show{opacity:1;transform:translate(-50%,0)}#toast.error{color:var(--red);border-color:#ff557555}
-@media(max-width:1050px){.main{grid-template-columns:270px minmax(0,1fr)}.right{display:none}}
-@media(max-width:700px){#app{grid-template-rows:56px 1fr}.main{grid-template-columns:1fr;grid-template-rows:42vh 58vh}.panel.left{order:2}.viewport{order:1}.sub{display:none}.title{font-size:10px}.stats,.legend{display:none}}
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+html,
+body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+
+  background:var(--bg);
+  color:var(--text);
+
+  font-family:
+    "JetBrains Mono",
+    "SF Mono",
+    "Fira Code",
+    ui-monospace,
+    monospace;
+}
+
+body{
+  display:grid;
+  grid-template-rows:var(--header-height) 1fr;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  padding:0 20px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #060b10,
+      #0a121a
+    );
+
+  border-bottom:1px solid var(--border);
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.logoMark{
+  width:34px;
+  height:34px;
+
+  display:grid;
+  place-items:center;
+
+  border:1px solid var(--cyan);
+
+  color:var(--cyan);
+
+  box-shadow:
+    0 0 12px rgba(0,229,255,.25);
+
+  font-size:16px;
+}
+
+.logoText{
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:3px;
+}
+
+.logoText span{
+  color:var(--cyan);
+}
+
+.status{
+  display:flex;
+  align-items:center;
+  gap:10px;
+
+  font-size:11px;
+  letter-spacing:1px;
+}
+
+.statusDot{
+  width:8px;
+  height:8px;
+
+  border-radius:50%;
+
+  background:var(--danger);
+
+  box-shadow:
+    0 0 8px var(--danger);
+}
+
+.statusDot.online{
+  background:var(--green);
+
+  box-shadow:
+    0 0 10px var(--green);
+}
+
+/* =========================================================
+   LAYOUT
+========================================================= */
+
+main{
+  height:calc(100vh - var(--header-height));
+
+  display:grid;
+  grid-template-columns:
+    320px
+    minmax(0,1fr)
+    340px;
+
+  overflow:hidden;
+}
+
+.col{
+  display:flex;
+  flex-direction:column;
+
+  min-width:0;
+
+  overflow-y:auto;
+  overflow-x:hidden;
+
+  border-right:1px solid var(--border);
+}
+
+.col:last-child{
+  border-right:none;
+}
+
+/* =========================================================
+   PANELS
+========================================================= */
+
+.panel{
+  border-bottom:1px solid var(--border);
+}
+
+.panelTitle{
+  padding:10px 14px;
+
+  background:var(--panel2);
+
+  border-bottom:1px solid var(--border);
+
+  color:var(--cyan);
+
+  font-size:10px;
+  letter-spacing:2px;
+}
+
+.panelBody{
+  padding:12px 14px;
+}
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+textarea,
+input{
+  width:100%;
+
+  background:#060b10;
+
+  border:1px solid var(--border);
+
+  color:var(--text);
+
+  padding:10px;
+
+  outline:none;
+
+  font:inherit;
+  font-size:12px;
+}
+
+textarea{
+  min-height:90px;
+  resize:vertical;
+}
+
+textarea:focus,
+input:focus{
+  border-color:var(--cyan);
+
+  box-shadow:
+    0 0 8px rgba(0,229,255,.08);
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+button{
+  width:100%;
+
+  margin-top:8px;
+
+  padding:10px;
+
+  background:transparent;
+
+  border:1px solid var(--cyan);
+
+  color:var(--cyan);
+
+  font:inherit;
+  font-size:11px;
+
+  letter-spacing:1.5px;
+
+  cursor:pointer;
+
+  transition:
+    background .15s,
+    box-shadow .15s,
+    transform .05s;
+}
+
+button:hover:not(:disabled){
+  background:rgba(0,229,255,.12);
+
+  box-shadow:
+    0 0 12px rgba(0,229,255,.2);
+}
+
+button:active:not(:disabled){
+  transform:translateY(1px);
+}
+
+button:disabled{
+  opacity:.35;
+  cursor:not-allowed;
+}
+
+button.green{
+  border-color:var(--green);
+  color:var(--green);
+}
+
+button.pink{
+  border-color:var(--pink);
+  color:var(--pink);
+}
+
+button.yellow{
+  border-color:var(--yellow);
+  color:var(--yellow);
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.errorBox{
+  min-height:16px;
+
+  margin-top:8px;
+
+  color:var(--danger);
+
+  font-size:10px;
+  line-height:1.5;
+
+  white-space:pre-wrap;
+}
+
+/* =========================================================
+   PIPELINE
+========================================================= */
+
+.pipeline{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.stage{
+  padding:5px 8px;
+
+  border:1px solid var(--border);
+
+  color:var(--muted);
+
+  font-size:9px;
+
+  letter-spacing:1px;
+}
+
+.stage.active{
+  border-color:var(--cyan);
+  color:var(--cyan);
+
+  box-shadow:
+    0 0 8px rgba(0,229,255,.3);
+}
+
+.stage.done{
+  border-color:var(--green);
+  color:var(--green);
+}
+
+/* =========================================================
+   LOG
+========================================================= */
+
+.log{
+  max-height:170px;
+
+  overflow-y:auto;
+
+  color:var(--muted);
+
+  font-size:10px;
+  line-height:1.55;
+}
+
+.log .ok{
+  color:var(--green);
+}
+
+.log .info{
+  color:var(--cyan);
+}
+
+.log .warn{
+  color:#ffb347;
+}
+
+.log .err{
+  color:var(--danger);
+}
+
+/* =========================================================
+   VECTOR
+========================================================= */
+
+.vectorDim{
+  margin-bottom:6px;
+
+  color:var(--cyan);
+
+  font-size:11px;
+}
+
+.vectorBox{
+  max-height:120px;
+
+  overflow-y:auto;
+
+  padding:8px;
+
+  background:#060b10;
+
+  border:1px solid var(--border);
+
+  color:var(--muted);
+
+  font-size:10px;
+  line-height:1.4;
+
+  word-break:break-all;
+}
+
+/* =========================================================
+   3D SCENE
+========================================================= */
+
+.sceneColumn{
+  position:relative;
+
+  overflow:hidden;
+}
+
+.scenePanel{
+  height:100%;
+
+  display:flex;
+  flex-direction:column;
+
+  border-bottom:none;
+}
+
+.sceneBody{
+  flex:1;
+
+  min-height:0;
+
+  padding:0;
+
+  position:relative;
+}
+
+#scene{
+  position:relative;
+
+  width:100%;
+  height:100%;
+
+  min-height:420px;
+
+  overflow:hidden;
+
+  background:
+    radial-gradient(
+      ellipse at center,
+      #0a1520 0%,
+      #05080c 70%
+    );
+}
+
+#canvas3d{
+  display:block;
+
+  width:100%;
+  height:100%;
+}
+
+.hud{
+  position:absolute;
+
+  top:10px;
+  left:12px;
+  right:12px;
+
+  display:flex;
+  justify-content:space-between;
+
+  z-index:10;
+
+  pointer-events:none;
+
+  color:var(--muted);
+
+  font-size:10px;
+  letter-spacing:1.5px;
+}
+
+.hudRight{
+  color:var(--cyan);
+}
+
+.controlsHint{
+  position:absolute;
+
+  left:12px;
+  bottom:10px;
+
+  z-index:10;
+
+  pointer-events:none;
+
+  color:var(--muted);
+
+  font-size:9px;
+}
+
+.toolbar3d{
+  position:absolute;
+
+  right:12px;
+  bottom:8px;
+
+  z-index:10;
+
+  display:flex;
+  gap:6px;
+}
+
+.toolbar3d button{
+  width:auto;
+
+  margin:0;
+
+  padding:6px 9px;
+
+  font-size:9px;
+}
+
+/* =========================================================
+   INSPECTOR
+========================================================= */
+
+.inspector{
+  position:absolute;
+
+  top:40px;
+  right:12px;
+
+  width:280px;
+
+  max-height:
+    calc(100% - 60px);
+
+  overflow-y:auto;
+
+  padding:12px;
+
+  background:
+    rgba(8,14,20,.95);
+
+  border:1px solid var(--border);
+
+  z-index:20;
+
+  display:none;
+
+  font-size:11px;
+
+  backdrop-filter:blur(6px);
+}
+
+.inspector.visible{
+  display:block;
+}
+
+.inspector h3{
+  margin-bottom:8px;
+
+  color:var(--cyan);
+
+  font-size:10px;
+  letter-spacing:2px;
+}
+
+.inspector .id{
+  margin-bottom:6px;
+
+  color:var(--green);
+}
+
+.inspector .txt{
+  margin-bottom:8px;
+
+  line-height:1.45;
+
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+
+.inspector .meta{
+  color:var(--muted);
+
+  font-size:10px;
+
+  line-height:1.5;
+}
+
+.tag{
+  display:inline-block;
+
+  margin:
+    2px
+    2px
+    0
+    0;
+
+  padding:3px 5px;
+
+  border:1px solid var(--border);
+
+  color:var(--muted);
+
+  font-size:9px;
+}
+
+/* =========================================================
+   MEMORY BANK
+========================================================= */
+
+.memoryList{
+  max-height:250px;
+
+  overflow-y:auto;
+
+  font-size:11px;
+}
+
+.memItem{
+  padding:8px 6px;
+
+  border-bottom:1px solid var(--border);
+
+  cursor:pointer;
+}
+
+.memItem:hover{
+  background:
+    rgba(0,229,255,.06);
+}
+
+.memItem.selected{
+  background:
+    rgba(0,229,255,.10);
+}
+
+.memId{
+  color:var(--cyan);
+
+  font-size:10px;
+}
+
+.memText{
+  margin-top:2px;
+
+  color:var(--text);
+
+  white-space:nowrap;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+}
+
+.memMeta{
+  margin-top:2px;
+
+  color:var(--muted);
+
+  font-size:9px;
+}
+
+/* =========================================================
+   METRICS
+========================================================= */
+
+.metrics{
+  display:grid;
+
+  grid-template-columns:
+    1fr
+    1fr;
+
+  gap:10px;
+
+  margin-top:12px;
+}
+
+.metric{
+  padding:10px;
+
+  background:#060b10;
+
+  border:1px solid var(--border);
+
+  text-align:center;
+}
+
+.metricLabel{
+  color:var(--muted);
+
+  font-size:9px;
+
+  letter-spacing:1px;
+}
+
+.metricValue{
+  margin-top:4px;
+
+  color:var(--cyan);
+
+  font-size:18px;
+}
+
+/* =========================================================
+   SEARCH RANKING
+========================================================= */
+
+.rankItem{
+  padding:8px 6px;
+
+  border-bottom:1px solid var(--border);
+
+  cursor:pointer;
+}
+
+.rankItem:hover{
+  background:
+    rgba(0,229,255,.06);
+}
+
+.rankScore{
+  color:var(--pink);
+
+  font-size:10px;
+}
+
+.rankText{
+  margin-top:2px;
+
+  line-height:1.4;
+}
+
+.bar{
+  height:3px;
+
+  margin-top:5px;
+
+  background:#0c171e;
+}
+
+.barFill{
+  height:100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--cyan),
+      var(--pink)
+    );
+}
+
+/* =========================================================
+   METHOD
+========================================================= */
+
+.arch{
+  color:var(--muted);
+
+  font-size:9px;
+  line-height:1.7;
+}
+
+.arch b{
+  color:var(--text);
+}
+
+/* =========================================================
+   MOBILE / TABLET
+========================================================= */
+
+@media(max-width:1100px){
+
+  main{
+    grid-template-columns:
+      280px
+      minmax(0,1fr);
+  }
+
+  .col:last-child{
+    position:absolute;
+
+    top:var(--header-height);
+    right:0;
+    bottom:0;
+
+    width:320px;
+
+    background:
+      rgba(5,8,12,.97);
+
+    transform:translateX(100%);
+
+    transition:
+      transform .2s ease;
+
+    z-index:50;
+  }
+
+  .col:last-child.open{
+    transform:translateX(0);
+  }
+
+}
+
+@media(max-width:700px){
+
+  body{
+    grid-template-rows:
+      48px
+      1fr;
+  }
+
+  header{
+    padding:0 12px;
+  }
+
+  .logoText{
+    font-size:11px;
+    letter-spacing:2px;
+  }
+
+  .logoMark{
+    width:30px;
+    height:30px;
+  }
+
+  main{
+    grid-template-columns:
+      1fr;
+
+    grid-template-rows:
+      40vh
+      60vh;
+  }
+
+  .col:first-child{
+    display:none;
+  }
+
+  .sceneColumn{
+    grid-row:1;
+  }
+
+  .col:last-child{
+    position:static;
+
+    width:auto;
+
+    transform:none;
+
+    grid-row:2;
+
+    display:flex;
+  }
+
+  .inspector{
+    width:
+      calc(100% - 24px);
+  }
+
+  .hud{
+    font-size:8px;
+  }
+
+  .hudRight{
+    display:none;
+  }
+
+}
+
 </style>
 </head>
+
+
 <body>
-<div id="app">
+
+<!-- =======================================================
+     HEADER
+======================================================= -->
+
 <header>
-  <div class="brand"><div class="logo">N</div><div><div class="title">NEURAL MEMORY</div><div class="sub">SEMANTIC MEMORY / PROJECT STATE / DETERMINISTIC HISTORY</div></div></div>
-  <div class="status"><span id="statusDot" class="dot"></span><span id="status">INITIALISIERUNG</span></div>
+
+  <div class="logo">
+
+    <div class="logoMark">
+      Σ
+    </div>
+
+    <div class="logoText">
+      NEURAL <span>MEMORY</span>
+    </div>
+
+  </div>
+
+  <div class="status">
+
+    <div
+      id="statusDot"
+      class="statusDot">
+    </div>
+
+    <span id="statusText">
+      EMBEDDING CORE OFFLINE
+    </span>
+
+  </div>
+
 </header>
 
-<div class="main">
 
-<aside class="panel left">
-  <section class="section">
-    <div class="section-title">MEMORY / NODE</div>
-    <label>TEXT</label><textarea id="memoryText" placeholder="Gedächtnisinhalt ..."></textarea>
-    <label>TYPE</label>
-    <select id="memoryType"><option>memory</option><option>concept</option><option>claim</option><option>evidence</option><option>hypothesis</option></select>
-    <label>TAGS</label><input id="memoryTags" placeholder="RAG, Architektur, Git">
-    <button id="saveMemory" class="btn green">+ MEMORY ANLEGEN</button>
-    <button id="deleteSelected" class="btn red">SELECTED MEMORY LÖSCHEN</button>
-    <div class="help">Embedding = 384D. pos3d ist separat und nach dem Anlegen unveränderlich.</div>
-  </section>
+<main>
 
-  <section class="section">
-    <div class="section-title">CODE BLOCK / FILE</div>
-    <label>FILE PATH</label><input id="filePath" placeholder="src/core.js">
-    <label>BLOCK NAME</label><input id="blockName" placeholder="cosineSimilarity">
-    <label>CODE</label><textarea id="codeText" placeholder="function ..."></textarea>
-    <button id="saveBlock" class="btn">+ CODE BLOCK SPEICHERN</button>
-    <div class="help">Code wird als eigener persistenter Block gespeichert und kann in Commits versioniert werden.</div>
-  </section>
+<!-- =======================================================
+     LEFT COLUMN
+======================================================= -->
 
-  <section class="section">
-    <div class="section-title">HYPEREDGE</div>
-    <label>LABEL</label><input id="hyperLabel" placeholder="SEMANTIC CONTEXT">
-    <label>MEMORY IDS</label><input id="hyperMembers" placeholder="MEM-000001, MEM-000002, MEM-000003">
-    <button id="saveHyper" class="btn">+ HYPEREDGE</button>
-  </section>
+<div class="col">
 
-  <section class="section">
-    <div class="section-title">SYSTEM LOG</div>
-    <div id="log"></div>
-  </section>
-</aside>
+  <!-- INPUT -->
 
-<main class="viewport">
-  <div id="scene"></div>
-  <div class="hud"><b>FIXED SEMANTIC SPACE</b><div>384D → ANCHORED R³ · FIBONACCI FALLBACK · NO FORCE SIMULATION</div></div>
-  <div class="stats">
-    <div>NODES <strong id="nodeCount">0</strong></div><div>EDGES <strong id="edgeCount">0</strong></div>
-    <div>HYPER <strong id="hyperCount">0</strong></div><div>COMMITS <strong id="commitCount">0</strong></div>
-    <div>BLOCKS <strong id="blockCount">0</strong></div><div>ACTIVE <strong id="activeCount">0</strong></div>
+  <div class="panel">
+
+    <div class="panelTitle">
+      01 / MEMORY INPUT
+    </div>
+
+    <div class="panelBody">
+
+      <textarea
+        id="textInput"
+        placeholder="Eine neue Memory eingeben ..."
+      ></textarea>
+
+      <button id="embedBtn">
+        GENERATE EMBEDDING
+      </button>
+
+      <button
+        id="storeBtn"
+        class="green"
+        disabled
+      >
+        STORE MEMORY IN SPACE
+      </button>
+
+      <div
+        id="errorBox"
+        class="errorBox"
+      ></div>
+
+    </div>
+
   </div>
-  <div class="legend">
-    <div><span class="sw" style="background:#00f5ff"></span>MEMORY</div>
-    <div><span class="sw" style="background:#4ade80"></span>CONCEPT</div>
-    <div><span class="sw" style="background:#f7d154"></span>CLAIM</div>
-    <div><span class="sw" style="background:#ff187f"></span>EVIDENCE</div>
-    <div><span class="sw" style="background:#b66cff"></span>HYPOTHESIS</div>
+
+
+  <!-- PIPELINE -->
+
+  <div class="panel">
+
+    <div class="panelTitle">
+      PIPELINE
+    </div>
+
+    <div class="panelBody">
+
+      <div class="pipeline">
+
+        <div
+          id="stageText"
+          class="stage"
+        >
+          TEXT
+        </div>
+
+        <div
+          id="stageToken"
+          class="stage"
+        >
+          TOKENIZATION
+        </div>
+
+        <div
+          id="stageModel"
+          class="stage"
+        >
+          E5 EMBEDDING
+        </div>
+
+        <div
+          id="stageVector"
+          class="stage"
+        >
+          VECTOR 384D
+        </div>
+
+        <div
+          id="stageStore"
+          class="stage"
+        >
+          ANCHORED INSERT
+        </div>
+
+        <div
+          id="stageSearch"
+          class="stage"
+        >
+          COSINE SEARCH
+        </div>
+
+      </div>
+
+    </div>
+
   </div>
-  <div class="toolbar">
-    <button id="edges" class="toggle active">EDGES</button>
-    <button id="hyper" class="toggle active">HYPER</button>
-    <button id="anchors" class="toggle">ANCHORS</button>
-    <button id="fibonacci" class="toggle active">FIBONACCI</button>
-    <button id="clear" class="toggle">CLEAR</button>
+
+
+  <!-- SYSTEM LOG -->
+
+  <div class="panel">
+
+    <div class="panelTitle">
+      SYSTEM LOG
+    </div>
+
+    <div class="panelBody">
+
+      <div
+        id="log"
+        class="log"
+      ></div>
+
+    </div>
+
   </div>
+
+
+  <!-- VECTOR -->
+
+  <div class="panel">
+
+    <div class="panelTitle">
+      CURRENT VECTOR
+    </div>
+
+    <div class="panelBody">
+
+      <div
+        id="vectorDim"
+        class="vectorDim"
+      >
+        d = —
+      </div>
+
+      <div
+        id="vectorBox"
+        class="vectorBox"
+      >
+        Noch kein Embedding berechnet.
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- METHOD -->
+
+  <div class="panel">
+
+    <div class="panelTitle">
+      METHOD
+    </div>
+
+    <div class="panelBody">
+
+      <div class="arch">
+
+        <b>HIGH-D → 3D</b><br>
+
+        384D cosine neighborhood →
+        anchor selection →
+        local distance fitting →
+        local relaxation →
+        fixed 3D position.
+
+        <br><br>
+
+        <b>SEMANTIC SPACE</b><br>
+
+        Die vollständige 384D-Repräsentation
+        bleibt die semantische Wahrheit
+        für Retrieval und Similarity.
+
+        <br><br>
+
+        <b>3D POSITION</b><br>
+
+        <code>pos3d</code> ist ausschließlich
+        die visuelle Darstellung.
+
+        <br><br>
+
+        <b>ANCHORS</b><br>
+
+        Bereits platzierte Erinnerungen
+        werden bei späteren Inserts
+        nicht verschoben.
+
+        <br><br>
+
+        <b>EDGES</b><br>
+
+        Sichtbarkeit einer Brücke basiert
+        ausschließlich auf 384D-Cosine.
+
+        <br><br>
+
+        <b>PROJECT MEMORY</b><br>
+
+        Git-Commit, Diff, Code-State und
+        Project-State können später als
+        eigene deterministische Node-Typen
+        in denselben Graph integriert werden.
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =======================================================
+     3D SPACE
+======================================================= -->
+
+<div
+  class="col sceneColumn"
+>
+
+  <div class="panel scenePanel">
+
+    <div class="panelTitle">
+      EMBEDDING SPACE / 3D MEMORY SPACE
+    </div>
+
+    <div class="panelBody sceneBody">
+
+      <div id="scene">
+
+        <div class="hud">
+
+          <div>
+            384D EMBEDDINGS → ANCHORED R³
+          </div>
+
+          <div
+            id="hudStatus"
+            class="hudRight"
+          >
+            MEMORY SPACE EMPTY
+          </div>
+
+        </div>
+
+
+        <canvas id="canvas3d"></canvas>
+
+
+        <div class="controlsHint">
+
+          DRAG · ROTATE
+          &nbsp;|&nbsp;
+          WHEEL · ZOOM
+          &nbsp;|&nbsp;
+          CLICK · SELECT
+          &nbsp;|&nbsp;
+          DBLCLICK · FOCUS
+
+        </div>
+
+
+        <div class="toolbar3d">
+
+          <button id="resetCamBtn">
+            RESET
+          </button>
+
+          <button id="toggleLinksBtn">
+            LINKS ON
+          </button>
+
+        </div>
+
+
+        <div
+          id="inspector"
+          class="inspector"
+        >
+
+          <h3>
+            MEMORY INSPECTOR
+          </h3>
+
+          <div
+            id="inspId"
+            class="id"
+          >
+            —
+          </div>
+
+          <div
+            id="inspText"
+            class="txt"
+          >
+            —
+          </div>
+
+          <div
+            id="inspMeta"
+            class="meta"
+          >
+            —
+          </div>
+
+          <div
+            id="inspAnchors"
+            class="meta"
+            style="margin-top:8px"
+          ></div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =======================================================
+     RIGHT COLUMN
+======================================================= -->
+
+<div class="col">
+
+  <!-- MEMORY BANK -->
+
+  <div class="panel">
+
+    <div class="panelTitle">
+      MEMORY BANK
+    </div>
+
+    <div class="panelBody">
+
+      <div
+        id="memoryList"
+        class="memoryList"
+      >
+
+        <div
+          style="
+            color:#405861;
+            font-size:10px
+          "
+        >
+          VECTOR STORE EMPTY
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- SEARCH -->
+
+  <div class="panel">
+
+    <div class="panelTitle">
+      SEMANTIC QUERY
+    </div>
+
+    <div class="panelBody">
+
+      <input
+        id="queryInput"
+        placeholder="z.B. Stuttgart Termin"
+      >
+
+      <button
+        id="searchBtn"
+        class="pink"
+        disabled
+      >
+        RUN COSINE SEARCH
+      </button>
+
+
+      <div class="metrics">
+
+        <div class="metric">
+
+          <div class="metricLabel">
+            MEMORY COUNT
+          </div>
+
+          <div
+            id="memoryCount"
+            class="metricValue"
+          >
+            0
+          </div>
+
+        </div>
+
+
+        <div class="metric">
+
+          <div class="metricLabel">
+            VECTOR DIM
+          </div>
+
+          <div
+            id="dimension"
+            class="metricValue"
+          >
+            —
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- SEARCH RESULTS -->
+
+  <div class="panel">
+
+    <div class="panelTitle">
+      RELEVANCE SCANNER
+    </div>
+
+    <div class="panelBody">
+
+      <div id="ranking">
+
+        <div
+          style="
+            color:#405861;
+            font-size:10px
+          "
+        >
+          NO SEARCH RESULT
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
 </main>
 
-<aside class="panel right">
-  <section class="section">
-    <div class="section-title">SEMANTIC QUERY</div>
-    <div class="row"><input id="query" placeholder="Kontext suchen ..."><button id="search" class="btn small">SEARCH</button></div>
-    <div id="results"></div>
-  </section>
-
-  <section class="section">
-    <div class="section-title">MEMORY BANK</div>
-    <div id="memoryList" class="list"></div>
-  </section>
-
-  <section class="section">
-    <div class="section-title">NODE INSPECTOR</div>
-    <div id="inspector"><div class="empty">Keine Memory ausgewählt.</div></div>
-  </section>
-
-  <section class="section">
-    <div class="section-title">CODE BLOCKS</div>
-    <div id="blockList" class="list"></div>
-  </section>
-
-  <section class="section">
-    <div class="section-title">COMMITS / DIFF</div>
-    <label>COMMIT MESSAGE</label><input id="commitMessage" placeholder="z.B. add deterministic memory node">
-    <button id="commit" class="btn pink">+ COMMIT ERSTELLEN</button>
-    <div id="commitList"></div>
-    <div id="diffView" style="margin-top:8px"></div>
-  </section>
-
-  <section class="section">
-    <div class="section-title">HYPERGRAPH</div>
-    <div id="hyperList"></div>
-  </section>
-</aside>
-</div>
-<div id="toast"></div>
-</div>
 
 <script type="module">
+
+/* =========================================================
+   IMPORTS
+========================================================= */
+
 import * as THREE from 'three';
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {pipeline} from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
 
-const MODEL='Xenova/multilingual-e5-small', DIM=384, DB='NEURAL_MEMORY_CORE_V3', VERSION=3;
-const STORES={memories:'memories',hyperedges:'hyperedges',blocks:'blocks',commits:'commits',events:'events'};
-const PAIR_THRESHOLD=.72, BASE_SCALE=5;
+import {
+  OrbitControls
+} from 'three/addons/controls/OrbitControls.js';
 
-let db,extractor,ready=false,saving=false;
-let memories=[],hyperedges=[],blocks=[],commits=[],events=[];
-let selectedId=null,active=new Set(),showEdges=true,showHyper=true,showAnchors=false,showFibonacci=true;
-let scene,camera,renderer,controls,raycaster,mouse,points,pairGroup,hyperGroup,anchorGroup,fibGroup;
-const root=document.getElementById('scene');
+import {
+  pipeline
+} from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
 
-const $=id=>document.getElementById(id);
-const esc=x=>String(x??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
-const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
-const v3ok=p=>Array.isArray(p)&&p.length===3&&p.every(Number.isFinite);
-const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
-const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
-const mul=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
-const norm=a=>Math.hypot(...a);
-const normalize=a=>{let n=norm(a);return n<1e-12?[1,0,0]:mul(a,1/n)};
-const dist=(a,b)=>norm(sub(a,b));
 
-function log(msg,type='info'){
-  const e=document.createElement('div');e.style.cssText='font-size:7px;padding:3px 0;border-bottom:1px solid #ffffff06';
-  e.style.color=type==='error'?'#ff5575':type==='ok'?'#4ade80':'#718792';
-  e.textContent='['+new Date().toLocaleTimeString()+'] '+msg;$('log').prepend(e);
-}
-function toast(msg,error=false){$('toast').textContent=msg;$('toast').classList.toggle('error',error);$('toast').classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>$('toast').classList.remove('show'),2400)}
-function status(t,c='#f7d154'){$('status').textContent=t;$('statusDot').style.color=c;$('statusDot').style.background='currentColor'}
-function fnv(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
-function dirFromId(id){let h=fnv(id),a=(h%100000)/100000*Math.PI*2,b=(((h>>>8)%100000)/100000-.5)*Math.PI,cb=Math.cos(b);return normalize([Math.cos(a)*cb,Math.sin(b),Math.sin(a)*cb])}
-function dot(a,b){let s=0,n=Math.min(a.length,b.length);for(let i=0;i<n;i++)s+=a[i]*b[i];return s}
-function cosine(a,b){if(!a||!b)return 0;let x=Math.sqrt(dot(a,a)),y=Math.sqrt(dot(b,b));return x<1e-12||y<1e-12?0:clamp(dot(a,b)/(x*y),-1,1)}
-function angular(a,b){return Math.acos(clamp(cosine(a,b),-1,1))/Math.PI}
+/* =========================================================
+   CONFIGURATION
+========================================================= */
 
-/* ---------- deterministic JSON / SHA ---------- */
-function canonical(x){
-  if(x===null||typeof x!=='object')return JSON.stringify(x);
-  if(Array.isArray(x))return '['+x.map(canonical).join(',')+']';
-  return '{'+Object.keys(x).sort().map(k=>JSON.stringify(k)+':'+canonical(x[k])).join(',')+'}';
-}
-async function sha256(text){
-  const data=new TextEncoder().encode(text),buf=await crypto.subtle.digest('SHA-256',data);
-  return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,'0')).join('');
-}
-function snapshot(){
-  return {
-    memories:memories.map(m=>({id:m.id,text:m.text,type:m.type,tags:m.tags,vector:m.vector,pos3d:m.pos3d,anchors:m.anchors,positionLocked:m.positionLocked,createdAt:m.createdAt})),
-    blocks:blocks.map(b=>({id:b.id,path:b.path,name:b.name,content:b.content,createdAt:b.createdAt})),
-    hyperedges:hyperedges.map(h=>({id:h.id,nodeIds:h.nodeIds,label:h.label,type:h.type,source:h.source,score:h.score,createdAt:h.createdAt}))
-  };
+const CONFIG = Object.freeze({
+
+  MODEL:
+    'Xenova/multilingual-e5-small',
+
+  DIM:
+    384,
+
+  K_NEIGHBORS:
+    8,
+
+  ANCHOR_COUNT:
+    5,
+
+  RELAX_ITERATIONS:
+    120,
+
+  EDGE_THRESHOLD:
+    0.72,
+
+  DB_NAME:
+    'NEURAL_MEMORY_ANCHORED_V2',
+
+  DB_STORE:
+    'memories',
+
+  DB_VERSION:
+    3
+
+});
+
+
+/* =========================================================
+   APPLICATION STATE
+========================================================= */
+
+const state = {
+
+  extractor:
+    null,
+
+  modelPromise:
+    null,
+
+  modelReady:
+    false,
+
+  currentVector:
+    null,
+
+  currentText:
+    '',
+
+  memories:
+    [],
+
+  nextId:
+    1,
+
+  selectedId:
+    null,
+
+  showLinks:
+    true,
+
+  queryVector:
+    null,
+
+  db:
+    null
+
+};
+
+
+/* =========================================================
+   DOM CACHE
+========================================================= */
+
+const $ = id =>
+  document.getElementById(id);
+
+
+/* =========================================================
+   BASIC HELPERS
+========================================================= */
+
+function sleep(ms){
+
+  return new Promise(
+    resolve => setTimeout(resolve,ms)
+  );
+
 }
 
-/* ---------- indexedDB ---------- */
-function req(r){return new Promise((ok,no)=>{r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error||Error('IndexedDB request failed'))})}
-async function openDB(){
- if(db)return db;
- db=await new Promise((ok,no)=>{
-  const r=indexedDB.open(DB,VERSION);
-  r.onupgradeneeded=e=>{
-   const d=e.target.result;
-   for(const s of Object.values(STORES))if(!d.objectStoreNames.contains(s))d.createObjectStore(s,{keyPath:'id'});
-  };
-  r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error);
- });
- return db;
-}
-async function all(store){return req((await openDB()).transaction(store,'readonly').objectStore(store).getAll())}
-async function put(store,obj){return req((await openDB()).transaction(store,'readwrite').objectStore(store).put(obj))}
-async function del(store,id){return req((await openDB()).transaction(store,'readwrite').objectStore(store).delete(id))}
-async function replaceAll(store,arr){
- const d=await openDB(),tx=d.transaction(store,'readwrite'),s=tx.objectStore(store);s.clear();for(const x of arr)s.put(x);
- return new Promise((ok,no)=>{tx.oncomplete=ok;tx.onerror=()=>no(tx.error)})
-}
-function nextId(prefix,arr){
- let max=0;for(const x of arr){const m=new RegExp('^'+prefix+'-(\\d+)$').exec(x.id);if(m)max=Math.max(max,+m[1])}
- return prefix+'-'+String(max+1).padStart(6,'0')
+
+function now(){
+
+  return new Date().toISOString();
+
 }
 
-/* ---------- embedding ---------- */
-async function embed(text,mode='passage'){
- if(!extractor)throw Error('Embedding Engine nicht bereit');
- const out=await extractor((mode==='query'?'query: ':'passage: ')+text,{pooling:'mean',normalize:true});
- let d=out?.data?Array.from(out.data):typeof out?.tolist==='function'?out.tolist():null;
- while(Array.isArray(d)&&d.length===1&&Array.isArray(d[0]))d=d[0];
- d=Array.from(d||[],Number);if(d.length!==DIM)throw Error('Embedding '+d.length+'D statt '+DIM+'D');return d;
-}
-async function loadModel(){
- try{
-  status('LOADING MODEL');$('embeddingStatus')?.textContent='';
-  extractor=await pipeline('feature-extraction',MODEL,{dtype:'q8',device:'wasm'});
-  await embed('model test');ready=true;status('CORE ONLINE','#4ade80');log('384D Embedding Engine bereit.','ok');
- }catch(e){console.error(e);status('MODEL ERROR','#ff5575');log(e.message,'error');toast('Embedding-Modell konnte nicht geladen werden.',true)}
+
+function esc(value){
+
+  return String(value)
+
+    .replaceAll('&','&amp;')
+
+    .replaceAll('<','&lt;')
+
+    .replaceAll('>','&gt;')
+
+    .replaceAll('"','&quot;')
+
+    .replaceAll("'",'&#039;');
+
 }
 
-/* ---------- Fibonacci sphere ---------- */
+
+function log(message,type='info'){
+
+  const entry =
+    document.createElement('div');
+
+  entry.className = type;
+
+  const time =
+    new Date().toLocaleTimeString(
+      'de-DE',
+      {hour12:false}
+    );
+
+  entry.textContent =
+    `[${time}] ${message}`;
+
+  $('log').prepend(entry);
+
+  while(
+    $('log').children.length > 60
+  ){
+
+    $('log').lastElementChild.remove();
+
+  }
+
+}
+
+
+function setStatus(online,text){
+
+  $('statusDot')
+    .classList
+    .toggle('online',online);
+
+  $('statusText').textContent =
+    text;
+
+}
+
+
+function stage(id,status){
+
+  const element = $(id);
+
+  if(!element)return;
+
+  element.classList.remove(
+    'active',
+    'done'
+  );
+
+  if(status){
+
+    element.classList.add(status);
+
+  }
+
+}
+
+
+function resetStages(){
+
+  [
+    'stageText',
+    'stageToken',
+    'stageModel',
+    'stageVector',
+    'stageStore',
+    'stageSearch'
+  ]
+  .forEach(
+    id => stage(id,null)
+  );
+
+}
+
+
+function error(message=''){
+
+  $('errorBox').textContent =
+    message;
+
+}
+
+
+/* =========================================================
+   VECTOR MATH
+========================================================= */
+
 /*
- Deterministische Fibonacci-Sphäre:
- phi = pi*(3-sqrt(5))
- y = 1 - 2*i/(n-1)
- r = sqrt(1-y²)
- x = cos(i*phi)*r
- z = sin(i*phi)*r
+   v ∈ R^384
 
- Sie dient ausschließlich als deterministische visuelle Fallback-/Verteilungsschicht.
- Sie verändert den gespeicherten semantischen pos3d-Wert nicht.
+   Cosine similarity:
+
+   cos(a,b)
+     =
+   (a · b)
+   /
+   (||a|| ||b||)
+
+   3D coordinates are NOT used here.
 */
-function fibonacciPoint(i,n,radius=1){
- if(n<=1)return [0,0,1];
- const g=Math.PI*(3-Math.sqrt(5)),y=1-(2*i)/(n-1),r=Math.sqrt(Math.max(0,1-y*y)),a=i*g;
- return [Math.cos(a)*r*radius,y*radius,Math.sin(a)*r*radius]
-}
-function fibonacciFallback(id,index,total){
- const p=fibonacciPoint((fnv(id)+index)%Math.max(total,1),Math.max(total,2),BASE_SCALE*1.7);
- return p
+
+function dot(a,b){
+
+  let sum = 0;
+
+  const n =
+    Math.min(
+      a.length,
+      b.length
+    );
+
+  for(let i=0;i<n;i++){
+
+    sum +=
+      a[i] * b[i];
+
+  }
+
+  return sum;
+
 }
 
-/* ---------- anchored positions ---------- */
-function localScale(){
- if(memories.length<2)return BASE_SCALE;
- let sum=0,n=0,ss=memories.slice(-20);
- for(let i=0;i<ss.length;i++)for(let j=i+1;j<ss.length;j++){let d=dist(ss[i].pos3d,ss[j].pos3d);if(d>.001){sum+=d;n++}}
- return n?clamp(sum/n,2,10):BASE_SCALE;
-}
-function neighbors(v){return memories.filter(m=>Array.isArray(m.vector)&&m.vector.length===DIM&&v3ok(m.pos3d)).map(m=>({m,s:cosine(v,m.vector)})).sort((a,b)=>b.s-a.s)}
-function place(memory){
- if(!memories.length){memory.pos3d=[0,0,0];memory.anchors=[];memory.positionLocked=true;return}
- const ns=neighbors(memory.vector).slice(0,4);
- if(!ns.length){memory.pos3d=fibonacciFallback(memory.id,memories.length,memories.length+1);memory.anchors=[];memory.positionLocked=true;return}
- if(ns.length===1){
-  const a=ns[0].m,d=localScale()*(.7+(1-angular(memory.vector,a.vector))*1.5);
-  memory.pos3d=add(a.pos3d,mul(dirFromId(memory.id),d));memory.anchors=[a.id]
- }else{
-  let p=[0,0,0],w=0;
-  for(const n of ns){let q=Math.max(.001,n.s);p=add(p,mul(n.m.pos3d,q));w+=q}
-  memory.pos3d=mul(p,1/w);memory.anchors=ns.map(x=>x.m.id)
- }
- memory.positionLocked=true
-}
-function pairEdges(){
- const e=[];for(let i=0;i<memories.length;i++)for(let j=i+1;j<memories.length;j++){let s=cosine(memories[i].vector,memories[j].vector);if(s>=PAIR_THRESHOLD)e.push({a:memories[i],b:memories[j],s})}return e
+
+function norm(v){
+
+  let sum = 0;
+
+  for(const x of v){
+
+    sum += x*x;
+
+  }
+
+  return Math.sqrt(sum);
+
 }
 
-/* ---------- creation/deletion ---------- */
-async function createMemory(){
- if(saving)return;let text=$('memoryText').value.trim();if(!text)return toast('Text fehlt.',true);if(!ready)return toast('Embedding Engine nicht bereit.',true);
- saving=true;$('saveMemory').disabled=true;
- try{
-  status('WRITING MEMORY');let m={id:nextId('MEM',memories),text,type:$('memoryType').value,tags:$('memoryTags').value.split(',').map(x=>x.trim()).filter(Boolean),vector:await embed(text),pos3d:null,anchors:[],positionLocked:false,createdAt:new Date().toISOString()};
-  place(m);await put(STORES.memories,m);memories.push(m);
-  $('memoryText').value='';$('memoryTags').value='';selectedId=m.id;active=new Set([m.id]);
-  await event('memory.created',{memoryId:m.id});refresh();render();status('CORE ONLINE','#4ade80');log(m.id+' angelegt.','ok');toast(m.id+' gespeichert.')
- }catch(e){console.error(e);status('SAVE ERROR','#ff5575');log(e.message,'error');toast('Speichern fehlgeschlagen.',true)}
- finally{saving=false;$('saveMemory').disabled=false}
-}
-async function deleteSelected(){
- if(!selectedId)return toast('Keine Memory ausgewählt.',true);
- const m=memories.find(x=>x.id===selectedId);if(!m)return;
- if(!confirm(m.id+' wirklich löschen? Zugehörige Hyperedges werden ebenfalls gelöscht.'))return;
- try{
-  status('DELETING','#f7d154');const hs=hyperedges.filter(h=>h.nodeIds.includes(m.id));
-  for(const h of hs)await del(STORES.hyperedges,h.id);await del(STORES.memories,m.id);
-  memories=memories.filter(x=>x.id!==m.id);hyperedges=hyperedges.filter(h=>!h.nodeIds.includes(m.id));
-  selectedId=null;active.clear();await event('memory.deleted',{memoryId:m.id,hyperedges:hs.map(h=>h.id)});
-  refresh();render();status('CORE ONLINE','#4ade80');log(m.id+' gelöscht.','ok')
- }catch(e){log(e.message,'error');toast('Löschen fehlgeschlagen.',true)}
-}
-async function createBlock(){
- const path=$('filePath').value.trim(),name=$('blockName').value.trim(),content=$('codeText').value;
- if(!path||!name||!content.trim())return toast('Pfad, Name und Code erforderlich.',true);
- const b={id:nextId('BLK',blocks),path,name,content,createdAt:new Date().toISOString()};
- await put(STORES.blocks,b);blocks.push(b);$('filePath').value='';$('blockName').value='';$('codeText').value='';
- await event('block.created',{blockId:b.id,path});refresh();toast(b.id+' gespeichert.')
-}
-async function createHyper(){
- const ids=[...new Set($('hyperMembers').value.split(',').map(x=>x.trim()).filter(Boolean))];
- if(ids.length<3)return toast('Mindestens 3 Nodes.',true);
- if(ids.some(id=>!memories.some(m=>m.id===id)))return toast('Unbekannte Memory ID.',true);
- const key=ids.slice().sort().join('|');if(hyperedges.some(h=>h.nodeIds.slice().sort().join('|')===key))return toast('Hyperedge existiert.',true);
- const h={id:nextId('H',hyperedges),nodeIds:ids,label:$('hyperLabel').value.trim()||'MANUAL CONTEXT',type:'manual',source:'user',score:null,createdAt:new Date().toISOString()};
- await put(STORES.hyperedges,h);hyperedges.push(h);await event('hyperedge.created',{hyperedgeId:h.id});$('hyperMembers').value='';$('hyperLabel').value='';refresh();render();toast(h.id+' erstellt.')
-}
-async function deleteHyper(id){if(!confirm(id+' löschen?'))return;await del(STORES.hyperedges,id);hyperedges=hyperedges.filter(h=>h.id!==id);await event('hyperedge.deleted',{hyperedgeId:id});refresh();render()}
 
-/* ---------- event store ---------- */
-async function event(type,payload){
- const e={id:'EVT-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),type,payload,at:new Date().toISOString()};events.push(e);await put(STORES.events,e)
+function cosine(a,b){
+
+  const na =
+    norm(a);
+
+  const nb =
+    norm(b);
+
+  if(
+    na === 0 ||
+    nb === 0
+  ){
+
+    return 0;
+
+  }
+
+  return dot(a,b) /
+    (na * nb);
+
 }
 
-/* ---------- commit / diff ---------- */
-async function createCommit(){
- const message=$('commitMessage').value.trim()||'snapshot';
- const state=snapshot(),parent=commits.at(-1)?.hash||null;
- const body={version:1,parent,message,state};
- const hash=await sha256(canonical(body));
- const c={id:nextId('COM',commits),hash,parent,message,state,createdAt:new Date().toISOString()};
- await put(STORES.commits,c);commits.push(c);$('commitMessage').value='';
- await event('commit.created',{commitId:c.id,hash:c.hash,parent:c.parent});
- refresh();showDiff(c);toast(c.id+' · '+hash.slice(0,12));log('Commit '+c.id+' erstellt.','ok')
-}
-function flattenState(s){
- const lines=[];
- for(const m of s.memories)lines.push('MEM '+m.id+' | '+m.type+' | '+m.text);
- for(const b of s.blocks)lines.push('FILE '+b.path+' :: '+b.name+' |\\n'+b.content);
- for(const h of s.hyperedges)lines.push('HYPER '+h.id+' ['+h.nodeIds.join(',')+'] '+h.label);
- return lines
-}
-function diffLines(a,b){
- const n=a.length,m=b.length,dp=Array.from({length:n+1},()=>Array(m+1).fill(0));
- for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)dp[i][j]=a[i]===b[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
- let i=0,j=0,out=[];
- while(i<n&&j<m){if(a[i]===b[j]){out.push([' ',a[i]]);i++;j++}else if(dp[i+1][j]>=dp[i][j+1]){out.push(['-',a[i++]]}else out.push(['+',b[j++]]}
- while(i<n)out.push(['-',a[i++]]);while(j<m)out.push(['+',b[j++]]);
- return out
-}
-function showDiff(c){
- const parent=commits.find(x=>x.hash===c.parent),a=parent?flattenState(parent.state):[],b=flattenState(c.state),d=diffLines(a,b);
- $('diffView').innerHTML='<div class="meta">COMMIT '+esc(c.id)+' · '+esc(c.hash)+'<br>PARENT '+esc(c.parent||'ROOT')+'</div><div class="code">'+d.map(x=>'<div class="'+(x[0]==='+'?'diff-add':x[0]==='-'?'diff-del':'')+'">'+esc(x[0]+' '+x[1])+'</div>').join('')+'</div>'
+
+function clamp(
+  value,
+  min,
+  max
+){
+
+  return Math.max(
+    min,
+    Math.min(max,value)
+  );
+
 }
 
-/* ---------- UI ---------- */
-function select(id){selectedId=id;active=new Set([id]);refresh();render();focus(memories.find(m=>m.id===id))}
-function refresh(){
- $('nodeCount').textContent=memories.length;$('edgeCount').textContent=pairEdges().length;$('hyperCount').textContent=hyperedges.length;
- $('commitCount').textContent=commits.length;$('blockCount').textContent=blocks.length;$('activeCount').textContent=active.size;
- $('memoryList').innerHTML=memories.length?memories.slice().reverse().map(m=>`<div class="item ${m.id===selectedId?'selected':''}" data-id="${esc(m.id)}"><span class="id">${esc(m.id)}</span><span class="type">${esc(m.type)}</span><div class="text">${esc(m.text)}</div></div>`).join(''):'<div class="empty">MEMORY BANK EMPTY</div>';
- $('memoryList').querySelectorAll('[data-id]').forEach(e=>e.onclick=()=>select(e.dataset.id));
- const m=memories.find(x=>x.id===selectedId);
- $('inspector').innerHTML=m?`<div class="ins"><b>${esc(m.id)}</b><br>TYPE / ${esc(m.type)}<br>R³ / [${m.pos3d.map(x=>x.toFixed(3)).join(', ')}]<br>VECTOR / ${m.vector.length}D<br>LOCK / ${m.positionLocked?'YES':'NO'}<br>ANCHORS / ${m.anchors.join(', ')||'—'}<br>TAGS / ${esc(m.tags.join(', ')||'—')}<hr>${esc(m.text)}</div>`:'<div class="empty">Keine Memory ausgewählt.</div>';
- $('blockList').innerHTML=blocks.length?blocks.slice().reverse().map(b=>`<div class="item" data-block="${esc(b.id)}"><span class="id">${esc(b.id)}</span><div class="text">${esc(b.path)} :: ${esc(b.name)}</div></div>`).join(''):'<div class="empty">NO CODE BLOCKS</div>';
- $('blockList').querySelectorAll('[data-block]').forEach(e=>e.onclick=()=>{let b=blocks.find(x=>x.id===e.dataset.block);if(b){$('filePath').value=b.path;$('blockName').value=b.name;$('codeText').value=b.content}});
- $('commitList').innerHTML=commits.slice().reverse().map(c=>`<div class="commit" data-commit="${esc(c.id)}"><div class="hash">${esc(c.id)} · ${esc(c.hash.slice(0,18))}</div><div class="msg">${esc(c.message)}</div><div class="meta">${new Date(c.createdAt).toLocaleString()}</div></div>`).join('');
- $('commitList').querySelectorAll('[data-commit]').forEach(e=>e.onclick=()=>showDiff(commits.find(c=>c.id===e.dataset.commit)));
- $('hyperList').innerHTML=hyperedges.length?hyperedges.map(h=>`<div class="item"><span class="id">${esc(h.id)}</span><div class="text">${esc(h.label)}<br>${h.nodeIds.map(esc).join(' · ')}</div><button class="btn small" data-delh="${esc(h.id)}">DELETE</button></div>`).join(''):'<div class="empty">HYPERGRAPH EMPTY</div>';
- $('hyperList').querySelectorAll('[data-delh]').forEach(e=>e.onclick=ev=>{ev.stopPropagation();deleteHyper(e.dataset.delh)})
-}
-async function query(){
- const q=$('query').value.trim();if(!q)return;if(!ready)return toast('Embedding Engine nicht bereit.',true);
- const v=await embed(q,'query'),r=memories.map(m=>({m,s:cosine(v,m.vector)})).sort((a,b)=>b.s-a.s).slice(0,12);
- $('results').innerHTML=r.map(x=>`<div class="result" data-q="${esc(x.m.id)}"><span>${esc(x.m.id)}</span><span class="score">${x.s.toFixed(3)}</span><div class="text">${esc(x.m.text)}</div></div>`).join('');
- $('results').querySelectorAll('[data-q]').forEach(e=>e.onclick=()=>select(e.dataset.q));active=new Set(r.slice(0,8).map(x=>x.m.id));render()
+
+function angularDistance(a,b){
+
+  return Math.sqrt(
+    Math.max(
+      0,
+      2 * (1 - cosine(a,b))
+    )
+  );
+
 }
 
-/* ---------- three ---------- */
-function color(type){return new THREE.Color(type==='concept'?'#4ade80':type==='claim'?'#f7d154':type==='evidence'?'#ff187f':type==='hypothesis'?'#b66cff':'#00f5ff')}
-function dispose(o){if(!o)return;o.traverse(c=>{c.geometry?.dispose();if(c.material){Array.isArray(c.material)?c.material.forEach(m=>m.dispose()):c.material.dispose()}})}
-function rebuildPoints(){
- if(points){scene.remove(points);dispose(points)}
- if(!memories.length)return;
- const pos=[],cols=[];memories.forEach((m,i)=>{let p=v3ok(m.pos3d)?m.pos3d:fibonacciFallback(m.id,i,memories.length);pos.push(...p);let c=color(m.type),k=active.size&&!active.has(m.id)?.12:1;if(selectedId===m.id){c.set('#ff187f');k=1.5}cols.push(c.r*k,c.g*k,c.b*k)});
- const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));
- points=new THREE.Points(g,new THREE.PointsMaterial({size:innerWidth<800?.78:.62,sizeAttenuation:true,vertexColors:true,transparent:true,opacity:.95,depthWrite:false}));scene.add(points)
+
+function distance3(a,b){
+
+  return Math.hypot(
+    a[0]-b[0],
+    a[1]-b[1],
+    a[2]-b[2]
+  );
+
 }
-function rebuildLines(){
- for(const [group,flag] of [[pairGroup,showEdges],[hyperGroup,showHyper],[anchorGroup,showAnchors],[fibGroup,showFibonacci]]){dispose(group)}
- pairGroup=new THREE.Group();hyperGroup=new THREE.Group();anchorGroup=new THREE.Group();fibGroup=new THREE.Group();scene.add(pairGroup,hyperGroup,anchorGroup,fibGroup);
- if(showEdges){const p=[];for(const e of pairEdges())if(!active.size||active.has(e.a.id)||active.has(e.b.id))p.push(...e.a.pos3d,...e.b.pos3d);if(p.length){let g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));pairGroup.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x008fa0,transparent:true,opacity:active.size?.3:.13})))}}
- if(showHyper)for(const h of hyperedges){const ns=h.nodeIds.map(id=>memories.find(m=>m.id===id)).filter(m=>m&&v3ok(m.pos3d));if(ns.length<3)continue;let c=[0,0,0];ns.forEach(n=>c=add(c,n.pos3d));c=mul(c,1/ns.length);let p=[];ns.forEach(n=>p.push(...c,...n.pos3d));let g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));hyperGroup.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0xb66cff,transparent:true,opacity:h.source==='user'?.55:.25})));let hub=new THREE.Mesh(new THREE.SphereGeometry(.09,10,10),new THREE.MeshBasicMaterial({color:0xb66cff}));hub.position.set(...c);hyperGroup.add(hub)}
- if(showAnchors){let p=[];memories.forEach(m=>(m.anchors||[]).forEach(id=>{let a=memories.find(x=>x.id===id);if(a)p.push(...m.pos3d,...a.pos3d)}));if(p.length){let g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));anchorGroup.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x4ade80,transparent:true,opacity:.13})))}}
- if(showFibonacci&&memories.length>1){const p=[];const r=BASE_SCALE*1.7;for(let i=0;i<memories.length;i++){const a=fibonacciPoint(i,memories.length,r),b=fibonacciPoint((i+1)%memories.length,memories.length,r);p.push(...a,...b)}let g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));fibGroup.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x00f5ff,transparent:true,opacity:.018})))}}
-function render(){rebuildPoints();rebuildLines()}
-function focus(m){if(!m)return;let t=new THREE.Vector3(...m.pos3d),d=new THREE.Vector3(.8,.45,1).normalize();camera.position.copy(t.clone().add(d.multiplyScalar(8)));controls.target.copy(t);controls.update()}
+
+
+/* =========================================================
+   INDEXEDDB
+========================================================= */
+
+function openDB(){
+
+  if(state.db){
+
+    return Promise.resolve(
+      state.db
+    );
+
+  }
+
+  return new Promise(
+    (resolve,reject)=>{
+
+      const request =
+        indexedDB.open(
+          CONFIG.DB_NAME,
+          CONFIG.DB_VERSION
+        );
+
+
+      request.onupgradeneeded =
+        () => {
+
+          const db =
+            request.result;
+
+          if(
+            !db.objectStoreNames
+              .contains(CONFIG.DB_STORE)
+          ){
+
+            db.createObjectStore(
+              CONFIG.DB_STORE,
+              {
+                keyPath:'id'
+              }
+            );
+
+          }
+
+        };
+
+
+      request.onsuccess =
+        () => {
+
+          state.db =
+            request.result;
+
+          state.db.onclose =
+            () => {
+
+              state.db = null;
+
+            };
+
+          resolve(
+            state.db
+          );
+
+        };
+
+
+      request.onerror =
+        () => {
+
+          reject(
+            request.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+async function dbGetAll(){
+
+  try{
+
+    const db =
+      await openDB();
+
+    return await new Promise(
+      (resolve,reject)=>{
+
+        const tx =
+          db.transaction(
+            CONFIG.DB_STORE,
+            'readonly'
+          );
+
+        const request =
+          tx
+            .objectStore(CONFIG.DB_STORE)
+            .getAll();
+
+        request.onsuccess =
+          () => resolve(
+            request.result || []
+          );
+
+        request.onerror =
+          () => reject(
+            request.error
+          );
+
+      }
+    );
+
+  }catch(e){
+
+    log(
+      `IndexedDB nicht verfügbar: ${e.message}`,
+      'warn'
+    );
+
+    return [];
+
+  }
+
+}
+
+
+async function dbPut(record){
+
+  const db =
+    await openDB();
+
+  return await new Promise(
+    (resolve,reject)=>{
+
+      const tx =
+        db.transaction(
+          CONFIG.DB_STORE,
+          'readwrite'
+        );
+
+      tx
+        .objectStore(CONFIG.DB_STORE)
+        .put(record);
+
+      tx.oncomplete =
+        () => resolve();
+
+      tx.onerror =
+        () => reject(
+          tx.error
+        );
+
+    }
+  );
+
+}
+
+
+async function dbPutMany(records){
+
+  if(!records.length)return;
+
+  const db =
+    await openDB();
+
+  return await new Promise(
+    (resolve,reject)=>{
+
+      const tx =
+        db.transaction(
+          CONFIG.DB_STORE,
+          'readwrite'
+        );
+
+      const store =
+        tx.objectStore(
+          CONFIG.DB_STORE
+        );
+
+      for(
+        const record
+        of records
+      ){
+
+        store.put(record);
+
+      }
+
+      tx.oncomplete =
+        () => resolve();
+
+      tx.onerror =
+        () => reject(
+          tx.error
+        );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   EMBEDDING MODEL
+========================================================= */
+
+async function loadModel(){
+
+  if(state.modelReady){
+
+    return true;
+
+  }
+
+
+  if(state.modelPromise){
+
+    return state.modelPromise;
+
+  }
+
+
+  state.modelPromise =
+    (async()=>{
+
+      setStatus(
+        false,
+        'LOADING EMBEDDING CORE'
+      );
+
+      stage(
+        'stageModel',
+        'active'
+      );
+
+      error('');
+
+      log(
+        `Lade ${CONFIG.MODEL} …`,
+        'info'
+      );
+
+      log(
+        'Browser-Modus: WASM + quantisiertes Modell.',
+        'info'
+      );
+
+      try{
+
+        state.extractor =
+          await pipeline(
+            'feature-extraction',
+            CONFIG.MODEL,
+            {
+
+              dtype:'q8',
+
+              device:'wasm',
+
+              progress_callback:
+                progress => {
+
+                  if(
+                    progress?.status ===
+                    'progress'
+                  ){
+
+                    const pct =
+                      Number.isFinite(
+                        progress.progress
+                      )
+                      ? ` ${Math.round(progress.progress)}%`
+                      : '';
+
+                    const file =
+                      progress.file
+                      ? ` · ${progress.file}`
+                      : '';
+
+                    log(
+                      `Modelldownload${pct}${file}`,
+                      'info'
+                    );
+
+                  }
+
+                }
+
+            }
+          );
+
+
+        /*
+           Echter Inferenztest.
+
+           Erst danach gilt das Modell
+           als ONLINE.
+        */
+
+        const smoke =
+          await state.extractor(
+            'passage: Modelltest',
+            {
+              pooling:'mean',
+              normalize:true
+            }
+          );
+
+
+        const vector =
+          Array.from(
+            smoke.data ||
+            smoke.tolist()[0]
+          );
+
+
+        if(
+          vector.length !==
+          CONFIG.DIM
+        ){
+
+          throw new Error(
+            `Modelltest lieferte ${vector.length} Dimensionen statt ${CONFIG.DIM}.`
+          );
+
+        }
+
+
+        state.modelReady =
+          true;
+
+        setStatus(
+          true,
+          `EMBEDDING CORE ONLINE · ${CONFIG.DIM}D`
+        );
+
+        $('dimension').textContent =
+          CONFIG.DIM;
+
+        stage(
+          'stageModel',
+          'done'
+        );
+
+        log(
+          'Embedding Core ONLINE.',
+          'ok'
+        );
+
+        log(
+          `Smoke-Test erfolgreich · ${CONFIG.DIM}D.`,
+          'ok'
+        );
+
+        return true;
+
+      }catch(e){
+
+        state.extractor =
+          null;
+
+        state.modelReady =
+          false;
+
+        setStatus(
+          false,
+          'LOAD FAILED'
+        );
+
+        stage(
+          'stageModel',
+          null
+        );
+
+        error(
+          `${e?.message || e}\n\n` +
+          'Das Modell wird im Browser geladen. ' +
+          'Beim ersten Start kann der Download länger dauern.'
+        );
+
+        log(
+          `Embedding-Modell konnte nicht geladen werden: ${e?.message || e}`,
+          'err'
+        );
+
+        return false;
+
+      }finally{
+
+        state.modelPromise =
+          null;
+
+      }
+
+    })();
+
+
+  return state.modelPromise;
+
+}
+
+
+async function embed(
+  text,
+  mode='passage'
+){
+
+  const ready =
+    await loadModel();
+
+  if(
+    !ready ||
+    !state.extractor
+  ){
+
+    throw new Error(
+      'Embedding-Modell ist nicht verfügbar.'
+    );
+
+  }
+
+
+  const clean =
+    text.trim();
+
+  if(!clean){
+
+    throw new Error(
+      'Leerer Text kann nicht eingebettet werden.'
+    );
+
+  }
+
+
+  const prepared =
+    `${mode}: ${clean}`;
+
+
+  const output =
+    await state.extractor(
+      prepared,
+      {
+        pooling:'mean',
+        normalize:true
+      }
+    );
+
+
+  const vector =
+    Array.from(
+      output.data ||
+      output.tolist()[0]
+    );
+
+
+  if(
+    vector.length !==
+    CONFIG.DIM
+  ){
+
+    throw new Error(
+      `Unerwartete Dimension ${vector.length}, erwartet ${CONFIG.DIM}.`
+    );
+
+  }
+
+
+  return vector;
+
+}
+
+
+/* =========================================================
+   MEMORY SCHEMA
+========================================================= */
+
+/*
+   WICHTIG:
+
+   semantic.embedding.vector
+       = vollständiger 384D-Vektor
+
+   geometry.pos3d
+       = separate 3D-Visualisierung
+
+   Git-Metadaten werden später separat
+   als deterministische Node-Typen ergänzt.
+*/
+
+function createMemoryRecord(
+  id,
+  text,
+  vector
+){
+
+  return {
+
+    id,
+
+    schema_version:
+      '1.1',
+
+    type:
+      'memory',
+
+    content:{
+
+      title:
+        text.slice(0,80),
+
+      text
+
+    },
+
+    semantic:{
+
+      embedding:{
+
+        model:
+          CONFIG.MODEL,
+
+        dimensions:
+          CONFIG.DIM,
+
+        vector:
+          vector.slice()
+
+      }
+
+    },
+
+    geometry:{
+
+      pos3d:[
+        0,
+        0,
+        0
+      ]
+
+    },
+
+    anchors:[],
+
+    positionLocked:
+      true,
+
+    created_at:
+      now()
+
+  };
+
+}
+
+
+/*
+   Compatibility helpers.
+
+   Die 384D-Daten liegen strukturiert unter
+   semantic.embedding.vector.
+
+   Die Funktionen erlauben zugleich den
+   Zugriff auf ältere gespeicherte Datensätze.
+*/
+
+function getVector(memory){
+
+  if(
+    Array.isArray(
+      memory?.semantic
+        ?.embedding
+        ?.vector
+    )
+  ){
+
+    return memory.semantic.embedding.vector;
+
+  }
+
+  if(
+    Array.isArray(
+      memory?.vector
+    )
+  ){
+
+    return memory.vector;
+
+  }
+
+  return [];
+
+}
+
+
+function getPosition(memory){
+
+  if(
+    Array.isArray(
+      memory?.geometry?.pos3d
+    )
+  ){
+
+    return memory.geometry.pos3d;
+
+  }
+
+  if(
+    Array.isArray(memory?.pos3d)
+  ){
+
+    return memory.pos3d;
+
+  }
+
+  return [0,0,0];
+
+}
+
+
+function setPosition(
+  memory,
+  position
+){
+
+  if(!memory.geometry){
+
+    memory.geometry = {};
+
+  }
+
+  memory.geometry.pos3d =
+    position.slice();
+
+}
+
+
+/* =========================================================
+   ANCHOR SEARCH
+========================================================= */
+
+function nearestNeighbors(
+  vector
+){
+
+  return state.memories
+
+    .map(
+      memory => {
+
+        const v =
+          getVector(memory);
+
+        return {
+
+          memory,
+
+          score:
+            cosine(vector,v),
+
+          distance:
+            angularDistance(
+              vector,
+              v
+            )
+
+        };
+
+      }
+    )
+
+    .sort(
+      (a,b) =>
+        b.score -
+        a.score
+    )
+
+    .slice(
+      0,
+      CONFIG.K_NEIGHBORS
+    );
+
+}
+
+
+/* =========================================================
+   ANCHOR SELECTION
+========================================================= */
+
+function chooseAnchors(
+  neighbors
+){
+
+  if(
+    neighbors.length <=
+    CONFIG.ANCHOR_COUNT
+  ){
+
+    return neighbors.map(
+      x => x.memory
+    );
+
+  }
+
+
+  const selected = [
+    neighbors[0].memory
+  ];
+
+
+  while(
+    selected.length <
+    Math.min(
+      CONFIG.ANCHOR_COUNT,
+      neighbors.length
+    )
+  ){
+
+    let best =
+      null;
+
+    let bestValue =
+      -Infinity;
+
+
+    for(
+      const candidate
+      of neighbors
+    ){
+
+      if(
+        selected.some(
+          item =>
+            item.id ===
+            candidate.memory.id
+        )
+      ){
+
+        continue;
+
+      }
+
+
+      let diversity =
+        Infinity;
+
+
+      for(
+        const selectedMemory
+        of selected
+      ){
+
+        diversity =
+          Math.min(
+            diversity,
+            angularDistance(
+              getVector(candidate.memory),
+              getVector(selectedMemory)
+            )
+          );
+
+      }
+
+
+      const value =
+        diversity * 0.65 +
+        candidate.score * 0.35;
+
+
+      if(
+        value >
+        bestValue
+      ){
+
+        bestValue =
+          value;
+
+        best =
+          candidate.memory;
+
+      }
+
+    }
+
+
+    if(!best)break;
+
+    selected.push(best);
+
+  }
+
+
+  return selected;
+
+}
+
+
+/* =========================================================
+   LOCAL 3D SCALE
+========================================================= */
+
+function localScale(
+  anchors
+){
+
+  const ratios = [];
+
+
+  for(
+    let i=0;
+    i<anchors.length;
+    i++
+  ){
+
+    for(
+      let j=i+1;
+      j<anchors.length;
+      j++
+    ){
+
+      const semanticDistance =
+        angularDistance(
+          getVector(anchors[i]),
+          getVector(anchors[j])
+        );
+
+
+      const visualDistance =
+        distance3(
+          getPosition(anchors[i]),
+          getPosition(anchors[j])
+        );
+
+
+      if(
+        semanticDistance > 1e-5 &&
+        visualDistance > 1e-5
+      ){
+
+        ratios.push(
+          visualDistance /
+          semanticDistance
+        );
+
+      }
+
+    }
+
+  }
+
+
+  if(!ratios.length){
+
+    return 3;
+
+  }
+
+
+  ratios.sort(
+    (a,b)=>a-b
+  );
+
+
+  return clamp(
+    ratios[
+      Math.floor(
+        ratios.length / 2
+      )
+    ],
+    .35,
+    8
+  );
+
+}
+
+
+/* =========================================================
+   INITIAL POSITION
+========================================================= */
+
+function initialPosition(
+  vector,
+  anchors
+){
+
+  if(!anchors.length){
+
+    return [0,0,0];
+
+  }
+
+
+  const weights =
+    anchors.map(
+      anchor =>
+        Math.max(
+          .0001,
+          Math.pow(
+            (
+              cosine(
+                vector,
+                getVector(anchor)
+              ) + 1
+            ) / 2,
+            4
+          )
+        )
+    );
+
+
+  const sum =
+    weights.reduce(
+      (a,b)=>a+b,
+      0
+    );
+
+
+  const position =
+    [0,0,0];
+
+
+  anchors.forEach(
+    (anchor,index)=>{
+
+      const p =
+        getPosition(anchor);
+
+      position[0] +=
+        p[0] *
+        weights[index];
+
+      position[1] +=
+        p[1] *
+        weights[index];
+
+      position[2] +=
+        p[2] *
+        weights[index];
+
+    }
+  );
+
+
+  position[0] /= sum;
+  position[1] /= sum;
+  position[2] /= sum;
+
+
+  return position;
+
+}
+
+
+/* =========================================================
+   LOCAL POSITION SOLVER
+========================================================= */
+
+function solveLocalPosition(
+  vector,
+  anchors
+){
+
+  if(!anchors.length){
+
+    return [0,0,0];
+
+  }
+
+
+  if(anchors.length === 1){
+
+    return getPosition(
+      anchors[0]
+    ).slice();
+
+  }
+
+
+  const scale =
+    localScale(
+      anchors
+    );
+
+
+  const targets =
+    anchors.map(
+      anchor =>
+        clamp(
+          angularDistance(
+            vector,
+            getVector(anchor)
+          ) * scale,
+          .03,
+          12
+        )
+    );
+
+
+  let position =
+    initialPosition(
+      vector,
+      anchors
+    );
+
+
+  let best =
+    position.slice();
+
+  let bestLoss =
+    Infinity;
+
+
+  for(
+    let iteration=0;
+    iteration<CONFIG.RELAX_ITERATIONS;
+    iteration++
+  ){
+
+    const gradient =
+      [0,0,0];
+
+    let loss =
+      0;
+
+
+    for(
+      let k=0;
+      k<anchors.length;
+      k++
+    ){
+
+      const anchorPosition =
+        getPosition(
+          anchors[k]
+        );
+
+
+      let dx =
+        position[0] -
+        anchorPosition[0];
+
+      let dy =
+        position[1] -
+        anchorPosition[1];
+
+      let dz =
+        position[2] -
+        anchorPosition[2];
+
+
+      let radius =
+        Math.hypot(
+          dx,
+          dy,
+          dz
+        );
+
+
+      if(
+        radius < 1e-6
+      ){
+
+        radius = 1e-6;
+
+      }
+
+
+      const errorDistance =
+        radius -
+        targets[k];
+
+
+      const similarityWeight =
+        .2 +
+        .8 *
+        Math.pow(
+          (
+            cosine(
+              vector,
+              getVector(
+                anchors[k]
+              )
+            ) + 1
+          ) / 2,
+          2
+        );
+
+
+      const weight =
+        similarityWeight *
+        (
+          1 /
+          (1 + targets[k])
+        );
+
+
+      loss +=
+        weight *
+        errorDistance *
+        errorDistance;
+
+
+      gradient[0] +=
+        2 *
+        weight *
+        errorDistance *
+        dx /
+        radius;
+
+
+      gradient[1] +=
+        2 *
+        weight *
+        errorDistance *
+        dy /
+        radius;
+
+
+      gradient[2] +=
+        2 *
+        weight *
+        errorDistance *
+        dz /
+        radius;
+
+    }
+
+
+    const learningRate =
+      .075 *
+      (
+        1 -
+        iteration /
+        CONFIG.RELAX_ITERATIONS
+      ) +
+      .008;
+
+
+    position[0] -=
+      learningRate *
+      gradient[0];
+
+    position[1] -=
+      learningRate *
+      gradient[1];
+
+    position[2] -=
+      learningRate *
+      gradient[2];
+
+
+    if(
+      loss <
+      bestLoss
+    ){
+
+      bestLoss =
+        loss;
+
+      best =
+        position.slice();
+
+    }
+
+  }
+
+
+  return best;
+
+}
+
+
+/* =========================================================
+   INITIAL FRAME
+========================================================= */
+
+function seedInitialFrame(){
+
+  const memories =
+    state.memories;
+
+
+  if(
+    memories.length === 0
+  ){
+
+    return;
+
+  }
+
+
+  /*
+     Memory 1
+  */
+
+  if(
+    memories.length === 1
+  ){
+
+    setPosition(
+      memories[0],
+      [0,0,0]
+    );
+
+    memories[0].anchors = [];
+
+    memories[0].positionLocked =
+      true;
+
+    return;
+
+  }
+
+
+  /*
+     Memory 2
+  */
+
+  if(
+    memories.length === 2
+  ){
+
+    const a =
+      memories[0];
+
+    const b =
+      memories[1];
+
+
+    const semanticDistance =
+      angularDistance(
+        getVector(a),
+        getVector(b)
+      );
+
+
+    const separation =
+      clamp(
+        1.5 +
+        semanticDistance * 2.5,
+        1.5,
+        4.0
+      );
+
+
+    setPosition(
+      a,
+      [
+        -separation / 2,
+        0,
+        0
+      ]
+    );
+
+
+    setPosition(
+      b,
+      [
+        separation / 2,
+        0,
+        0
+      ]
+    );
+
+
+    a.anchors = [];
+
+    b.anchors = [
+      a.id
+    ];
+
+    a.positionLocked = true;
+    b.positionLocked = true;
+
+    return;
+
+  }
+
+
+  /*
+     Memory 3
+
+     Establishes a stable initial
+     triangular frame.
+  */
+
+  const a =
+    memories[0];
+
+  const b =
+    memories[1];
+
+  const c =
+    memories[2];
+
+
+  const dAB =
+    angularDistance(
+      getVector(a),
+      getVector(b)
+    );
+
+  const dAC =
+    angularDistance(
+      getVector(a),
+      getVector(c)
+    );
+
+  const dBC =
+    angularDistance(
+      getVector(b),
+      getVector(c)
+    );
+
+
+  const base =
+    Math.max(
+      dAB,
+      1e-6
+    );
+
+
+  const scale =
+    4.8 /
+    base;
+
+
+  setPosition(
+    a,
+    [-2.4,0,0]
+  );
+
+
+  setPosition(
+    b,
+    [2.4,0,0]
+  );
+
+
+  const AC =
+    dAC * scale;
+
+  const BC =
+    dBC * scale;
+
+
+  const x =
+    (
+      AC * AC -
+      BC * BC +
+      4.8 * 4.8
+    ) /
+    (
+      2 * 4.8
+    );
+
+
+  const y =
+    Math.sqrt(
+      Math.max(
+        0,
+        AC * AC -
+        x * x
+      )
+    );
+
+
+  setPosition(
+    c,
+    [
+      x - 2.4,
+      y,
+      0
+    ]
+  );
+
+
+  c.anchors = [
+    a.id,
+    b.id
+  ];
+
+
+  for(
+    const memory
+    of [a,b,c]
+  ){
+
+    memory.positionLocked =
+      true;
+
+  }
+
+}
+
+
+/* =========================================================
+   PERSISTENCE
+========================================================= */
+
+async function persistAll(){
+
+  await dbPutMany(
+    state.memories
+  );
+
+}
+
+
+/* =========================================================
+   INSERT MEMORY
+========================================================= */
+
+async function insertMemory(
+  text,
+  vector
+){
+
+  const id =
+    `MEM-${String(
+      state.nextId++
+    ).padStart(6,'0')}`;
+
+
+  const record =
+    createMemoryRecord(
+      id,
+      text,
+      vector
+    );
+
+
+  state.memories.push(
+    record
+  );
+
+
+  /*
+     First three memories create
+     the fixed coordinate frame.
+  */
+
+  if(
+    state.memories.length <= 3
+  ){
+
+    seedInitialFrame();
+
+    await persistAll();
+
+    return record;
+
+  }
+
+
+  /*
+     From Memory #4 onward:
+
+     Only the NEW memory gets
+     a calculated position.
+
+     Existing memories remain fixed.
+  */
+
+  const neighbors =
+    nearestNeighbors(
+      vector
+    );
+
+
+  const anchors =
+    chooseAnchors(
+      neighbors
+    );
+
+
+  record.anchors =
+    anchors.map(
+      anchor => anchor.id
+    );
+
+
+  setPosition(
+    record,
+    solveLocalPosition(
+      vector,
+      anchors
+    )
+  );
+
+
+  record.positionLocked =
+    true;
+
+
+  await dbPut(
+    record
+  );
+
+
+  return record;
+
+}
+
+
+/* =========================================================
+   THREE.JS
+========================================================= */
+
+let scene;
+let camera;
+let renderer;
+let controls;
+
+let pointsMesh;
+let linesGroup;
+
+let raycaster;
+let mouse;
+
+
+const vertexShader = `
+
+attribute float aSelected;
+
+varying float vSelected;
+
+void main(){
+
+  vSelected =
+    float(aSelected > 0.5);
+
+  vec4 mvPosition =
+    modelViewMatrix *
+    vec4(position,1.0);
+
+  gl_Position =
+    projectionMatrix *
+    mvPosition;
+
+  float distanceScale =
+    260.0 /
+    max(
+      40.0,
+      -mvPosition.z
+    );
+
+  gl_PointSize =
+    (
+      aSelected > 0.5
+      ? 8.5
+      : 5.5
+    )
+    *
+    distanceScale;
+
+}
+
+`;
+
+
+const fragmentShader = `
+
+varying float vSelected;
+
+void main(){
+
+  vec2 p =
+    gl_PointCoord -
+    vec2(0.5);
+
+  float radius =
+    length(p);
+
+  if(radius > 0.5){
+
+    discard;
+
+  }
+
+  float core =
+    1.0 -
+    smoothstep(
+      0.03,
+      0.23,
+      radius
+    );
+
+  float glow =
+    1.0 -
+    smoothstep(
+      0.12,
+      0.50,
+      radius
+    );
+
+  vec3 cyan =
+    vec3(
+      0.0,
+      0.90,
+      1.0
+    );
+
+  vec3 pink =
+    vec3(
+      1.0,
+      0.18,
+      0.58
+    );
+
+  vec3 color =
+    mix(
+      cyan,
+      pink,
+      vSelected
+    );
+
+  float alpha =
+    max(
+      core,
+      glow * 0.65
+    );
+
+  gl_FragColor =
+    vec4(
+      color,
+      alpha
+    );
+
+}
+
+`;
+
+
+/* =========================================================
+   THREE INITIALIZATION
+========================================================= */
+
 function initThree(){
- scene=new THREE.Scene();scene.background=new THREE.Color('#010307');scene.fog=new THREE.Fog('#010307',45,190);
- camera=new THREE.PerspectiveCamera(55,root.clientWidth/root.clientHeight,.1,500);camera.position.set(0,5,28);
- renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(root.clientWidth,root.clientHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;root.appendChild(renderer.domElement);
- controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.055;controls.minDistance=3;controls.maxDistance=170;
- raycaster=new THREE.Raycaster();mouse=new THREE.Vector2();
- pairGroup=new THREE.Group();hyperGroup=new THREE.Group();anchorGroup=new THREE.Group();fibGroup=new THREE.Group();scene.add(pairGroup,hyperGroup,anchorGroup,fibGroup);
- const axes=new THREE.AxesHelper(9);axes.material.transparent=true;axes.material.opacity=.035;scene.add(axes);
- renderer.domElement.onpointerdown=e=>{const r=renderer.domElement.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;raycaster.params.Points.threshold=.28;raycaster.setFromCamera(mouse,camera);if(points){const hit=raycaster.intersectObject(points)[0];if(hit)select(memories[hit.index].id)}};
- addEventListener('resize',()=>{camera.aspect=root.clientWidth/root.clientHeight;camera.updateProjectionMatrix();renderer.setSize(root.clientWidth,root.clientHeight)});
- (function loop(){requestAnimationFrame(loop);controls.update();renderer.render(scene,camera)})()
+
+  const container =
+    $('scene');
+
+  const canvas =
+    $('canvas3d');
+
+
+  scene =
+    new THREE.Scene();
+
+
+  scene.fog =
+    new THREE.FogExp2(
+      0x05080c,
+      .035
+    );
+
+
+  camera =
+    new THREE.PerspectiveCamera(
+      55,
+      1,
+      .1,
+      200
+    );
+
+
+  camera.position.set(
+    8,
+    6,
+    10
+  );
+
+
+  renderer =
+    new THREE.WebGLRenderer({
+
+      canvas,
+
+      antialias:true,
+
+      alpha:true
+
+    });
+
+
+  renderer.setPixelRatio(
+    Math.min(
+      window.devicePixelRatio || 1,
+      2
+    )
+  );
+
+
+  renderer.setClearColor(
+    0x000000,
+    0
+  );
+
+
+  controls =
+    new OrbitControls(
+      camera,
+      canvas
+    );
+
+
+  controls.enableDamping =
+    true;
+
+  controls.dampingFactor =
+    .08;
+
+  controls.minDistance =
+    1.5;
+
+  controls.maxDistance =
+    50;
+
+  controls.target.set(
+    0,
+    0,
+    0
+  );
+
+
+  scene.add(
+    new THREE.AmbientLight(
+      0x406080,
+      .6
+    )
+  );
+
+
+  const directionalLight =
+    new THREE.DirectionalLight(
+      0x00e5ff,
+      .45
+    );
+
+
+  directionalLight.position.set(
+    5,
+    10,
+    7
+  );
+
+
+  scene.add(
+    directionalLight
+  );
+
+
+  const grid =
+    new THREE.GridHelper(
+      18,
+      18,
+      0x1a2a36,
+      0x0f1a22
+    );
+
+
+  grid.material.transparent =
+    true;
+
+  grid.material.opacity =
+    .4;
+
+
+  scene.add(
+    grid
+  );
+
+
+  const axes =
+    new THREE.AxesHelper(
+      3.5
+    );
+
+
+  axes.setColors(
+    0xff2d95,
+    0x00ff9d,
+    0x00e5ff
+  );
+
+
+  axes.material.transparent =
+    true;
+
+  axes.material.opacity =
+    .45;
+
+
+  scene.add(
+    axes
+  );
+
+
+  linesGroup =
+    new THREE.Group();
+
+
+  scene.add(
+    linesGroup
+  );
+
+
+  raycaster =
+    new THREE.Raycaster();
+
+
+  raycaster.params.Points.threshold =
+    .25;
+
+
+  mouse =
+    new THREE.Vector2();
+
+
+  canvas.addEventListener(
+    'pointerdown',
+    onPointerDown
+  );
+
+
+  canvas.addEventListener(
+    'dblclick',
+    onDoubleClick
+  );
+
+
+  resizeThree();
+
+
+  window.addEventListener(
+    'resize',
+    resizeThree
+  );
+
+
+  animate();
+
 }
 
-/* ---------- controls ---------- */
-$('saveMemory').onclick=createMemory;$('deleteSelected').onclick=deleteSelected;$('saveBlock').onclick=createBlock;$('saveHyper').onclick=createHyper;$('commit').onclick=createCommit;$('search').onclick=query;
-$('query').onkeydown=e=>{if(e.key==='Enter')query()};$('clear').onclick=()=>{active.clear();selectedId=null;refresh();render()};
-for(const [id,key] of [['edges','showEdges'],['hyper','showHyper'],['anchors','showAnchors'],['fibonacci','showFibonacci']]){
- $(id).onclick=()=>{if(key==='showEdges')showEdges=!showEdges;if(key==='showHyper')showHyper=!showHyper;if(key==='showAnchors')showAnchors=!showAnchors;if(key==='showFibonacci')showFibonacci=!showFibonacci;$(id).classList.toggle('active',eval(key));render()}
-}
-document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();createMemory()}if(e.key==='Escape'){active.clear();refresh();render()}});
 
-/* ---------- init ---------- */
-async function init(){
- try{
-  status('DATABASE');await openDB();memories=await all(STORES.memories);hyperedges=await all(STORES.hyperedges);blocks=await all(STORES.blocks);commits=await all(STORES.commits);events=await all(STORES.events);
-  memories.sort((a,b)=>a.createdAt.localeCompare(b.createdAt));commits.sort((a,b)=>a.createdAt.localeCompare(b.createdAt));blocks.sort((a,b)=>a.createdAt.localeCompare(b.createdAt));
-  // Legacy repair: only repair missing positions. Existing locked positions are never recomputed.
-  for(const m of memories)if(!v3ok(m.pos3d)){place(m);await put(STORES.memories,m)}
-  initThree();refresh();render();log(memories.length+' Nodes restored.','ok');log(commits.length+' Commits restored.','ok');await loadModel()
- }catch(e){console.error(e);status('INIT ERROR','#ff5575');log(e.message,'error');toast('Initialisierung fehlgeschlagen.',true)}
+/* =========================================================
+   THREE RESIZE
+========================================================= */
+
+function resizeThree(){
+
+  if(!renderer)return;
+
+
+  const width =
+    $('scene').clientWidth ||
+    1;
+
+  const height =
+    $('scene').clientHeight ||
+    1;
+
+
+  camera.aspect =
+    width / height;
+
+
+  camera.updateProjectionMatrix();
+
+
+  renderer.setSize(
+    width,
+    height,
+    false
+  );
+
 }
-init();
+
+
+/* =========================================================
+   RENDER LOOP
+========================================================= */
+
+function animate(){
+
+  requestAnimationFrame(
+    animate
+  );
+
+  controls.update();
+
+  renderer.render(
+    scene,
+    camera
+  );
+
+}
+
+
+/* =========================================================
+   POINT CLOUD
+========================================================= */
+
+function disposeObject(
+  object
+){
+
+  if(!object)return;
+
+
+  if(object.geometry){
+
+    object.geometry.dispose();
+
+  }
+
+
+  if(object.material){
+
+    if(
+      Array.isArray(
+        object.material
+      )
+    ){
+
+      object.material.forEach(
+        material =>
+          material.dispose()
+      );
+
+    }else{
+
+      object.material.dispose();
+
+    }
+
+  }
+
+}
+
+
+function makePoints(){
+
+  if(pointsMesh){
+
+    scene.remove(
+      pointsMesh
+    );
+
+    disposeObject(
+      pointsMesh
+    );
+
+    pointsMesh =
+      null;
+
+  }
+
+
+  if(
+    !state.memories.length
+  ){
+
+    return;
+
+  }
+
+
+  const count =
+    state.memories.length;
+
+
+  const positions =
+    new Float32Array(
+      count * 3
+    );
+
+
+  const selected =
+    new Float32Array(
+      count
+    );
+
+
+  state.memories.forEach(
+    (memory,index)=>{
+
+      const p =
+        getPosition(
+          memory
+        );
+
+
+      positions[
+        index * 3
+      ] =
+        p[0];
+
+      positions[
+        index * 3 + 1
+      ] =
+        p[1];
+
+      positions[
+        index * 3 + 2
+      ] =
+        p[2];
+
+
+      selected[index] =
+        memory.id ===
+        state.selectedId
+        ? 1
+        : 0;
+
+    }
+  );
+
+
+  const geometry =
+    new THREE.BufferGeometry();
+
+
+  geometry.setAttribute(
+    'position',
+    new THREE.BufferAttribute(
+      positions,
+      3
+    )
+  );
+
+
+  geometry.setAttribute(
+    'aSelected',
+    new THREE.BufferAttribute(
+      selected,
+      1
+    )
+  );
+
+
+  const material =
+    new THREE.ShaderMaterial({
+
+      vertexShader,
+
+      fragmentShader,
+
+      transparent:true,
+
+      depthWrite:false,
+
+      blending:
+        THREE.AdditiveBlending
+
+    });
+
+
+  pointsMesh =
+    new THREE.Points(
+      geometry,
+      material
+    );
+
+
+  scene.add(
+    pointsMesh
+  );
+
+}
+
+
+/* =========================================================
+   SEMANTIC EDGES
+========================================================= */
+
+function rebuildLinks(){
+
+  while(
+    linesGroup.children.length
+  ){
+
+    const object =
+      linesGroup
+        .children
+        .pop();
+
+
+    disposeObject(
+      object
+    );
+
+  }
+
+
+  if(
+    !state.showLinks ||
+    state.memories.length < 2
+  ){
+
+    return;
+
+  }
+
+
+  const positions = [];
+
+
+  for(
+    let i=0;
+    i<state.memories.length;
+    i++
+  ){
+
+    const a =
+      state.memories[i];
+
+
+    for(
+      let j=i+1;
+      j<state.memories.length;
+      j++
+    ){
+
+      const b =
+        state.memories[j];
+
+
+      const similarity =
+        cosine(
+          getVector(a),
+          getVector(b)
+        );
+
+
+      if(
+        similarity >=
+        CONFIG.EDGE_THRESHOLD
+      ){
+
+        const pa =
+          getPosition(a);
+
+        const pb =
+          getPosition(b);
+
+
+        positions.push(
+
+          pa[0],
+          pa[1],
+          pa[2],
+
+          pb[0],
+          pb[1],
+          pb[2]
+
+        );
+
+      }
+
+    }
+
+  }
+
+
+  if(!positions.length){
+
+    return;
+
+  }
+
+
+  const geometry =
+    new THREE.BufferGeometry();
+
+
+  geometry.setAttribute(
+    'position',
+    new THREE.Float32BufferAttribute(
+      positions,
+      3
+    )
+  );
+
+
+  const material =
+    new THREE.LineBasicMaterial({
+
+      color:
+        0x00e5ff,
+
+      transparent:true,
+
+      opacity:.25,
+
+      depthWrite:false
+
+    });
+
+
+  linesGroup.add(
+    new THREE.LineSegments(
+      geometry,
+      material
+    )
+  );
+
+}
+
+
+/* =========================================================
+   SCENE REBUILD
+========================================================= */
+
+function rebuildScene(){
+
+  makePoints();
+
+  rebuildLinks();
+
+
+  $('hudStatus').textContent =
+    state.memories.length
+
+      ? `${state.memories.length} MEMORIES · ANCHORED R³`
+
+      : 'MEMORY SPACE EMPTY';
+
+}
+
+
+/* =========================================================
+   RAYCASTING
+========================================================= */
+
+function getIntersections(
+  event
+){
+
+  if(!pointsMesh){
+
+    return [];
+
+  }
+
+
+  const rect =
+    renderer.domElement
+      .getBoundingClientRect();
+
+
+  mouse.x =
+    (
+      (event.clientX - rect.left)
+      /
+      rect.width
+    ) * 2 - 1;
+
+
+  mouse.y =
+    -(
+      (event.clientY - rect.top)
+      /
+      rect.height
+    ) * 2 + 1;
+
+
+  raycaster.setFromCamera(
+    mouse,
+    camera
+  );
+
+
+  return raycaster.intersectObject(
+    pointsMesh
+  );
+
+}
+
+
+function onPointerDown(
+  event
+){
+
+  if(
+    event.button !== 0
+  ){
+
+    return;
+
+  }
+
+
+  const hits =
+    getIntersections(
+      event
+    );
+
+
+  if(!hits.length)return;
+
+
+  const index =
+    hits[0].index;
+
+
+  if(
+    index == null ||
+    !state.memories[index]
+  ){
+
+    return;
+
+  }
+
+
+  selectMemory(
+    state.memories[index].id
+  );
+
+}
+
+
+function onDoubleClick(
+  event
+){
+
+  const hits =
+    getIntersections(
+      event
+    );
+
+
+  if(!hits.length)return;
+
+
+  const index =
+    hits[0].index;
+
+
+  if(
+    index == null ||
+    !state.memories[index]
+  ){
+
+    return;
+
+  }
+
+
+  const memory =
+    state.memories[index];
+
+
+  const p =
+    getPosition(
+      memory
+    );
+
+
+  controls.target.set(
+    p[0],
+    p[1],
+    p[2]
+  );
+
+
+  const direction =
+    new THREE.Vector3()
+      .subVectors(
+        camera.position,
+        controls.target
+      )
+      .normalize();
+
+
+  camera.position
+    .copy(
+      controls.target
+    )
+    .addScaledVector(
+      direction,
+      4
+    );
+
+
+  controls.update();
+
+}
+
+
+/* =========================================================
+   MEMORY LIST
+========================================================= */
+
+function renderMemoryList(){
+
+  const list =
+    $('memoryList');
+
+
+  if(
+    !state.memories.length
+  ){
+
+    list.innerHTML =
+      `
+      <div
+        style="
+          color:#405861;
+          font-size:10px
+        "
+      >
+        VECTOR STORE EMPTY
+      </div>
+      `;
+
+    return;
+
+  }
+
+
+  list.innerHTML =
+    state.memories
+      .map(
+        memory => {
+
+          const vector =
+            getVector(
+              memory
+            );
+
+
+          return `
+            <div
+              class="memItem
+                ${
+                  memory.id ===
+                  state.selectedId
+                    ? 'selected'
+                    : ''
+                }"
+              data-id="${esc(memory.id)}"
+            >
+
+              <div class="memId">
+                ${esc(memory.id)}
+              </div>
+
+              <div class="memText">
+                ${esc(
+                  memory.content?.text ||
+                  memory.text ||
+                  ''
+                )}
+              </div>
+
+              <div class="memMeta">
+
+                ${
+                  memory.created_at
+                    ? new Date(
+                        memory.created_at
+                      ).toLocaleString(
+                        'de-DE'
+                      )
+                    : ''
+                }
+
+                · ${vector.length}D
+
+              </div>
+
+            </div>
+          `;
+
+        }
+      )
+      .join('');
+
+
+  list
+    .querySelectorAll(
+      '.memItem'
+    )
+    .forEach(
+      element => {
+
+        element.onclick =
+          () =>
+            selectMemory(
+              element.dataset.id
+            );
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   INSPECTOR
+========================================================= */
+
+function renderInspector(
+  memory,
+  score=null
+){
+
+  if(!memory){
+
+    $('inspector')
+      .classList
+      .remove('visible');
+
+    return;
+
+  }
+
+
+  const vector =
+    getVector(
+      memory
+    );
+
+
+  const position =
+    getPosition(
+      memory
+    );
+
+
+  const text =
+    memory.content?.text ||
+    memory.text ||
+    '';
+
+
+  const anchors =
+    Array.isArray(
+      memory.anchors
+    )
+      ? memory.anchors
+      : [];
+
+
+  $('inspector')
+    .classList
+    .add('visible');
+
+
+  $('inspId').textContent =
+    memory.id;
+
+
+  $('inspText').textContent =
+    text;
+
+
+  $('inspMeta').innerHTML = `
+
+    TYPE:
+    ${esc(
+      memory.type ||
+      'memory'
+    )}
+
+    <br>
+
+    SCHEMA:
+    ${esc(
+      memory.schema_version ||
+      '1.0'
+    )}
+
+    <br>
+
+    VECTOR:
+    ${vector.length}D
+
+    <br>
+
+    ‖v‖ =
+    ${norm(vector).toFixed(6)}
+
+    <br>
+
+    POS:
+    [
+      ${position.map(
+        x => x.toFixed(3)
+      ).join(', ')}
+    ]
+
+    ${
+      score == null
+      ? ''
+      :
+      `<br>
+       cos(query,v) =
+       ${score.toFixed(6)}`
+    }
+
+  `;
+
+
+  $('inspAnchors').innerHTML =
+    anchors.length
+
+      ? `
+        ANCHORS:
+
+        ${anchors
+          .map(
+            id =>
+              `<span class="tag">
+                ${esc(id)}
+              </span>`
+          )
+          .join('')
+        }
+      `
+
+      :
+
+      `
+        ANCHORS:
+
+        <span class="tag">
+          INITIAL FRAME
+        </span>
+      `;
+
+}
+
+
+/* =========================================================
+   SELECT MEMORY
+========================================================= */
+
+function selectMemory(
+  id
+){
+
+  const memory =
+    state.memories.find(
+      item =>
+        item.id === id
+    );
+
+
+  if(!memory)return;
+
+
+  state.selectedId =
+    id;
+
+
+  const vector =
+    getVector(
+      memory
+    );
+
+
+  state.currentVector =
+    vector.slice();
+
+
+  state.currentText =
+    memory.content?.text ||
+    memory.text ||
+    '';
+
+
+  $('textInput').value =
+    '';
+
+
+  $('vectorDim').textContent =
+    `d = ${vector.length}`;
+
+
+  $('vectorBox').textContent =
+    vector
+      .slice(0,24)
+      .map(
+        x =>
+          Number(x).toFixed(5)
+      )
+      .join(', ') +
+    ' …';
+
+
+  renderMemoryList();
+
+  renderInspector(
+    memory
+  );
+
+  rebuildScene();
+
+
+  const p =
+    getPosition(
+      memory
+    );
+
+
+  controls.target.set(
+    p[0],
+    p[1],
+    p[2]
+  );
+
+
+  $('hudStatus').textContent =
+    `${id} SELECTED`;
+
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+async function runSearch(){
+
+  const query =
+    $('queryInput')
+      .value
+      .trim();
+
+
+  if(
+    !query ||
+    !state.memories.length
+  ){
+
+    return;
+
+  }
+
+
+  stage(
+    'stageSearch',
+    'active'
+  );
+
+
+  error('');
+
+
+  log(
+    `Query: "${query}"`,
+    'info'
+  );
+
+
+  try{
+
+    const queryVector =
+      await embed(
+        query,
+        'query'
+      );
+
+
+    state.queryVector =
+      queryVector;
+
+
+    const results =
+      state.memories
+
+        .map(
+          memory => ({
+
+            memory,
+
+            score:
+              cosine(
+                queryVector,
+                getVector(memory)
+              )
+
+          })
+        )
+
+        .sort(
+          (a,b) =>
+            b.score -
+            a.score
+        );
+
+
+    $('ranking').innerHTML =
+      results
+        .map(
+          (result,index)=>{
+
+            const percentage =
+              clamp(
+                (
+                  result.score + 1
+                ) / 2 * 100,
+                0,
+                100
+              );
+
+
+            const text =
+              result.memory
+                .content?.text ||
+              result.memory.text ||
+              '';
+
+
+            return `
+
+              <div
+                class="rankItem"
+                data-id="${esc(
+                  result.memory.id
+                )}"
+              >
+
+                <div class="rankScore">
+
+                  #${index + 1}
+                  · COS
+                  ${result.score.toFixed(6)}
+
+                </div>
+
+                <div class="rankText">
+
+                  ${esc(text)}
+
+                </div>
+
+                <div class="bar">
+
+                  <div
+                    class="barFill"
+                    style="
+                      width:${percentage}%
+                    "
+                  ></div>
+
+                </div>
+
+              </div>
+
+            `;
+
+          }
+        )
+        .join('');
+
+
+    $('ranking')
+      .querySelectorAll(
+        '.rankItem'
+      )
+      .forEach(
+        element => {
+
+          element.onclick =
+            () => {
+
+              const result =
+                results.find(
+                  item =>
+                    item.memory.id ===
+                    element.dataset.id
+                );
+
+
+              if(!result)return;
+
+
+              selectMemory(
+                result.memory.id
+              );
+
+
+              renderInspector(
+                result.memory,
+                result.score
+              );
+
+            };
+
+        }
+      );
+
+
+    stage(
+      'stageSearch',
+      'done'
+    );
+
+
+    if(results[0]){
+
+      selectMemory(
+        results[0].memory.id
+      );
+
+
+      renderInspector(
+        results[0].memory,
+        results[0].score
+      );
+
+
+      log(
+        `Top-1: ${results[0].memory.id} · ${results[0].score.toFixed(6)}`,
+        'ok'
+      );
+
+    }
+
+  }catch(e){
+
+    stage(
+      'stageSearch',
+      null
+    );
+
+    error(
+      e?.message ||
+      String(e)
+    );
+
+    log(
+      `Search fehlgeschlagen: ${e?.message || e}`,
+      'err'
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   GENERATE EMBEDDING
+========================================================= */
+
+async function generate(){
+
+  const text =
+    $('textInput')
+      .value
+      .trim();
+
+
+  if(!text){
+
+    error(
+      'Bitte Text eingeben.'
+    );
+
+    return;
+
+  }
+
+
+  error('');
+
+  $('embedBtn').disabled =
+    true;
+
+  $('storeBtn').disabled =
+    true;
+
+
+  resetStages();
+
+
+  try{
+
+    stage(
+      'stageText',
+      'active'
+    );
+
+    log(
+      'Text empfangen.',
+      'info'
+    );
+
+
+    await sleep(80);
+
+
+    stage(
+      'stageText',
+      'done'
+    );
+
+
+    stage(
+      'stageToken',
+      'active'
+    );
+
+
+    await sleep(100);
+
+
+    stage(
+      'stageToken',
+      'done'
+    );
+
+
+    const vector =
+      await embed(
+        text,
+        'passage'
+      );
+
+
+    state.currentVector =
+      vector;
+
+
+    state.currentText =
+      text;
+
+
+    stage(
+      'stageVector',
+      'active'
+    );
+
+
+    $('vectorDim').textContent =
+      `d = ${vector.length}`;
+
+
+    $('vectorBox').textContent =
+      vector
+        .slice(0,24)
+        .map(
+          x =>
+            x.toFixed(5)
+        )
+        .join(', ') +
+      ' …';
+
+
+    await sleep(60);
+
+
+    stage(
+      'stageVector',
+      'done'
+    );
+
+
+    $('storeBtn').disabled =
+      false;
+
+
+    log(
+      `384D Embedding erzeugt · ‖v‖=${norm(vector).toFixed(6)}`,
+      'ok'
+    );
+
+
+  }catch(e){
+
+    error(
+      e?.message ||
+      String(e)
+    );
+
+
+    log(
+      `Embedding fehlgeschlagen: ${e?.message || e}`,
+      'err'
+    );
+
+
+  }finally{
+
+    $('embedBtn').disabled =
+      false;
+
+  }
+
+}
+
+
+/* =========================================================
+   STORE
+========================================================= */
+
+async function store(){
+
+  if(
+    !state.currentVector
+  ){
+
+    return;
+
+  }
+
+
+  const text =
+    state.currentText.trim();
+
+
+  if(!text){
+
+    error(
+      'Kein Text zum Speichern vorhanden.'
+    );
+
+    return;
+
+  }
+
+
+  $('storeBtn').disabled =
+    true;
+
+
+  try{
+
+    stage(
+      'stageStore',
+      'active'
+    );
+
+
+    const record =
+      await insertMemory(
+        text,
+        state.currentVector
+      );
+
+
+    stage(
+      'stageStore',
+      'done'
+    );
+
+
+    state.selectedId =
+      record.id;
+
+
+    renderMemoryList();
+
+    renderInspector(
+      record
+    );
+
+
+    rebuildScene();
+
+
+    $('memoryCount').textContent =
+      state.memories.length;
+
+
+    state.queryVector =
+      null;
+
+
+    log(
+      `${record.id} gespeichert. ` +
+      (
+        record.anchors?.length
+          ? `Anker: ${record.anchors.join(', ')}`
+          : 'Initial frame.'
+      ),
+      'ok'
+    );
+
+
+    state.currentVector =
+      null;
+
+    state.currentText =
+      '';
+
+    $('textInput').value =
+      '';
+
+
+  }catch(e){
+
+    $('storeBtn').disabled =
+      false;
+
+
+    error(
+      e?.message ||
+      String(e)
+    );
+
+
+    log(
+      `Speichern fehlgeschlagen: ${e?.message || e}`,
+      'err'
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+$('resetCamBtn').onclick =
+  () => {
+
+    camera.position.set(
+      8,
+      6,
+      10
+    );
+
+    controls.target.set(
+      0,
+      0,
+      0
+    );
+
+    controls.update();
+
+  };
+
+
+$('toggleLinksBtn').onclick =
+  () => {
+
+    state.showLinks =
+      !state.showLinks;
+
+
+    $('toggleLinksBtn')
+      .textContent =
+        state.showLinks
+          ? 'LINKS ON'
+          : 'LINKS OFF';
+
+
+    rebuildLinks();
+
+  };
+
+
+/* =========================================================
+   EVENTS
+========================================================= */
+
+$('embedBtn')
+  .addEventListener(
+    'click',
+    generate
+  );
+
+
+$('storeBtn')
+  .addEventListener(
+    'click',
+    store
+  );
+
+
+$('searchBtn')
+  .addEventListener(
+    'click',
+    runSearch
+  );
+
+
+$('queryInput')
+  .addEventListener(
+    'keydown',
+    event => {
+
+      if(
+        event.key === 'Enter'
+      ){
+
+        runSearch();
+
+      }
+
+    }
+  );
+
+
+$('textInput')
+  .addEventListener(
+    'keydown',
+    event => {
+
+      if(
+        event.ctrlKey &&
+        event.key === 'Enter'
+      ){
+
+        generate();
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   RESTORE DATABASE
+========================================================= */
+
+async function restore(){
+
+  log(
+    'Lese NEURAL MEMORY aus IndexedDB …',
+    'info'
+  );
+
+
+  const memories =
+    await dbGetAll();
+
+
+  state.memories =
+    Array.isArray(memories)
+      ? memories
+      : [];
+
+
+  state.memories.sort(
+    (a,b) =>
+      String(a.id)
+        .localeCompare(
+          String(b.id),
+          undefined,
+          {
+            numeric:true
+          }
+        )
+  );
+
+
+  /*
+     Normalize older records.
+
+     Alte Struktur:
+
+       text
+       vector
+       pos3d
+
+     Neue Struktur:
+
+       content.text
+       semantic.embedding.vector
+       geometry.pos3d
+  */
+
+  for(
+    const memory
+    of state.memories
+  ){
+
+    const vector =
+      getVector(memory);
+
+
+    const position =
+      getPosition(memory);
+
+
+    if(
+      !memory.schema_version
+    ){
+
+      memory.schema_version =
+        '1.1';
+
+    }
+
+
+    if(
+      !memory.type
+    ){
+
+      memory.type =
+        'memory';
+
+    }
+
+
+    if(
+      !memory.content
+    ){
+
+      memory.content = {
+
+        title:
+          (
+            memory.text ||
+            ''
+          ).slice(0,80),
+
+        text:
+          memory.text ||
+          ''
+
+      };
+
+    }
+
+
+    if(
+      !memory.semantic
+    ){
+
+      memory.semantic = {};
+
+    }
+
+
+    if(
+      !memory.semantic.embedding
+    ){
+
+      memory.semantic.embedding = {
+
+        model:
+          CONFIG.MODEL,
+
+        dimensions:
+          vector.length,
+
+        vector:
+          vector.slice()
+
+      };
+
+    }
+
+
+    if(
+      !memory.geometry
+    ){
+
+      memory.geometry = {};
+
+    }
+
+
+    memory.geometry.pos3d =
+      position.slice();
+
+
+    if(
+      !Array.isArray(
+        memory.anchors
+      )
+    ){
+
+      memory.anchors = [];
+
+    }
+
+
+    memory.positionLocked =
+      true;
+
+  }
+
+
+  /*
+     Restore next deterministic ID.
+  */
+
+  if(
+    state.memories.length
+  ){
+
+    const numbers =
+      state.memories.map(
+        memory =>
+          Number(
+            String(memory.id)
+              .split('-')
+              .pop()
+          ) || 0
+      );
+
+
+    state.nextId =
+      Math.max(
+        ...numbers
+      ) + 1;
+
+  }
+
+
+  /*
+     If old records had no real frame,
+     reconstruct only when necessary.
+  */
+
+  const needsFrame =
+    state.memories.length > 0 &&
+    state.memories.every(
+      memory => {
+
+        const p =
+          getPosition(memory);
+
+        return p.every(
+          Number.isFinite
+        );
+
+      }
+    ) &&
+    state.memories.some(
+      memory =>
+        getPosition(memory)
+          .some(
+            value =>
+              Math.abs(value) > 1e-9
+          )
+    ) === false;
+
+
+  if(needsFrame){
+
+    seedInitialFrame();
+
+    await persistAll();
+
+    log(
+      'Initial 3D frame rekonstruiert.',
+      'ok'
+    );
+
+  }
+
+
+  $('memoryCount').textContent =
+    state.memories.length;
+
+
+  $('dimension').textContent =
+    state.memories.length
+      ? CONFIG.DIM
+      : '—';
+
+
+  renderMemoryList();
+
+  rebuildScene();
+
+
+  log(
+    `${state.memories.length} Memories aus IndexedDB geladen.`,
+    'ok'
+  );
+
+}
+
+
+/* =========================================================
+   BOOT
+========================================================= */
+
+initThree();
+
+
+(async()=>{
+
+  log(
+    'NEURAL MEMORY — Semantic Memory Core initialisiert.',
+    'ok'
+  );
+
+
+  log(
+    'Rendering: WebGL custom point shader.',
+    'info'
+  );
+
+
+  log(
+    'Semantik: 384D cosine, nicht 3D-Distanz.',
+    'info'
+  );
+
+
+  log(
+    `Embedding: ${CONFIG.MODEL}`,
+    'info'
+  );
+
+
+  await restore();
+
+
+  const modelReady =
+    await loadModel();
+
+
+  $('searchBtn').disabled =
+    !(
+      modelReady &&
+      state.memories.length > 0
+    );
+
+
+  log(
+    'NEURAL MEMORY CORE ONLINE.',
+    'ok'
+  );
+
+
+})();
+
 </script>
+
 </body>
 </html>
