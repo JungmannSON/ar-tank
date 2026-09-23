@@ -143,7 +143,15 @@ button.small {
 .fileIcon { color: var(--cyan); font-size: 12px; }
 .fileName { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fileMeta { color: var(--muted); font-size: 9px; }
-
+.itemDel {
+  width: auto; margin: 0; padding: 2px 6px; font-size: 10px;
+  border-color: var(--danger); color: var(--danger); flex-shrink: 0;
+  line-height: 1.2; opacity: 0.7;
+}
+.itemDel:hover:not(:disabled) {
+  opacity: 1; background: rgba(255,77,106,.15);
+  box-shadow: 0 0 8px rgba(255,77,106,.25);
+}
 /* STRUCTURE TREE */
 .structureTree { max-height: 320px; overflow-y: auto; font-size: 11px; }
 .treeNode {
@@ -171,10 +179,14 @@ button.small {
 /* MEMORY LIST */
 .memoryList { max-height: 200px; overflow-y: auto; font-size: 11px; }
 .memItem {
-  padding: 7px 6px; border-bottom: 1px solid var(--border); cursor: pointer;
+  position: relative;
+  padding: 7px 28px 7px 6px; border-bottom: 1px solid var(--border); cursor: pointer;
 }
 .memItem:hover { background: rgba(0,229,255,.06); }
 .memItem.selected { background: rgba(0,229,255,.10); }
+.memItem .itemDel {
+  position: absolute; right: 4px; top: 6px;
+}
 .memId { color: var(--cyan); font-size: 10px; }
 .memText {
   margin-top: 2px; color: var(--text);
@@ -310,6 +322,7 @@ button.small {
 
         <button id="saveProjectBtn" class="green">PROJEKT SPEICHERN</button>
         <button id="exportProjectBtn">EXPORT PROJECT JSON</button>
+        <button id="resetAllBtn" class="danger">ALLES ZURÜCKSETZEN</button>
         <div id="projectError" class="errorBox"></div>
       </div>
     </div>
@@ -327,6 +340,7 @@ button.small {
         </div>
 
         <button id="parseAllBtn" class="pink" disabled>ALLE DATEIEN STRUKTURIEREN</button>
+        <button id="deleteAllFilesBtn" class="danger" disabled>ALLE DATEIEN LÖSCHEN</button>
       </div>
     </div>
 
@@ -433,6 +447,7 @@ button.small {
         <div id="memoryList" class="memoryList" style="margin-top:10px">
           <div style="color:var(--muted);font-size:10px">VECTOR STORE EMPTY</div>
         </div>
+        <button id="deleteAllMemoriesBtn" class="danger" disabled style="margin-top:8px">ALLE MEMORIES LÖSCHEN</button>
         <input id="queryInput" placeholder="Semantische Suche …" style="margin-top:8px">
         <button id="searchBtn" class="pink" disabled>RUN COSINE SEARCH</button>
         <div id="ranking" style="margin-top:8px;font-size:11px">
@@ -673,6 +688,16 @@ async function dbDelete(id) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(CONFIG.DB_STORE, 'readwrite');
     tx.objectStore(CONFIG.DB_STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function dbClearStore() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CONFIG.DB_STORE, 'readwrite');
+    tx.objectStore(CONFIG.DB_STORE).clear();
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
@@ -955,7 +980,7 @@ async function handleFiles(fileList) {
 
     log(`[UPLOAD] ${commitId} mit ${commit.fileIds.length} File-Version(en) registriert.`, 'ok');
     renderFileList();
-    $('parseAllBtn').disabled = state.files.length === 0;
+    updateFileActionButtons();
 
     // Neueste registrierte Datei aktivieren
     const lastNew = [...state.files].reverse().find(f => f.commitId === commitId);
@@ -963,6 +988,194 @@ async function handleFiles(fileList) {
     else if (commit.fileIds[0]) selectFile(commit.fileIds[0]);
   } catch (e) {
     log(`[UPLOAD] fehlgeschlagen: ${e?.message || e}`, 'err');
+  }
+}
+
+function updateFileActionButtons() {
+  const hasFiles = state.files.length > 0;
+  if ($('parseAllBtn')) $('parseAllBtn').disabled = !hasFiles;
+  if ($('deleteAllFilesBtn')) $('deleteAllFilesBtn').disabled = !hasFiles;
+}
+
+function updateMemoryActionButtons() {
+  if ($('deleteAllMemoriesBtn')) $('deleteAllMemoriesBtn').disabled = state.memories.length === 0;
+  if ($('searchBtn')) $('searchBtn').disabled = !state.modelReady || state.memories.length === 0;
+}
+
+/** Löscht eine einzelne File-Version inkl. zugehöriger Nodes/Edges dieses File-Ids. */
+async function deleteFile(fileVersionId) {
+  const file = state.files.find(f => f.id === fileVersionId);
+  if (!file) return;
+  const label = file.path || file.id;
+  if (!confirm(`Datei-Version löschen?\n${label}\n\nZugehörige Nodes/Edges dieser Version werden mitgelöscht.\nMemories bleiben erhalten.`)) return;
+
+  try {
+    const nodeIds = new Set(
+      state.nodes.filter(n => n.fileId === fileVersionId).map(n => n.id)
+    );
+
+    // Edges, die diese Nodes berühren
+    const edgeIds = state.edges
+      .filter(e => nodeIds.has(e.from) || nodeIds.has(e.to))
+      .map(e => e.id);
+
+    // Aus Commits entfernen
+    for (const commit of state.commits) {
+      if (commit.fileIds?.includes(fileVersionId)) {
+        commit.fileIds = commit.fileIds.filter(id => id !== fileVersionId);
+      }
+      if (commit.nodeIds?.length) {
+        commit.nodeIds = commit.nodeIds.filter(id => !nodeIds.has(id));
+      }
+      if (commit.edgeIds?.length) {
+        commit.edgeIds = commit.edgeIds.filter(id => !edgeIds.includes(id));
+      }
+      await dbPut(commit);
+    }
+
+    // Nodes / Edges / File aus State + DB
+    for (const nid of nodeIds) {
+      state.nodes = state.nodes.filter(n => n.id !== nid);
+      await dbDelete(nid);
+    }
+    for (const eid of edgeIds) {
+      state.edges = state.edges.filter(e => e.id !== eid);
+      await dbDelete(eid);
+    }
+    state.files = state.files.filter(f => f.id !== fileVersionId);
+    await dbDelete(fileVersionId);
+
+    // Leere Commits entfernen (keine fileIds mehr)
+    const emptyCommits = state.commits.filter(c => !c.fileIds?.length);
+    for (const c of emptyCommits) {
+      state.commits = state.commits.filter(x => x.id !== c.id);
+      await dbDelete(c.id);
+    }
+
+    if (state.activeFileId === fileVersionId) {
+      state.activeFileId = state.files[0]?.id || null;
+      state.selectedNodeId = null;
+      state.selectedChunkId = null;
+      clearChunkDetail();
+      $('structureTree').innerHTML = '<div style="color:var(--muted);font-size:10px">Keine Struktur.</div>';
+      $('structureMeta').textContent = 'Datei auswählen oder alle strukturieren.';
+    }
+
+    renderFileList();
+    updateFileActionButtons();
+    if (state.activeFileId) selectFile(state.activeFileId);
+    log(`Datei-Version gelöscht: ${label}`, 'warn');
+  } catch (e) {
+    log(`Datei löschen fehlgeschlagen: ${e?.message || e}`, 'err');
+  }
+}
+
+/** Löscht alle Dateien, Commits, Nodes und Edges. Memories bleiben. */
+async function deleteAllFiles() {
+  if (!state.files.length && !state.commits.length) return;
+  if (!confirm(`Alle Dateien, Commits, Nodes und Edges löschen?\n\nMemories bleiben erhalten.\nDieser Schritt ist nicht rückgängig zu machen.`)) return;
+
+  try {
+    const toDelete = [
+      ...state.commits.map(c => c.id),
+      ...state.files.map(f => f.id),
+      ...state.nodes.map(n => n.id),
+      ...state.edges.map(e => e.id)
+    ];
+    for (const id of toDelete) await dbDelete(id);
+
+    state.commits = [];
+    state.files = [];
+    state.nodes = [];
+    state.edges = [];
+    state.nextCommitId = 1;
+    state.activeCommitId = null;
+    state.activeFileId = null;
+    state.selectedNodeId = null;
+    state.selectedChunkId = null;
+
+    clearChunkDetail();
+    $('structureTree').innerHTML = '<div style="color:var(--muted);font-size:10px">Keine Struktur.</div>';
+    $('structureMeta').textContent = 'Datei auswählen oder alle strukturieren.';
+    renderFileList();
+    updateFileActionButtons();
+    log('Alle Dateien / Commits / Nodes / Edges gelöscht. Memories unberührt.', 'warn');
+  } catch (e) {
+    log(`Alle Dateien löschen fehlgeschlagen: ${e?.message || e}`, 'err');
+  }
+}
+
+/** Löscht alle Memories. Code-Historie bleibt. */
+async function deleteAllMemories() {
+  if (!state.memories.length) return;
+  if (!confirm(`Alle ${state.memories.length} Memories löschen?\n\nCode-Historie (Commits/Files/Nodes) bleibt erhalten.`)) return;
+
+  try {
+    for (const m of [...state.memories]) await dbDelete(m.id);
+    state.memories = [];
+    state.nextMemId = 1;
+    state.selectedId = null;
+    renderMemoryList();
+    updateMemoryActionButtons();
+    $('memoryCount').textContent = '0';
+    rebuildScene();
+    $('inspector').classList.remove('visible');
+    $('ranking').innerHTML = '<div style="color:var(--muted);font-size:10px">NO SEARCH RESULT</div>';
+    log('Alle Memories gelöscht · Code-Historie unberührt.', 'warn');
+  } catch (e) {
+    log(`Alle Memories löschen fehlgeschlagen: ${e?.message || e}`, 'err');
+  }
+}
+
+/** Kompletter Reset: IndexedDB leeren, State zurücksetzen. */
+async function resetAll() {
+  if (!confirm('ALLES ZURÜCKSETZEN?\n\n• Commits, Dateien, Nodes, Edges\n• Alle Memories\n• IndexedDB wird geleert\n\nProjektname bleibt. Nicht rückgängig zu machen.')) return;
+  if (!confirm('Wirklich ALLES löschen? Letzte Bestätigung.')) return;
+
+  try {
+    await dbClearStore();
+
+    state.commits = [];
+    state.files = [];
+    state.nodes = [];
+    state.edges = [];
+    state.memories = [];
+    state.chunks = [];
+    state.nextCommitId = 1;
+    state.nextMemId = 1;
+    state.activeCommitId = null;
+    state.activeFileId = null;
+    state.selectedNodeId = null;
+    state.selectedChunkId = null;
+    state.selectedId = null;
+    state.llmContext = null;
+
+    // Projekt-Metadaten behalten und neu speichern
+    state.project.updated_at = now();
+    if (!state.project.created_at) state.project.created_at = now();
+    await dbPut({
+      id: state.project.id,
+      type: 'project',
+      ...state.project
+    });
+
+    clearChunkDetail();
+    clearLlmContext();
+    $('structureTree').innerHTML = '<div style="color:var(--muted);font-size:10px">Keine Struktur.</div>';
+    $('structureMeta').textContent = 'Datei auswählen oder alle strukturieren.';
+    $('ranking').innerHTML = '<div style="color:var(--muted);font-size:10px">NO SEARCH RESULT</div>';
+    $('memoryCount').textContent = '0';
+    $('dimension').textContent = state.modelReady ? CONFIG.DIM : '—';
+    $('inspector').classList.remove('visible');
+
+    renderFileList();
+    renderMemoryList();
+    updateFileActionButtons();
+    updateMemoryActionButtons();
+    rebuildScene();
+    log('Projekt vollständig zurückgesetzt.', 'warn');
+  } catch (e) {
+    log(`Reset fehlgeschlagen: ${e?.message || e}`, 'err');
   }
 }
 
@@ -1000,13 +1213,23 @@ function renderFileList() {
           <span class="fileIcon">📄</span>
           <span class="fileName">${esc(displayName)}</span>
           <span class="fileMeta">${esc(meta)}</span>
+          <button type="button" class="itemDel" data-del-file="${esc(f.id)}" title="Datei-Version löschen">×</button>
         </div>`;
     }).join('');
     return header + items;
   }).join('');
 
   list.querySelectorAll('.fileItem').forEach(el => {
-    el.onclick = () => selectFile(el.dataset.id);
+    el.onclick = (ev) => {
+      if (ev.target.closest('[data-del-file]')) return;
+      selectFile(el.dataset.id);
+    };
+  });
+  list.querySelectorAll('[data-del-file]').forEach(btn => {
+    btn.onclick = (ev) => {
+      ev.stopPropagation();
+      deleteFile(btn.getAttribute('data-del-file'));
+    };
   });
 }
 
@@ -1733,7 +1956,8 @@ async function parseFileToNodes(file) {
 }
 
 async function structureAllFiles() {
-  $('parseAllBtn').disabled = true;
+  updateFileActionButtons();
+  if ($('parseAllBtn')) $('parseAllBtn').disabled = true;
   log('Strukturiere Dateien → Nodes + Edges + Versionen …', 'info');
 
   let totalNodes = 0;
@@ -1834,13 +2058,13 @@ async function structureAllFiles() {
   }
 
   renderFileList();
+  updateFileActionButtons();
   if (state.activeFileId) {
     selectFile(state.activeFileId);
   } else if (state.files.length) {
     selectFile(state.files[0].id);
   }
 
-  $('parseAllBtn').disabled = false;
   log(`Strukturierung abgeschlossen · ${totalNodes} Nodes · ${totalEdges} Edges.`, 'ok');
 }
 
@@ -2802,7 +3026,7 @@ async function storeSelectedChunk() {
     renderMemoryList();
     rebuildScene();
     $('memoryCount').textContent = state.memories.length;
-    $('searchBtn').disabled = !state.modelReady || state.memories.length === 0;
+    updateMemoryActionButtons();
   } catch (e) {
     error('chunkError', e?.message || String(e));
     log(`Speichern fehlgeschlagen: ${e?.message}`, 'err');
@@ -2840,7 +3064,7 @@ async function storeAllChunksOfFile() {
   renderMemoryList();
   rebuildScene();
   $('memoryCount').textContent = state.memories.length;
-  $('searchBtn').disabled = !state.modelReady || state.memories.length === 0;
+  updateMemoryActionButtons();
   log(`${ok}/${interesting.length} Nodes gespeichert.`, 'ok');
   $('storeAllChunksBtn').disabled = false;
 }
@@ -2862,6 +3086,7 @@ async function deleteMemory(id) {
   await dbDelete(id);
   state.selectedId = null;
   renderMemoryList();
+  updateMemoryActionButtons();
   $('memoryCount').textContent = state.memories.length;
   rebuildScene();
   $('inspector').classList.remove('visible');
@@ -2882,11 +3107,22 @@ function renderMemoryList() {
       <div class="memId">${esc(m.id)}</div>
       <div class="memText">${esc(m.chunkName || m.content?.title || '')}</div>
       <div class="memMeta">${esc(m.file || '')} · ${esc(m.chunkType || '')} · ${esc(m.chunkId || '')}</div>
+      <button type="button" class="itemDel" data-del-mem="${esc(m.id)}" title="Memory löschen">×</button>
     </div>
   `).join('');
   list.querySelectorAll('.memItem').forEach(el => {
-    el.onclick = () => selectMemory(el.dataset.id);
+    el.onclick = (ev) => {
+      if (ev.target.closest('[data-del-mem]')) return;
+      selectMemory(el.dataset.id);
+    };
   });
+  list.querySelectorAll('[data-del-mem]').forEach(btn => {
+    btn.onclick = (ev) => {
+      ev.stopPropagation();
+      deleteMemory(btn.getAttribute('data-del-mem'));
+    };
+  });
+  updateMemoryActionButtons();
 }
 
 function selectMemory(id) {
@@ -3199,6 +3435,8 @@ async function restore() {
   $('dimension').textContent = state.memories.length ? CONFIG.DIM : '—';
   renderFileList();
   renderMemoryList();
+  updateFileActionButtons();
+  updateMemoryActionButtons();
   rebuildScene();
   log(`[${projectId}] ${state.commits.length} Commits · ${state.files.length} Files · ${state.nodes.length} Nodes · ${state.edges.length} Edges · ${state.memories.length} Memories.`, 'ok');
 }
@@ -3208,6 +3446,7 @@ async function restore() {
 ========================================================= */
 $('saveProjectBtn').onclick = saveProject;
 $('exportProjectBtn').onclick = exportProjectJson;
+$('resetAllBtn').onclick = resetAll;
 $('fileInput').onchange = async (e) => {
   const list = e.target.files;
   try {
@@ -3220,6 +3459,8 @@ $('fileInput').onchange = async (e) => {
   }
 };
 $('parseAllBtn').onclick = structureAllFiles;
+$('deleteAllFilesBtn').onclick = deleteAllFiles;
+$('deleteAllMemoriesBtn').onclick = deleteAllMemories;
 $('toLlmBtn').onclick = sendToLlm;
 $('storeChunkBtn').onclick = storeSelectedChunk;
 $('storeAllChunksBtn').onclick = storeAllChunksOfFile;
@@ -3248,7 +3489,7 @@ initThree();
   log('Flow: PROJEKT → UPLOAD → COMMIT → FILE → NODES → MEMORY', 'info');
   await restore();
   const ready = await loadModel();
-  $('searchBtn').disabled = !(ready && state.memories.length > 0);
+  updateMemoryActionButtons();
   log('NEURAL MEMORY CORE ONLINE.', 'ok');
 })();
 
