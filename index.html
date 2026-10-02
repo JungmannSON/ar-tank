@@ -1,0 +1,3479 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>NEURAL MEMORY — Commit Graph</title>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<style>
+:root {
+  --bg: #05080c;
+  --panel: #0a1016;
+  --panel2: #070d12;
+  --border: #1a2a36;
+  --cyan: #00e5ff;
+  --pink: #ff2d95;
+  --green: #00ff9d;
+  --yellow: #ffe600;
+  --danger: #ff4d6a;
+  --text: #b8d4e3;
+  --muted: #405861;
+  --header-h: 52px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  background: var(--bg); color: var(--text);
+  font-family: "JetBrains Mono", "SF Mono", "Fira Code", ui-monospace, monospace;
+}
+body { display: grid; grid-template-rows: var(--header-h) 1fr; }
+
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px;
+  background: linear-gradient(90deg, #060b10, #0a121a);
+  border-bottom: 1px solid var(--border);
+}
+.logo { display: flex; align-items: center; gap: 12px; }
+.logoMark {
+  width: 34px; height: 34px; display: grid; place-items: center;
+  border: 1px solid var(--cyan); color: var(--cyan);
+  box-shadow: 0 0 12px rgba(0,229,255,.25); font-size: 16px;
+}
+.logoText { font-size: 14px; font-weight: 600; letter-spacing: 3px; }
+.logoText span { color: var(--cyan); }
+.status { font-size: 11px; letter-spacing: 1px; color: var(--muted); }
+.status b { color: var(--green); }
+
+main {
+  height: calc(100vh - var(--header-h));
+  display: grid;
+  grid-template-columns: 300px minmax(0,1fr) 320px;
+  overflow: hidden;
+}
+.col {
+  display: flex; flex-direction: column; min-width: 0;
+  overflow-y: auto; overflow-x: hidden;
+  border-right: 1px solid var(--border);
+}
+.col:last-child { border-right: none; }
+
+.panel { border-bottom: 1px solid var(--border); }
+.panelTitle {
+  padding: 10px 14px; background: var(--panel2);
+  border-bottom: 1px solid var(--border);
+  color: var(--cyan); font-size: 10px; letter-spacing: 2px;
+}
+.panelBody { padding: 12px 14px; }
+
+label {
+  display: block; color: var(--muted); font-size: 9px;
+  letter-spacing: 1px; margin: 8px 0 4px;
+}
+label:first-child { margin-top: 0; }
+input, textarea {
+  width: 100%; background: #060b10; border: 1px solid var(--border);
+  color: var(--text); padding: 8px 10px; outline: none;
+  font: inherit; font-size: 12px;
+}
+textarea { min-height: 60px; resize: vertical; }
+input:focus, textarea:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 8px rgba(0,229,255,.08);
+}
+
+button {
+  width: 100%; margin-top: 8px; padding: 9px;
+  background: transparent; border: 1px solid var(--cyan);
+  color: var(--cyan); font: inherit; font-size: 11px;
+  letter-spacing: 1.5px; cursor: pointer;
+  transition: background .15s, box-shadow .15s;
+}
+button:hover:not(:disabled) {
+  background: rgba(0,229,255,.12);
+  box-shadow: 0 0 12px rgba(0,229,255,.2);
+}
+button:disabled { opacity: .35; cursor: not-allowed; }
+button.green { border-color: var(--green); color: var(--green); }
+button.pink { border-color: var(--pink); color: var(--pink); }
+button.danger { border-color: var(--danger); color: var(--danger); }
+button.small { width: auto; margin: 0; padding: 5px 8px; font-size: 9px; }
+
+.list { max-height: 220px; overflow-y: auto; font-size: 11px; }
+.item {
+  padding: 8px 6px; border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.item:hover { background: rgba(0,229,255,.06); }
+.item.active { background: rgba(0,229,255,.12); border-left: 2px solid var(--cyan); }
+.item .id { color: var(--cyan); font-size: 10px; }
+.item .meta { color: var(--muted); font-size: 9px; margin-top: 2px; }
+.item .title { margin-top: 2px; line-height: 1.3; }
+
+.tree { max-height: 280px; overflow-y: auto; font-size: 11px; }
+.treeNode {
+  padding: 5px 6px 5px 8px; border-bottom: 1px solid #0d1520;
+  cursor: pointer; display: flex; gap: 6px; align-items: flex-start;
+}
+.treeNode:hover { background: rgba(0,229,255,.06); }
+.treeNode.selected { background: rgba(0,229,255,.12); border-left: 2px solid var(--cyan); }
+.treeKind { color: var(--pink); font-size: 8px; min-width: 56px; letter-spacing: 1px; padding-top: 2px; }
+.treeName { flex: 1; line-height: 1.3; }
+.treeLines { color: var(--muted); font-size: 9px; white-space: nowrap; }
+
+.codeBox {
+  background: #060b10; border: 1px solid var(--border);
+  padding: 10px; margin-top: 8px; font-size: 11px;
+  max-height: 240px; overflow-y: auto; white-space: pre-wrap;
+  word-break: break-word; line-height: 1.45;
+}
+.log {
+  max-height: 110px; overflow-y: auto;
+  color: var(--muted); font-size: 10px; line-height: 1.5;
+}
+.log .ok { color: var(--green); }
+.log .info { color: var(--cyan); }
+.log .warn { color: #ffb347; }
+.log .err { color: var(--danger); }
+
+.sceneCol { position: relative; overflow: hidden; }
+.scenePanel { height: 100%; display: flex; flex-direction: column; border-bottom: none; }
+.sceneBody { flex: 1; min-height: 0; padding: 0; position: relative; }
+#scene {
+  position: relative; width: 100%; height: 100%; min-height: 380px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at center, #0a1520 0%, #05080c 70%);
+}
+#canvas3d { display: block; width: 100%; height: 100%; }
+.hud {
+  position: absolute; top: 10px; left: 12px; right: 12px;
+  display: flex; justify-content: space-between; z-index: 10;
+  pointer-events: none; color: var(--muted); font-size: 10px; letter-spacing: 1.5px;
+}
+.hudRight { color: var(--cyan); }
+.hint {
+  position: absolute; left: 12px; bottom: 10px; z-index: 10;
+  pointer-events: none; color: var(--muted); font-size: 9px;
+}
+.toolbar {
+  position: absolute; right: 12px; bottom: 8px; z-index: 10;
+  display: flex; gap: 6px;
+}
+.toolbar button { width: auto; margin: 0; padding: 6px 9px; font-size: 9px; }
+
+.inspector {
+  position: absolute; top: 40px; right: 12px; width: 290px;
+  max-height: calc(100% - 60px); overflow-y: auto; padding: 12px;
+  background: rgba(8,14,20,.95); border: 1px solid var(--border);
+  z-index: 20; display: none; font-size: 11px; backdrop-filter: blur(6px);
+}
+.inspector.visible { display: block; }
+.inspector h3 { margin-bottom: 8px; color: var(--cyan); font-size: 10px; letter-spacing: 2px; }
+.inspector .id { margin-bottom: 6px; color: var(--green); }
+.inspector .txt { margin-bottom: 8px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; max-height: 180px; overflow-y: auto; }
+.inspector .meta { color: var(--muted); font-size: 10px; line-height: 1.5; }
+
+/* Retrieval Debug Panel — absolute overlay, does not alter layout grid */
+.retrievalPanel {
+  position: absolute; top: 40px; left: 12px; width: 300px;
+  max-height: calc(100% - 70px); overflow-y: auto; padding: 10px 12px;
+  background: rgba(8,14,20,.95); border: 1px solid var(--border);
+  z-index: 20; font-size: 10px; backdrop-filter: blur(6px);
+  display: none;
+}
+.retrievalPanel.visible { display: block; }
+.retrievalPanel h3 {
+  margin-bottom: 6px; color: var(--yellow); font-size: 10px; letter-spacing: 2px;
+}
+.retrievalPanel label { margin-top: 6px; }
+.retrievalPanel textarea {
+  min-height: 48px; font-size: 11px; margin-bottom: 4px;
+}
+.retrievalPanel .btnRow {
+  display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px;
+}
+.retrievalPanel .btnRow button {
+  width: auto; flex: 1; min-width: 60px; margin: 0; padding: 5px 6px; font-size: 9px;
+}
+.retrievalPanel .results {
+  margin-top: 8px; max-height: 220px; overflow-y: auto;
+  font-size: 10px; line-height: 1.4; color: var(--text);
+}
+.retrievalPanel .resItem {
+  padding: 5px 4px; border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.retrievalPanel .resItem:hover { background: rgba(255,230,0,.08); }
+.retrievalPanel .resRank { color: var(--yellow); font-weight: 600; }
+.retrievalPanel .resSim { color: var(--green); }
+.retrievalPanel .resMeta { color: var(--muted); font-size: 9px; }
+.retrievalPanel .intersectionBox {
+  margin-top: 8px; padding: 6px; border: 1px solid var(--pink);
+  background: rgba(255,45,149,.08); font-size: 10px;
+}
+
+/* Functional group legend — analysis layer only */
+.funcLegend {
+  position: absolute; left: 12px; bottom: 36px; z-index: 15;
+  padding: 8px 10px; min-width: 160px;
+  background: rgba(8,14,20,.92); border: 1px solid var(--border);
+  font-size: 9px; letter-spacing: 0.5px; pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+.funcLegend .flTitle {
+  color: var(--cyan); font-size: 9px; letter-spacing: 1.5px; margin-bottom: 6px;
+}
+.funcLegend .flRow {
+  display: flex; align-items: center; gap: 6px; margin: 3px 0; color: var(--text);
+}
+.funcLegend .flDot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  box-shadow: 0 0 6px currentColor;
+}
+.funcLegend .flCount { color: var(--muted); margin-left: auto; }
+.funcLegend .flDiag {
+  margin-top: 6px; padding-top: 5px; border-top: 1px solid var(--border);
+  color: var(--muted); line-height: 1.45;
+}
+
+.metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 8px; }
+.metric {
+  padding: 8px; background: #060b10; border: 1px solid var(--border); text-align: center;
+}
+.metricLabel { color: var(--muted); font-size: 8px; letter-spacing: 1px; }
+.metricValue { margin-top: 3px; color: var(--cyan); font-size: 15px; }
+
+@media (max-width: 1000px) {
+  main { grid-template-columns: 260px minmax(0,1fr); }
+  .col:last-child { display: none; }
+}
+
+/* --- AI Agent Panel --- */
+.agentPanel { font-size: 11px; }
+.agentCtx {
+  background: #060b10; border: 1px solid var(--border);
+  padding: 8px; margin-bottom: 8px; font-size: 10px; color: var(--muted);
+}
+.agentCtx b { color: var(--cyan); }
+.agentCtx .chip {
+  display: inline-block; margin: 2px 3px 2px 0; padding: 2px 6px;
+  border: 1px solid var(--border); color: var(--text); font-size: 9px;
+  cursor: pointer;
+}
+.agentCtx .chip:hover { border-color: var(--cyan); color: var(--cyan); }
+.agentTranscript {
+  max-height: 180px; overflow-y: auto; margin: 8px 0;
+  border: 1px solid var(--border); background: #05080c; padding: 8px;
+}
+.agentTurn { margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #122; }
+.agentTurn .role { font-size: 9px; letter-spacing: 1px; margin-bottom: 3px; }
+.agentTurn .role.user { color: var(--pink); }
+.agentTurn .role.agent { color: var(--green); }
+.agentTurn .role.system { color: var(--yellow); }
+.agentTurn .body { color: var(--text); white-space: pre-wrap; word-break: break-word; font-size: 10px; line-height: 1.4; }
+.agentProposal {
+  border: 1px solid var(--yellow); background: #121006; padding: 8px; margin-top: 8px;
+  display: none;
+}
+.agentProposal.visible { display: block; }
+.agentProposal .diff {
+  max-height: 140px; overflow: auto; font-size: 9px; white-space: pre-wrap;
+  background: #060b10; border: 1px solid var(--border); padding: 6px; margin: 6px 0;
+}
+.agentProposal .diff .add { color: var(--green); }
+.agentProposal .diff .del { color: var(--danger); }
+.btnRow2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.btnRow2 button { margin-top: 0; }
+button.green { border-color: var(--green); color: var(--green); }
+button.pink { border-color: var(--pink); color: var(--pink); }
+button.danger { border-color: var(--danger); color: var(--danger); }
+button.yellow { border-color: var(--yellow); color: var(--yellow); }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logoMark">Σ</div>
+    <div class="logoText">COMMIT <span>GRAPH</span></div>
+  </div>
+  <div class="status" id="headerStatus">PROJEKT · 0 COMMITS</div>
+</header>
+
+<main>
+  <!-- LEFT -->
+  <div class="col">
+    <div class="panel">
+      <div class="panelTitle">01 / PROJEKT</div>
+      <div class="panelBody">
+        <label>NAME</label>
+        <input id="projectName" value="Neural Memory" placeholder="Projektname">
+        <label>USER</label>
+        <input id="projectUser" placeholder="User">
+        <button id="saveProjectBtn" class="green">PROJEKT SPEICHERN</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panelTitle">02 / NEUER COMMIT</div>
+      <div class="panelBody">
+        <label>HASH</label>
+        <input id="commitHash" placeholder="z.B. 85f2a16">
+        <label>MESSAGE</label>
+        <input id="commitMsg" placeholder="Update memory core">
+        <label>DATEIEN DIESES STANDS</label>
+        <input id="commitFiles" type="file" multiple
+          accept=".html,.htm,.js,.mjs,.ts,.tsx,.jsx,.css,.json,.md,.txt,.py,.yaml,.yml">
+        <div id="pendingFiles" class="list" style="margin-top:6px;max-height:100px"></div>
+        <button id="createCommitBtn" class="pink">COMMIT ANLEGEN + STRUKTURIEREN</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panelTitle">03 / COMMITS</div>
+      <div class="panelBody">
+        <div id="commitList" class="list">
+          <div style="color:var(--muted);font-size:10px">Noch keine Commits.</div>
+        </div>
+        <button id="deleteCommitBtn" class="danger" disabled>COMMIT LÖSCHEN</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panelTitle">SYSTEM LOG</div>
+      <div class="panelBody"><div id="log" class="log"></div></div>
+    </div>
+  </div>
+
+  <!-- CENTER: 3D -->
+  <div class="col sceneCol">
+    <div class="panel scenePanel">
+      <div class="panelTitle">COMMIT TIMELINE + STRUKTUR</div>
+      <div class="panelBody sceneBody">
+        <div id="scene">
+          <div class="hud">
+            <div>COMMITS · DATEIEN · FUNKTIONEN</div>
+            <div id="hudStatus" class="hudRight">LEER</div>
+          </div>
+          <canvas id="canvas3d"></canvas>
+          <div class="hint">DRAG · ROTATE &nbsp;|&nbsp; WHEEL · ZOOM &nbsp;|&nbsp; CLICK · SELECT</div>
+          <div id="funcLegend" class="funcLegend">
+            <div class="flTitle">FUNKTIONALE BAUGRUPPEN</div>
+            <div id="funcLegendRows"></div>
+            <div id="funcLegendDiag" class="flDiag">—</div>
+          </div>
+          <div class="toolbar">
+            <button id="resetCamBtn">RESET</button>
+            <button id="focusTimelineBtn">TIMELINE</button>
+            <button id="showRetrievalBtn">RETRIEVAL</button>
+          </div>
+          <div id="inspector" class="inspector">
+            <h3 id="inspTitle">INSPECTOR</h3>
+            <div id="inspId" class="id">—</div>
+            <div id="inspText" class="txt">—</div>
+            <div id="inspMeta" class="meta">—</div>
+          </div>
+          <!-- Semantic Retrieval Debug Panel (overlay, non-invasive) -->
+          <div id="retrievalPanel" class="retrievalPanel">
+            <h3>SEMANTIC RETRIEVAL</h3>
+            <label>QUERY</label>
+            <textarea id="retrievalQuery" placeholder="z.B. UI Layout CSS responsive Viewport Smartphone"></textarea>
+            <div class="btnRow">
+              <button id="runQuery1Btn" class="green">Q1</button>
+              <button id="runQuery2Btn" class="pink">Q2</button>
+              <button id="runIntersectBtn">∩</button>
+              <button id="clearRetrievalBtn" class="danger">CLEAR</button>
+            </div>
+            <div class="btnRow" style="margin-top:4px">
+              <button id="toggleRetrievalBtn">PANEL OFF</button>
+            </div>
+            <div id="retrievalResults" class="results">
+              <div style="color:var(--muted)">Noch keine Query.</div>
+            </div>
+            <div id="retrievalIntersection" class="intersectionBox" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="col">
+    <div class="panel">
+      <div class="panelTitle">04 / STRUKTUR DES COMMITS</div>
+      <div class="panelBody">
+        <div id="structMeta" style="color:var(--muted);font-size:9px;margin-bottom:6px">
+          Commit auswählen.
+        </div>
+        <div id="structTree" class="tree">
+          <div style="color:var(--muted);font-size:10px">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panelTitle">05 / CODE</div>
+      <div class="panelBody">
+        <div id="codeHeader" style="color:var(--muted);font-size:10px;margin-bottom:6px">—</div>
+        <div id="codeBox" class="codeBox">Kein Node ausgewählt.</div>
+        <button id="copyCodeBtn" disabled>CODE KOPIEREN</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panelTitle">07 / AI AGENT</div>
+      <div class="panelBody agentPanel">
+        <label>PROVIDER (OpenAI-kompatibel)</label>
+        <select id="llmProvider" style="width:100%;background:#060b10;border:1px solid var(--border);color:var(--text);padding:6px;font:inherit;font-size:11px">
+          <option value="openai">OpenAI</option>
+          <option value="xai">xAI / Grok</option>
+          <option value="custom">Custom Base URL</option>
+        </select>
+        <label>BASE URL (optional)</label>
+        <input id="llmBaseUrl" placeholder="https://api.openai.com/v1" />
+        <label>MODEL</label>
+        <input id="llmModel" placeholder="gpt-4o-mini" value="gpt-4o-mini" />
+        <label>API KEY (nur Session, nicht in IndexedDB)</label>
+        <input id="llmApiKey" type="password" placeholder="sk-…" autocomplete="off" />
+        <div class="agentCtx" id="agentContextBox" style="margin-top:10px">
+          <div><b>CONTEXT</b></div>
+          <div id="agentContextSummary">0 Nodes · keine Auswahl</div>
+          <div id="agentContextChips" style="margin-top:6px"></div>
+          <div style="margin-top:6px">
+            <button id="agentAddSelectedBtn" type="button" style="margin-top:4px">NODE → KONTEXT</button>
+            <button id="agentClearContextBtn" type="button" style="margin-top:4px">KONTEXT LEEREN</button>
+          </div>
+        </div>
+        <label>ANFRAGE</label>
+        <textarea id="agentQuery" placeholder="Warum funktioniert das Mobile-Layout nicht zuverlässig und welche Änderung würdest du vorschlagen?"></textarea>
+        <button id="agentRunBtn" class="green">AGENT AUSFÜHREN (LLM)</button>
+        <div class="agentTranscript" id="agentTranscript">
+          <div style="color:var(--muted)">Noch kein Durchlauf. API-Key setzen, Kontext wählen, Anfrage senden.</div>
+        </div>
+        <div class="agentProposal" id="agentProposalBox">
+          <div style="color:var(--yellow);font-size:9px;letter-spacing:1px">PROPOSAL</div>
+          <div id="agentProposalMeta" style="color:var(--muted);font-size:10px;margin:4px 0"></div>
+          <div class="diff" id="agentProposalDiff"></div>
+          <div class="btnRow2">
+            <button id="agentRejectBtn" class="danger">ABLEHNEN</button>
+            <button id="agentApplyBtn" class="green">ANWENDEN</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panelTitle">06 / ÜBERSICHT</div>
+      <div class="panelBody">
+        <div class="metrics">
+          <div class="metric">
+            <div class="metricLabel">COMMITS</div>
+            <div id="mCommits" class="metricValue">0</div>
+          </div>
+          <div class="metric">
+            <div class="metricLabel">DATEIEN</div>
+            <div id="mFiles" class="metricValue">0</div>
+          </div>
+          <div class="metric">
+            <div class="metricLabel">SYMBOLE</div>
+            <div id="mSymbols" class="metricValue">0</div>
+          </div>
+        </div>
+        <button id="exportBtn" style="margin-top:10px">EXPORT PROJECT JSON</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+
+/* =========================================================
+   DATA MODEL
+   Project → Commit → FileNode → SymbolNode
+   Edges: parent_commit | contains_file | contains_symbol
+========================================================= */
+
+const DB_NAME = 'COMMIT_GRAPH_V1';
+const DB_STORE = 'records';
+const DB_VERSION = 1;
+
+const EMBED_CONFIG = Object.freeze({
+  MODEL: 'Xenova/multilingual-e5-small',
+  DIM: 384
+});
+
+/* =========================================================
+   FUNCTIONAL GROUP VISUALIZATION (analysis layer only)
+   Does NOT write into embeddings, pos3d, edges, or retrieval math.
+   Classification is deterministic from name + content + path.
+========================================================= */
+const FUNC_GROUPS = Object.freeze({
+  UI:        { id: 2, key: 'UI',        label: 'UI',                 color: [0.25, 0.75, 1.00] }, // light blue
+  RENDER3D:  { id: 3, key: 'RENDER3D',  label: '3D / Rendering',     color: [0.20, 1.00, 0.55] }, // green
+  RETRIEVAL: { id: 4, key: 'RETRIEVAL', label: 'Retrieval / Semantic', color: [1.00, 0.45, 0.90] }, // violet-pink
+  GIT:       { id: 5, key: 'GIT',       label: 'Git / Project State', color: [1.00, 0.85, 0.20] }, // gold
+  DATA:      { id: 6, key: 'DATA',      label: 'Data / Storage',     color: [1.00, 0.55, 0.20] }, // orange
+  CORE:      { id: 7, key: 'CORE',      label: 'Core / Infrastructure', color: [0.55, 0.60, 0.70] }  // muted blue-gray
+});
+
+/**
+ * FUNKTION: classifySymbol()
+ *
+ * ZWECK:
+ * Ordnet ein Symbol-Node einer primären funktionalen Baugruppe zu
+ * (plus optionalen sekundären Treffern). Rein für Visualisierung /
+ * Ground-Truth-Analyse. Kein Einfluss auf Embeddings oder Retrieval.
+ *
+ * INPUT:  Symbol-Node (name, content, path, kind)
+ * OUTPUT: { primary, secondary[], scores }
+ *
+ * LOGIK:
+ * Score-basiert über Name- und Content-Signaturen (reproduzierbar,
+ * keine feste Node-ID-Liste). Höchster Score = primary.
+ */
+function classifySymbol(s) {
+  const name = String(s.name || '').toLowerCase();
+  const content = String(s.content || '');
+  const contentL = content.toLowerCase();
+  const path = String(s.path || '').toLowerCase();
+  const blob = name + '\n' + contentL;
+
+  const scores = { UI: 0, RENDER3D: 0, RETRIEVAL: 0, GIT: 0, DATA: 0, CORE: 0 };
+
+  // --- Retrieval / Semantic ---
+  if (/\b(embed|embedding|cosine|semantic|retrieval|topk|top-k|semantick|querytext|highlightmap|embeddingtext|embeddingcache)\b/.test(blob)) {
+    scores.RETRIEVAL += 3;
+  }
+  if (/^(embed|loadmodel|attachembeddings|computesemantic|runsemantic|embedquery|embedembedding|rebuildhighlight|clearretrieval|computeretrieval|renderretrieval|validatesemantic|getspatial|cosinesim|cosinetodistance)/.test(name)) {
+    scores.RETRIEVAL += 5;
+  }
+  if (/pipeline\s*\(\s*['"]feature-extraction['"]|pooling:\s*['"]mean['"]|normalize:\s*true/.test(contentL)) {
+    scores.RETRIEVAL += 3;
+  }
+
+  // --- 3D / Rendering ---
+  if (/\b(three\.|webglrenderer|perspectivecamera|orbitcontrols|buffergeometry|shadermaterial|points\b|linesegments|raycaster|gridhelper)\b/.test(contentL)) {
+    scores.RENDER3D += 3;
+  }
+  if (/^(initthree|resizethree|rebuildscene|layoutgraph|animate|focuscommit|disposeobj|onpointerdown)$/.test(name)) {
+    scores.RENDER3D += 5;
+  }
+  if (/\b(pos3d|graphnodes|pointsmesh|linesgroup|gl_pointsize|fragmentshader|vertexshader|additiveblending)\b/.test(blob)) {
+    scores.RENDER3D += 2;
+  }
+  if (/renderer\.setsize|camera\.aspect|updateprojectionmatrix/.test(contentL)) {
+    scores.RENDER3D += 3;
+  }
+
+  // --- UI (DOM / panels / list rendering / interaction) ---
+  if (/\b(getelementbyid|queryselector|innerhtml|textcontent|classlist|createelement)\b/.test(contentL)) {
+    scores.UI += 2;
+  }
+  if (/\$\(\s*['"]/.test(content)) {
+    scores.UI += 2;
+  }
+  if (/^(rendercommitlist|renderstructure|renderpendingfiles|showinspector|selectnode|updateheader|updatemetrics|onfilesselected|copycode|saveproject)$/.test(name)) {
+    scores.UI += 5;
+  }
+  if (/\b(panel|inspector|toolbar|hud|structtree|codebox|pendingfiles|commitlist|button|onclick|overlay)\b/.test(blob)) {
+    scores.UI += 2;
+  }
+  if (/\b(@media|viewport|grid-template|clientwidth|clientheight|overflow)\b/.test(contentL) && scores.RENDER3D < 4) {
+    scores.UI += 2;
+  }
+  // HTML/CSS-heavy symbols (sections from markup files)
+  if (/\.(css|html|htm)$/.test(path) && (s.kind === 'section' || /style|class=|<\/|flex|grid/.test(contentL))) {
+    scores.UI += 2;
+  }
+
+  // --- Git / Project State ---
+  if (/^(createcommit|selectcommit|deletecommit|deleteselectedcommit|rendercommitlist)$/.test(name)) {
+    scores.GIT += 4;
+  }
+  if (/\b(parent_commit|contains_file|contains_symbol|parenthash|commitid|pendingfiles|nextids)\b/.test(blob)) {
+    scores.GIT += 2;
+  }
+  if (/\btype:\s*['"]commit['"]|\.commits\.|state\.commits/.test(contentL)) {
+    scores.GIT += 2;
+  }
+
+  // --- Data / Storage ---
+  if (/^(opendb|dbgetall|dbput|dbputmany|dbdelete|restore|exportproject)$/.test(name)) {
+    scores.DATA += 5;
+  }
+  if (/\b(indexeddb|objectstore|transaction|idb|localstorage|export.*json|db_name|db_store)\b/.test(blob)) {
+    scores.DATA += 3;
+  }
+
+  // --- Core / Infrastructure ---
+  if (/^(uid|esc|log|now|findbalancedblock|extractsymbols|buildembeddingtext|detunit)$/.test(name)) {
+    scores.CORE += 4;
+  }
+  if (/^\$|reserved|addblock|lineat/.test(name)) {
+    scores.CORE += 2;
+  }
+
+  // Fallback: unknown → CORE
+  const maxScore = Math.max(...Object.values(scores));
+  if (maxScore === 0) scores.CORE = 1;
+
+  let primary = 'CORE';
+  let best = -1;
+  for (const key of Object.keys(scores)) {
+    if (scores[key] > best) {
+      best = scores[key];
+      primary = key;
+    }
+  }
+
+  // Tie-break: prefer more specific domains over CORE
+  if (best > 0) {
+    const tied = Object.keys(scores).filter(k => scores[k] === best);
+    if (tied.length > 1) {
+      const prio = ['RETRIEVAL', 'RENDER3D', 'UI', 'GIT', 'DATA', 'CORE'];
+      for (const p of prio) {
+        if (tied.includes(p)) { primary = p; break; }
+      }
+    }
+  }
+
+  const secondary = Object.keys(scores)
+    .filter(k => k !== primary && scores[k] >= 2)
+    .sort((a, b) => scores[b] - scores[a]);
+
+  return { primary, secondary, scores };
+}
+
+function funcGroupId(primaryKey) {
+  return (FUNC_GROUPS[primaryKey] && FUNC_GROUPS[primaryKey].id) || FUNC_GROUPS.CORE.id;
+}
+
+const state = {
+  project: {
+    id: 'PROJ-001',
+    name: 'Neural Memory',
+    user: '',
+    created_at: null
+  },
+  commits: [],      // Commit[]
+  files: [],        // FileNode[]
+  symbols: [],      // SymbolNode[]
+  edges: [],        // Edge[]
+
+  // Embedding runtime (single init)
+  extractor: null,
+  modelReady: false,
+  modelPromise: null,
+  // embeddingText → number[384] (session + restored)
+  embeddingCache: new Map(),
+
+  pendingFiles: [], // { name, content } before commit create
+  selectedCommitId: null,
+  selectedNodeId: null,   // file or symbol id
+  selectedKind: null,     // 'commit' | 'file' | 'symbol'
+
+  db: null,
+  nextIds: { commit: 1, file: 1, symbol: 1, edge: 1 },
+
+  // Semantic Retrieval Debug (does not alter embeddings or pos3d)
+  // highlightMap: nodeId → intensity (0=none, 1=weak, 2=medium, 3=strong, 4=intersection)
+  retrieval: {
+    active: false,
+    query1: '',
+    query2: '',
+    k: 12,
+    results1: [],   // [{ nodeId, similarity, rank, name, kind, path, startLine, endLine }]
+    results2: [],
+    intersectionIds: [],
+    highlightMap: new Map()
+  },
+
+  // AI agent workspace (wrappers over existing state; no embedding/retrieval math change)
+  agent: {
+    contextNodeIds: [],
+    reason: '',
+    transcript: [],
+    proposal: null,
+    lastObservations: []
+  }
+};
+
+const $ = id => document.getElementById(id);
+
+function now() { return new Date().toISOString(); }
+function esc(v) {
+  return String(v)
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+}
+function log(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = type;
+  const t = new Date().toLocaleTimeString('de-DE', { hour12: false });
+  el.textContent = `[${t}] ${msg}`;
+  $('log').prepend(el);
+  while ($('log').children.length > 40) $('log').lastElementChild.remove();
+}
+function uid(prefix) {
+  const n = state.nextIds[prefix] || 1;
+  state.nextIds[prefix] = n + 1;
+  const map = { commit: 'COM', file: 'FILE', symbol: 'SYM', edge: 'EDGE' };
+  return `${map[prefix] || prefix.toUpperCase()}-${String(n).padStart(4, '0')}`;
+}
+
+/* =========================================================
+   INDEXEDDB
+========================================================= */
+function openDB() {
+  if (state.db) return Promise.resolve(state.db);
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(DB_STORE)) {
+        db.createObjectStore(DB_STORE, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => { state.db = req.result; resolve(state.db); };
+    req.onerror = () => reject(req.error);
+  });
+}
+async function dbGetAll() {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(DB_STORE, 'readonly');
+      const req = tx.objectStore(DB_STORE).getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  } catch { return []; }
+}
+async function dbPut(record) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).put(record);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function dbPutMany(records) {
+  if (!records.length) return;
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    const store = tx.objectStore(DB_STORE);
+    for (const r of records) store.put(r);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function dbDelete(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+/* =========================================================
+   PARSER — functions / classes / arrows
+========================================================= */
+function findBalancedBlock(source, openIndex) {
+  /**
+   * Brace matcher for symbol boundaries.
+   * Handles: strings ' " `, // and /* comments, and regex literals /.../flags
+   * (regex was the bug: /...{/g increased depth and never closed → content = rest of file).
+   * Template ${} braces are ignored while inside `...` (outer backticks only).
+   */
+  let depth = 0, quote = null, escaped = false, lineC = false, blockC = false;
+
+  function isRegexContext(pos) {
+    let j = pos - 1;
+    while (j >= 0 && (source[j] === ' ' || source[j] === '\t' || source[j] === '\n' || source[j] === '\r')) j--;
+    if (j < 0) return true;
+    const ch = source[j];
+    // After operand → division, not regex
+    if (/[A-Za-z0-9_$)\]]/.test(ch)) return false;
+    return true;
+  }
+
+  for (let i = openIndex; i < source.length; i++) {
+    const c = source[i], n = source[i + 1];
+    if (lineC) { if (c === '\n') lineC = false; continue; }
+    if (blockC) { if (c === '*' && n === '/') { blockC = false; i++; } continue; }
+    if (quote) {
+      if (escaped) { escaped = false; continue; }
+      if (c === '\\') { escaped = true; continue; }
+      if (c === quote) quote = null;
+      continue;
+    }
+    if (c === '/' && n === '/') { lineC = true; i++; continue; }
+    if (c === '/' && n === '*') { blockC = true; i++; continue; }
+    // Regex literal (must run before treating / as something else)
+    if (c === '/' && isRegexContext(i)) {
+      i++;
+      while (i < source.length) {
+        const ch = source[i];
+        if (ch === '\\') { i += 2; continue; }
+        if (ch === '\n') break;
+        if (ch === '[') {
+          i++;
+          while (i < source.length && source[i] !== ']') {
+            if (source[i] === '\\') { i += 2; continue; }
+            i++;
+          }
+          i++;
+          continue;
+        }
+        if (ch === '/') {
+          i++;
+          while (i < source.length && /[gimsuy]/.test(source[i])) i++;
+          i--; // for-loop will i++
+          break;
+        }
+        i++;
+      }
+      continue;
+    }
+    if (c === '"' || c === "'" || c === '`') { quote = c; continue; }
+    if (c === '{') { depth++; continue; }
+    if (c === '}') { depth--; if (depth === 0) return i + 1; }
+  }
+  return source.length;
+}
+
+const RESERVED = new Set([
+  'if','else','for','while','do','switch','case','catch','try','finally',
+  'return','throw','new','typeof','instanceof','void','delete','in','of',
+  'await','yield','import','export','default','class','function','const','let','var',
+  'async','static','get','set','constructor'
+]);
+
+/**
+ * Hierarchical structural parser (no embeddings, no artificial windows).
+ * Emits: function | class | arrow | method | section
+ * Nesting via parentIndex (resolved to parentNodeId at commit time).
+ */
+function extractSymbols(source, fileName) {
+  const blocks = [];
+  const seenOffset = new Set();
+
+  function lineAt(offset) {
+    return source.slice(0, offset).split('\n').length;
+  }
+
+  function addBlock(kind, name, start, end) {
+    if (start < 0 || end <= start) return null;
+    if (RESERVED.has(name) && kind !== 'method') return null;
+    // constructor is allowed as method
+    if (kind === 'method' && RESERVED.has(name) && name !== 'constructor') return null;
+    if (seenOffset.has(start)) return null;
+    seenOffset.add(start);
+    blocks.push({
+      kind,
+      name,
+      content: source.slice(start, end),
+      startLine: lineAt(start),
+      endLine: lineAt(end),
+      startOffset: start,
+      endOffset: end,
+      parentIndex: null
+    });
+    return blocks.length - 1;
+  }
+
+  // --- 1) function / class / arrow (including nested declarations) ---
+  const patterns = [
+    { kind: 'function', re: /\b(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{/g },
+    { kind: 'class', re: /\bclass\s+([A-Za-z_$][\w$]*)[^{]*\{/g },
+    { kind: 'arrow', re: /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>\s*\{/g }
+  ];
+
+  for (const p of patterns) {
+    const re = new RegExp(p.re.source, p.re.flags);
+    let m;
+    while ((m = re.exec(source))) {
+      const name = m[1];
+      if (RESERVED.has(name)) continue;
+      const open = source.indexOf('{', m.index);
+      if (open < 0) continue;
+      const end = findBalancedBlock(source, open);
+      addBlock(p.kind, name, m.index, end);
+    }
+  }
+
+  // --- 2) methods inside each class body ---
+  // Snapshot class list first (methods append to blocks).
+  const classBlocks = blocks.filter(b => b.kind === 'class');
+  const methodRe =
+    /(?:^|[\n;{])\s*(?:async\s+|static\s+|static\s+async\s+|async\s+static\s+|get\s+|set\s+)*([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{/g;
+
+  for (const cls of classBlocks) {
+    const open = source.indexOf('{', cls.startOffset);
+    if (open < 0 || open >= cls.endOffset) continue;
+    // Scan only inside class body (after '{')
+    const bodyStart = open + 1;
+    const bodyEnd = cls.endOffset - 1;
+    if (bodyEnd <= bodyStart) continue;
+
+    const body = source.slice(bodyStart, bodyEnd);
+    let m;
+    const re = new RegExp(methodRe.source, methodRe.flags);
+    while ((m = re.exec(body))) {
+      const name = m[1];
+      if (!name || (RESERVED.has(name) && name !== 'constructor')) continue;
+      // Absolute position of method name start within full source
+      // m.index points at boundary char or start; find real method start
+      const localNameIdx = body.indexOf(name, m.index);
+      if (localNameIdx < 0) continue;
+      // Walk back over optional modifiers for content start
+      let absName = bodyStart + localNameIdx;
+      let contentStart = absName;
+      const pre = source.slice(Math.max(bodyStart, absName - 40), absName);
+      const mod = pre.match(/(?:async\s+|static\s+|get\s+|set\s+)+$/);
+      if (mod) contentStart = absName - mod[0].length;
+
+      const brace = source.indexOf('{', absName);
+      if (brace < 0 || brace >= cls.endOffset) continue;
+      const end = findBalancedBlock(source, brace);
+      if (end > cls.endOffset) continue;
+      // Skip if this range is already a nested class/function captured above
+      if (seenOffset.has(contentStart)) continue;
+      addBlock('method', name, contentStart, end);
+    }
+  }
+
+  // --- 3) Parent = tightest enclosing block by source range ---
+  for (let i = 0; i < blocks.length; i++) {
+    const b = blocks[i];
+    let best = null;
+    let bestSpan = Infinity;
+    for (let j = 0; j < blocks.length; j++) {
+      if (i === j) continue;
+      const p = blocks[j];
+      const encloses =
+        p.startOffset <= b.startOffset &&
+        p.endOffset >= b.endOffset &&
+        (p.startOffset !== b.startOffset || p.endOffset !== b.endOffset);
+      if (!encloses) continue;
+      const span = p.endOffset - p.startOffset;
+      if (span < bestSpan) {
+        bestSpan = span;
+        best = j;
+      }
+    }
+    b.parentIndex = best;
+  }
+
+  // --- 4) Fallback: whole-file sections only if nothing structural found ---
+  if (!blocks.length) {
+    const lines = source.split('\n');
+    const size = 50;
+    for (let i = 0; i < lines.length; i += size) {
+      const chunk = lines.slice(i, i + size).join('\n');
+      if (!chunk.trim()) continue;
+      blocks.push({
+        kind: 'section',
+        name: `section:${i + 1}`,
+        content: chunk,
+        startLine: i + 1,
+        endLine: Math.min(lines.length, i + size),
+        startOffset: 0,
+        endOffset: 0,
+        parentIndex: null
+      });
+    }
+  }
+
+  blocks.sort((a, b) => a.startOffset - b.startOffset || b.endOffset - a.endOffset);
+  // Re-link parentIndex after sort (indices changed)
+  const byStart = new Map(blocks.map((b, i) => [b.startOffset + ':' + b.endOffset, i]));
+  // parentIndex still points to pre-sort indices — rebuild via ranges
+  for (let i = 0; i < blocks.length; i++) {
+    const b = blocks[i];
+    let best = null;
+    let bestSpan = Infinity;
+    for (let j = 0; j < blocks.length; j++) {
+      if (i === j) continue;
+      const p = blocks[j];
+      const encloses =
+        p.startOffset <= b.startOffset &&
+        p.endOffset >= b.endOffset &&
+        (p.startOffset !== b.startOffset || p.endOffset !== b.endOffset);
+      if (!encloses) continue;
+      const span = p.endOffset - p.startOffset;
+      if (span < bestSpan) {
+        bestSpan = span;
+        best = j;
+      }
+    }
+    b.parentIndex = best;
+  }
+
+  return blocks;
+}
+
+/* =========================================================
+   DETERMINISTIC EMBEDDING TEXT (no vector computation)
+========================================================= */
+/**
+ * Builds a stable, hierarchy-aware text for later embedding.
+ * Does not mutate content. No LLM, no summary.
+ */
+function buildEmbeddingText({
+  projectName,
+  filePath,
+  symbolName,
+  kind,
+  content,
+  parentKind,
+  parentName
+}) {
+  const lines = [
+    `PROJECT: ${projectName || ''}`,
+    `FILE: ${filePath || ''}`
+  ];
+  if (parentKind && parentName) {
+    lines.push(`PARENT: ${parentKind} ${parentName}`);
+  }
+  lines.push(`SYMBOL: ${symbolName || ''}`);
+  lines.push(`KIND: ${kind || ''}`);
+  lines.push('CODE:');
+  lines.push(content || '');
+  return lines.join('\n');
+}
+
+/* =========================================================
+   EMBEDDING LAYER (embeddingText → 384D only)
+========================================================= */
+async function loadModel() {
+  if (state.modelReady) return true;
+  if (state.modelPromise) return state.modelPromise;
+
+  state.modelPromise = (async () => {
+    log(`Lade Embedding-Modell ${EMBED_CONFIG.MODEL} …`, 'info');
+    try {
+      state.extractor = await pipeline(
+        'feature-extraction',
+        EMBED_CONFIG.MODEL,
+        {
+          dtype: 'q8',
+          device: 'wasm',
+          progress_callback: p => {
+            if (p?.status === 'progress' && Number.isFinite(p.progress)) {
+              const pct = Math.round(p.progress);
+              if (pct % 20 === 0 || pct >= 99) {
+                log(`Modelldownload ${pct}%`, 'info');
+              }
+            }
+          }
+        }
+      );
+      const smoke = await state.extractor('passage: smoke', {
+        pooling: 'mean',
+        normalize: true
+      });
+      const v = Array.from(smoke.data || smoke.tolist()[0]);
+      if (v.length !== EMBED_CONFIG.DIM) {
+        throw new Error(`Erwartet ${EMBED_CONFIG.DIM}D, bekommen ${v.length}`);
+      }
+      state.modelReady = true;
+      log(`Embedding-Modell ONLINE · ${EMBED_CONFIG.DIM}D`, 'ok');
+      return true;
+    } catch (e) {
+      state.extractor = null;
+      state.modelReady = false;
+      log(`Embedding-Modell Fehler: ${e?.message || e}`, 'err');
+      return false;
+    } finally {
+      state.modelPromise = null;
+    }
+  })();
+
+  return state.modelPromise;
+}
+
+/** Embed a single embeddingText string → number[384]. Uses cache. */
+async function embedEmbeddingText(embeddingText) {
+  const key = embeddingText || '';
+  if (state.embeddingCache.has(key)) {
+    return state.embeddingCache.get(key).slice();
+  }
+
+  const ready = await loadModel();
+  if (!ready || !state.extractor) {
+    throw new Error('Embedding-Modell nicht verfügbar.');
+  }
+
+  const output = await state.extractor(`passage: ${key}`, {
+    pooling: 'mean',
+    normalize: true
+  });
+  const vector = Array.from(output.data || output.tolist()[0]);
+  if (vector.length !== EMBED_CONFIG.DIM) {
+    throw new Error(`Unerwartete Dimension ${vector.length}`);
+  }
+
+  state.embeddingCache.set(key, vector.slice());
+  return vector.slice();
+}
+
+/**
+ * Assign embedding[384] + embeddingDim on each symbol.
+ * Identical embeddingText → shared computation via cache.
+ * Does not alter commit identity or history.
+ */
+async function attachEmbeddingsToSymbols(symbolList) {
+  if (!symbolList.length) return;
+
+  // Unique texts first
+  const unique = new Map();
+  for (const sym of symbolList) {
+    const t = sym.embeddingText || '';
+    if (!unique.has(t)) unique.set(t, []);
+    unique.get(t).push(sym);
+  }
+
+  let ok = 0;
+  let failed = 0;
+  for (const [text, group] of unique) {
+    try {
+      const vector = await embedEmbeddingText(text);
+      for (const sym of group) {
+        sym.embedding = vector.slice();
+        sym.embeddingDim = EMBED_CONFIG.DIM;
+        ok++;
+      }
+    } catch (e) {
+      failed += group.length;
+      log(`Embedding fehlgeschlagen (${group[0]?.name}): ${e?.message || e}`, 'err');
+    }
+  }
+  log(`Embeddings: ${ok} Nodes · ${unique.size} unique texts` +
+    (failed ? ` · ${failed} fehlgeschlagen` : ''), failed ? 'warn' : 'ok');
+}
+
+/* =========================================================
+   SEMANTIC NEIGHBORS (384D cosine, same-commit only)
+========================================================= */
+const SEMANTIC_K = 8;
+
+/** Cosine for L2-normalized vectors = dot product. */
+function cosineSim(a, b) {
+  if (!a || !b || a.length !== b.length || a.length === 0) return 0;
+  let s = 0;
+  for (let i = 0; i < a.length; i++) s += a[i] * b[i];
+  return s;
+}
+
+/**
+ * For every symbol of the given commit that has embedding[384],
+ * set semanticNeighbors = top-K other symbols in the same commit.
+ * In-memory only — no structural edges, no IndexedDB edge records.
+ */
+function computeSemanticNeighborsForCommit(commitId) {
+  if (!commitId) return;
+
+  const nodes = state.symbols.filter(
+    s =>
+      s.commitId === commitId &&
+      Array.isArray(s.embedding) &&
+      s.embedding.length === EMBED_CONFIG.DIM
+  );
+
+  for (const si of nodes) {
+    const scored = [];
+    for (const sj of nodes) {
+      if (si.id === sj.id) continue;
+      scored.push({
+        nodeId: sj.id,
+        similarity: cosineSim(si.embedding, sj.embedding)
+      });
+    }
+    scored.sort((a, b) => b.similarity - a.similarity);
+    si.semanticNeighbors = scored.slice(0, SEMANTIC_K);
+  }
+}
+
+/* =========================================================
+   SEMANTIC RETRIEVAL DEBUG
+   Query → same model (e5) → cosine against all symbol embeddings
+   → Top-K → highlightMap only (pos3d / embeddings / graph structure unchanged)
+========================================================= */
+
+/**
+ * FUNKTION: embedQueryText()
+ *
+ * ZWECK:
+ * Erzeugt ein 384D-Query-Embedding mit demselben Modell und denselben
+ * Pooling-/Normalize-Einstellungen wie die Node-Embeddings.
+ * Verwendet das e5-konforme Prefix "query: " (Nodes nutzen "passage: ").
+ *
+ * INPUT:  freier Query-String
+ * OUTPUT: number[384] (L2-normalisiert)
+ * CACHE:  nutzt state.embeddingCache mit Prefix-Key, um Doppelberechnung zu vermeiden
+ */
+async function embedQueryText(queryText) {
+  const key = `query::${queryText || ''}`;
+  if (state.embeddingCache.has(key)) {
+    return state.embeddingCache.get(key).slice();
+  }
+
+  const ready = await loadModel();
+  if (!ready || !state.extractor) {
+    throw new Error('Embedding-Modell nicht verfügbar.');
+  }
+
+  // e5 asymmetric: queries use "query: ", documents (nodes) use "passage: "
+  const output = await state.extractor(`query: ${queryText || ''}`, {
+    pooling: 'mean',
+    normalize: true
+  });
+  const vector = Array.from(output.data || output.tolist()[0]);
+  if (vector.length !== EMBED_CONFIG.DIM) {
+    throw new Error(`Unerwartete Dimension ${vector.length}`);
+  }
+
+  state.embeddingCache.set(key, vector.slice());
+  return vector.slice();
+}
+
+/**
+ * FUNKTION: runSemanticQuery()
+ *
+ * ZWECK:
+ * Vollständiger Retrieval-Durchlauf:
+ *   Query-Text
+ *     → embedQueryText (384D)
+ *     → cosineSim gegen alle Symbole mit embedding[384]
+ *     → Sortierung absteigend
+ *     → Top-K
+ *     → results + highlightMap aktualisieren
+ *     → rebuildScene (nur Farben)
+ *
+ * INPUT:
+ *   queryText  – natürliche Sprache
+ *   slot       – 1 oder 2 (zwei unabhängige Queries für Schnittmenge)
+ *   k          – Top-K (default state.retrieval.k)
+ *
+ * OUTPUT:
+ *   Array der Treffer (auch in state.retrieval.results1/results2)
+ *
+ * SEITENEFFEKTE:
+ *   state.retrieval.highlightMap, results1/2
+ *   rebuildScene() — Positionen bleiben unverändert
+ */
+async function runSemanticQuery(queryText, slot = 1, k = null) {
+  const topK = k != null ? k : state.retrieval.k;
+  const q = (queryText || '').trim();
+  if (!q) {
+    log('Retrieval: leere Query.', 'warn');
+    return [];
+  }
+
+  log(`Retrieval Q${slot}: „${q.slice(0, 60)}${q.length > 60 ? '…' : ''}“ …`, 'info');
+
+  let queryVec;
+  try {
+    queryVec = await embedQueryText(q);
+  } catch (e) {
+    log(`Retrieval Embedding-Fehler: ${e?.message || e}`, 'err');
+    return [];
+  }
+
+  // Alle Symbole mit gültigem 384D-Embedding (über alle Commits)
+  const candidates = state.symbols.filter(
+    s => Array.isArray(s.embedding) && s.embedding.length === EMBED_CONFIG.DIM
+  );
+
+  if (!candidates.length) {
+    log('Retrieval: keine Symbole mit Embeddings vorhanden. Zuerst Commit anlegen.', 'warn');
+    return [];
+  }
+
+  const scored = candidates.map(s => ({
+    nodeId: s.id,
+    similarity: cosineSim(queryVec, s.embedding),
+    name: s.name,
+    kind: s.kind,
+    path: s.path,
+    startLine: s.startLine,
+    endLine: s.endLine,
+    commitId: s.commitId,
+    content: s.content
+  }));
+
+  // Deterministisch: stabile Sortierung bei Gleichstand über nodeId
+  scored.sort((a, b) => {
+    if (b.similarity !== a.similarity) return b.similarity - a.similarity;
+    return String(a.nodeId).localeCompare(String(b.nodeId));
+  });
+
+  const top = scored.slice(0, topK).map((r, i) => ({
+    ...r,
+    rank: i + 1
+  }));
+
+  if (slot === 1) {
+    state.retrieval.query1 = q;
+    state.retrieval.results1 = top;
+  } else {
+    state.retrieval.query2 = q;
+    state.retrieval.results2 = top;
+  }
+
+  // Highlight-Map aus aktuellem Slot (und ggf. Intersection) neu aufbauen
+  rebuildHighlightMap();
+  state.retrieval.active = true;
+  renderRetrievalResults(slot);
+  rebuildScene();
+
+  log(`Retrieval Q${slot}: ${top.length} Treffer · Top-Sim ${top[0] ? top[0].similarity.toFixed(4) : '—'}`, 'ok');
+  return top;
+}
+
+/**
+ * FUNKTION: rebuildHighlightMap()
+ *
+ * ZWECK:
+ * Leitet aus results1, results2 und intersectionIds die Intensitäten ab.
+ * Intensität:
+ *   4 = Intersection (beide Queries)
+ *   3 = Top 1–3 des aktiven/letzten Queries
+ *   2 = Top 4–8
+ *   1 = Top 9–K
+ *   0 = kein Treffer
+ *
+ * Speichert nur in state.retrieval.highlightMap — keine Mutation der Nodes.
+ */
+function rebuildHighlightMap() {
+  const map = new Map();
+  const inter = new Set(state.retrieval.intersectionIds);
+
+  function applyResults(results) {
+    for (const r of results) {
+      if (inter.has(r.nodeId)) {
+        map.set(r.nodeId, 4);
+        continue;
+      }
+      let intensity = 1;
+      if (r.rank <= 3) intensity = 3;
+      else if (r.rank <= 8) intensity = 2;
+      const prev = map.get(r.nodeId) || 0;
+      if (intensity > prev) map.set(r.nodeId, intensity);
+    }
+  }
+
+  applyResults(state.retrieval.results1);
+  applyResults(state.retrieval.results2);
+
+  // Intersection immer stärkste Stufe
+  for (const id of inter) {
+    map.set(id, 4);
+  }
+
+  state.retrieval.highlightMap = map;
+}
+
+/**
+ * FUNKTION: computeRetrievalIntersection()
+ *
+ * ZWECK:
+ * Berechnet die Schnittmenge der Node-IDs aus results1 und results2.
+ * Speichert in state.retrieval.intersectionIds und aktualisiert Highlights.
+ */
+function computeRetrievalIntersection() {
+  const set1 = new Set(state.retrieval.results1.map(r => r.nodeId));
+  const inter = state.retrieval.results2
+    .filter(r => set1.has(r.nodeId))
+    .map(r => r.nodeId);
+
+  // Deterministische Reihenfolge: nach max. Similarity aus beiden Queries
+  const simMap = new Map();
+  for (const r of [...state.retrieval.results1, ...state.retrieval.results2]) {
+    const prev = simMap.get(r.nodeId) || 0;
+    if (r.similarity > prev) simMap.set(r.nodeId, r.similarity);
+  }
+  inter.sort((a, b) => (simMap.get(b) || 0) - (simMap.get(a) || 0));
+
+  state.retrieval.intersectionIds = inter;
+  rebuildHighlightMap();
+  renderRetrievalResults(0); // 0 = Intersection-Ansicht
+  rebuildScene();
+
+  log(`Intersection: ${inter.length} gemeinsame Nodes`, inter.length ? 'ok' : 'warn');
+  return inter;
+}
+
+/**
+ * FUNKTION: clearRetrieval()
+ *
+ * ZWECK:
+ * Löscht alle Retrieval-Ergebnisse und Highlights. Graph bleibt strukturell gleich.
+ */
+function clearRetrieval() {
+  state.retrieval.query1 = '';
+  state.retrieval.query2 = '';
+  state.retrieval.results1 = [];
+  state.retrieval.results2 = [];
+  state.retrieval.intersectionIds = [];
+  state.retrieval.highlightMap = new Map();
+  state.retrieval.active = false;
+  const panel = $('retrievalResults');
+  if (panel) panel.innerHTML = '<div style="color:var(--muted)">Noch keine Query.</div>';
+  const interBox = $('retrievalIntersection');
+  if (interBox) {
+    interBox.style.display = 'none';
+    interBox.innerHTML = '';
+  }
+  rebuildScene();
+  log('Retrieval gelöscht.', 'info');
+}
+
+/**
+ * FUNKTION: renderRetrievalResults()
+ *
+ * ZWECK:
+ * Füllt das Debug-Panel mit den aktuellen Treffern (Q1, Q2 oder Intersection).
+ */
+function renderRetrievalResults(slot) {
+  const el = $('retrievalResults');
+  const interBox = $('retrievalIntersection');
+  if (!el) return;
+
+  let results = [];
+  let title = '';
+  if (slot === 1) {
+    results = state.retrieval.results1;
+    title = `Q1 · Top-${results.length}`;
+  } else if (slot === 2) {
+    results = state.retrieval.results2;
+    title = `Q2 · Top-${results.length}`;
+  } else {
+    // Intersection view: show intersection members with their best sim
+    const idSet = new Set(state.retrieval.intersectionIds);
+    const combined = [...state.retrieval.results1, ...state.retrieval.results2];
+    const best = new Map();
+    for (const r of combined) {
+      if (!idSet.has(r.nodeId)) continue;
+      const prev = best.get(r.nodeId);
+      if (!prev || r.similarity > prev.similarity) best.set(r.nodeId, r);
+    }
+    results = state.retrieval.intersectionIds
+      .map(id => best.get(id))
+      .filter(Boolean)
+      .map((r, i) => ({ ...r, rank: i + 1 }));
+    title = `∩ INTERSECTION · ${results.length}`;
+  }
+
+  if (!results.length) {
+    el.innerHTML = `<div style="color:var(--muted)">${title || 'Keine Treffer.'}</div>`;
+  } else {
+    el.innerHTML = `<div style="color:var(--yellow);margin-bottom:4px">${esc(title)}</div>` +
+      results.map(r => `
+        <div class="resItem" data-id="${esc(r.nodeId)}">
+          <span class="resRank">#${r.rank}</span>
+          <span class="resSim">${r.similarity.toFixed(4)}</span>
+          · <b>${esc(r.kind)}</b> ${esc(r.name)}
+          <div class="resMeta">${esc(r.path)} · L${r.startLine}–${r.endLine} · ${esc(r.nodeId)}</div>
+        </div>
+      `).join('');
+
+    el.querySelectorAll('.resItem').forEach(item => {
+      item.onclick = () => {
+        const id = item.dataset.id;
+        const sym = state.symbols.find(s => s.id === id);
+        if (sym) {
+          if (state.selectedCommitId !== sym.commitId) {
+            selectCommit(sym.commitId);
+          }
+          selectNode('symbol', id);
+        }
+      };
+    });
+  }
+
+  if (interBox) {
+    if (state.retrieval.intersectionIds.length) {
+      interBox.style.display = 'block';
+      interBox.innerHTML = `<b style="color:var(--pink)">∩ ${state.retrieval.intersectionIds.length} Nodes</b><br>` +
+        state.retrieval.intersectionIds.map(id => {
+          const s = state.symbols.find(x => x.id === id);
+          return s ? `${esc(s.kind)}:${esc(s.name)}` : esc(id);
+        }).join(', ');
+    } else {
+      interBox.style.display = 'none';
+      interBox.innerHTML = '';
+    }
+  }
+}
+
+/* =========================================================
+   384D → 3D (deterministic stress layout on cosine distances)
+========================================================= */
+
+/** Deterministic [0,1) from string (FNV-1a style). */
+function detUnit(id, salt) {
+  let h = 2166136261 >>> 0;
+  const s = String(id) + ':' + String(salt);
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h / 4294967296;
+}
+
+/** Angular / chordal distance from cosine similarity ∈ [0, √2]. */
+function cosineToDistance(sim) {
+  return Math.sqrt(Math.max(0, 2 * (1 - sim)));
+}
+
+/**
+ * Project all embedded symbols of a commit into R³.
+ * Target distances from pairwise cosine; semanticNeighbors get tighter targets.
+ * Deterministic init from node ids; fixed iteration count.
+ * Skips nodes that already have pos3dSource === 'semantic'.
+ */
+function projectCommitSymbolsTo3D(commitId) {
+  if (!commitId) return;
+
+  const nodes = state.symbols.filter(
+    s =>
+      s.commitId === commitId &&
+      Array.isArray(s.embedding) &&
+      s.embedding.length === EMBED_CONFIG.DIM
+  );
+  if (nodes.length === 0) return;
+
+  // Only recompute nodes missing a semantic position
+  const need = nodes.filter(s => !(s.pos3d && s.pos3dSource === 'semantic'));
+  if (need.length === 0) return;
+
+  const n = nodes.length;
+  const indexOf = new Map(nodes.map((s, i) => [s.id, i]));
+
+  // Pairwise target distances from cosine (scale for readable layout)
+  const SCALE = 3.2;
+  const target = Array.from({ length: n }, () => new Float64Array(n));
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const sim = cosineSim(nodes[i].embedding, nodes[j].embedding);
+      const d = Math.max(0.06, cosineToDistance(sim) * SCALE);
+      target[i][j] = d;
+      target[j][i] = d;
+    }
+  }
+
+  // Tighten targets for known semantic neighbors
+  for (const si of nodes) {
+    const i = indexOf.get(si.id);
+    for (const nb of si.semanticNeighbors || []) {
+      const j = indexOf.get(nb.nodeId);
+      if (j == null) continue;
+      const d = Math.max(0.06, cosineToDistance(nb.similarity) * (SCALE * 0.85));
+      if (d < target[i][j]) {
+        target[i][j] = d;
+        target[j][i] = d;
+      }
+    }
+  }
+
+  // Positions: keep existing semantic coords; init others deterministically
+  const pos = nodes.map(s => {
+    if (s.pos3d && s.pos3dSource === 'semantic') {
+      return [s.pos3d.x, s.pos3d.y, s.pos3d.z];
+    }
+    const theta = detUnit(s.id, 'theta') * Math.PI * 2;
+    const phi = detUnit(s.id, 'phi') * Math.PI;
+    return [
+      Math.sin(phi) * Math.cos(theta),
+      Math.sin(phi) * Math.sin(theta),
+      Math.cos(phi)
+    ];
+  });
+
+  const ITER = 120;
+  for (let iter = 0; iter < ITER; iter++) {
+    const lr = 0.07 * (1 - iter / ITER) + 0.008;
+    for (let i = 0; i < n; i++) {
+      // Freeze already-semantic nodes as anchors
+      if (nodes[i].pos3d && nodes[i].pos3dSource === 'semantic' && !need.includes(nodes[i])) {
+        continue;
+      }
+      let gx = 0, gy = 0, gz = 0;
+      for (let j = 0; j < n; j++) {
+        if (i === j) continue;
+        let dx = pos[i][0] - pos[j][0];
+        let dy = pos[i][1] - pos[j][1];
+        let dz = pos[i][2] - pos[j][2];
+        const dist = Math.hypot(dx, dy, dz) || 1e-6;
+        const err = dist - target[i][j];
+        const w = 1 / (1 + target[i][j]);
+        gx += w * err * (dx / dist);
+        gy += w * err * (dy / dist);
+        gz += w * err * (dz / dist);
+      }
+      pos[i][0] -= lr * gx;
+      pos[i][1] -= lr * gy;
+      pos[i][2] -= lr * gz;
+    }
+  }
+
+  // Center cloud
+  let cx = 0, cy = 0, cz = 0;
+  for (const p of pos) {
+    cx += p[0]; cy += p[1]; cz += p[2];
+  }
+  cx /= n; cy /= n; cz /= n;
+
+  for (let i = 0; i < n; i++) {
+    // Only write nodes that needed projection (or refresh all without prior semantic)
+    if (nodes[i].pos3d && nodes[i].pos3dSource === 'semantic' && !need.includes(nodes[i])) {
+      continue;
+    }
+    nodes[i].pos3d = {
+      x: pos[i][0] - cx,
+      y: pos[i][1] - cy,
+      z: pos[i][2] - cz
+    };
+    nodes[i].pos3dSource = 'semantic';
+  }
+}
+
+/* =========================================================
+   SPATIAL NEIGHBORS (3D distance, same-commit only)
+========================================================= */
+
+function distance3d(a, b) {
+  if (!a || !b) return Infinity;
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  const dz = a.z - b.z;
+  return Math.sqrt(dx * dx + dy * dy + dz * dz);
+}
+
+/**
+ * Immediate spatial neighbors of a symbol in semantic pos3d space.
+ * Only symbols of the same commit with pos3dSource === 'semantic'.
+ * Returns [{ nodeId, distance3d }, ...] sorted by ascending distance.
+ */
+function getSpatialNeighbors(nodeId, commitId, k = SEMANTIC_K) {
+  const self = state.symbols.find(
+    s => s.id === nodeId && s.commitId === commitId
+  );
+  if (!self || !self.pos3d || self.pos3dSource !== 'semantic') return [];
+
+  const others = state.symbols.filter(
+    s =>
+      s.commitId === commitId &&
+      s.id !== nodeId &&
+      s.pos3d &&
+      s.pos3dSource === 'semantic'
+  );
+
+  const scored = others.map(s => ({
+    nodeId: s.id,
+    distance3d: distance3d(self.pos3d, s.pos3d)
+  }));
+
+  scored.sort((a, b) => a.distance3d - b.distance3d);
+  return scored.slice(0, k);
+}
+
+/**
+ * Internal validation: overlap of top-K semantic vs top-K spatial neighbors.
+ * Returns { nodeId, commitId, semanticIds, spatialIds, overlap, ratio }
+ * or null if the node cannot be validated.
+ */
+function validateSemanticSpatialOverlap(nodeId, commitId, k = SEMANTIC_K) {
+  const self = state.symbols.find(
+    s => s.id === nodeId && s.commitId === commitId
+  );
+  if (!self) return null;
+
+  const semanticIds = (self.semanticNeighbors || [])
+    .slice(0, k)
+    .map(n => n.nodeId);
+
+  const spatialIds = getSpatialNeighbors(nodeId, commitId, k)
+    .map(n => n.nodeId);
+
+  if (!semanticIds.length && !spatialIds.length) return null;
+
+  const spatialSet = new Set(spatialIds);
+  let overlap = 0;
+  for (const id of semanticIds) {
+    if (spatialSet.has(id)) overlap++;
+  }
+
+  const denom = Math.max(semanticIds.length, 1);
+  return {
+    nodeId,
+    commitId,
+    semanticIds,
+    spatialIds,
+    overlap,
+    ratio: overlap / denom
+  };
+}
+
+/* =========================================================
+   PROJECT / COMMIT CREATE
+========================================================= */
+function saveProject() {
+  state.project.name = $('projectName').value.trim() || 'Unnamed';
+  state.project.user = $('projectUser').value.trim();
+  if (!state.project.created_at) state.project.created_at = now();
+  state.project.updated_at = now();
+  dbPut({ id: state.project.id, type: 'project', ...state.project })
+    .then(() => log(`Projekt gespeichert: ${state.project.name}`, 'ok'))
+    .catch(e => log(`Projekt: ${e.message}`, 'err'));
+  updateHeader();
+}
+
+async function onFilesSelected(fileList) {
+  state.pendingFiles = [];
+  for (const f of Array.from(fileList || [])) {
+    try {
+      const content = await f.text();
+      state.pendingFiles.push({ name: f.name, content, size: content.length });
+      log(`Datei bereit: ${f.name}`, 'info');
+    } catch (e) {
+      log(`Datei lesen fehlgeschlagen: ${f.name}`, 'err');
+    }
+  }
+  renderPendingFiles();
+}
+
+function renderPendingFiles() {
+  const el = $('pendingFiles');
+  if (!state.pendingFiles.length) {
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = state.pendingFiles.map(f =>
+    `<div class="item"><div class="title">📄 ${esc(f.name)}</div>
+     <div class="meta">${f.size.toLocaleString('de-DE')} Zeichen</div></div>`
+  ).join('');
+}
+
+async function createCommit() {
+  if (!state.pendingFiles.length) {
+    log('Bitte zuerst Dateien auswählen.', 'warn');
+    return;
+  }
+
+  const hash = $('commitHash').value.trim() || `local-${state.nextIds.commit}`;
+  const message = $('commitMsg').value.trim() || 'Snapshot';
+  const parent = state.commits.length
+    ? state.commits[state.commits.length - 1]
+    : null;
+
+  const commitId = uid('commit');
+  const commit = {
+    id: commitId,
+    type: 'commit',
+    projectId: state.project.id,
+    hash,
+    message,
+    timestamp: now(),
+    parentId: parent?.id || null,
+    parentHash: parent?.hash || null
+  };
+
+  const newFiles = [];
+  const newSymbols = [];
+  const newEdges = [];
+
+  // parent edge
+  if (parent) {
+    const e = {
+      id: uid('edge'),
+      type: 'edge',
+      kind: 'parent_commit',
+      from: parent.id,
+      to: commitId
+    };
+    newEdges.push(e);
+  }
+
+  for (const pf of state.pendingFiles) {
+    const fileId = uid('file');
+    const fileNode = {
+      id: fileId,
+      type: 'file',
+      commitId,
+      path: pf.name,
+      content: pf.content,
+      size: pf.size
+    };
+    newFiles.push(fileNode);
+
+    newEdges.push({
+      id: uid('edge'),
+      type: 'edge',
+      kind: 'contains_file',
+      from: commitId,
+      to: fileId
+    });
+
+    const symbols = extractSymbols(pf.content, pf.name);
+    // Stable ids first so parentNodeId can reference siblings in same file
+    const indexToId = symbols.map(() => uid('symbol'));
+
+    for (let i = 0; i < symbols.length; i++) {
+      const s = symbols[i];
+      const symId = indexToId[i];
+      const parentNodeId =
+        s.parentIndex != null && s.parentIndex >= 0
+          ? indexToId[s.parentIndex]
+          : null;
+
+      const parentSym =
+        s.parentIndex != null && s.parentIndex >= 0
+          ? symbols[s.parentIndex]
+          : null;
+
+      const embeddingText = buildEmbeddingText({
+        projectName: state.project.name,
+        filePath: pf.name,
+        symbolName: s.name,
+        kind: s.kind,
+        content: s.content,
+        parentKind: parentSym ? parentSym.kind : null,
+        parentName: parentSym ? parentSym.name : null
+      });
+
+      const sym = {
+        id: symId,
+        type: 'symbol',
+        commitId,
+        fileId,
+        path: pf.name,
+        kind: s.kind,
+        name: s.name,
+        content: s.content,
+        embeddingText,
+        startLine: s.startLine,
+        endLine: s.endLine,
+        startOffset: s.startOffset,
+        endOffset: s.endOffset,
+        parentNodeId
+      };
+      newSymbols.push(sym);
+
+      // contains: file → top-level symbol | parent symbol → child symbol
+      newEdges.push({
+        id: uid('edge'),
+        type: 'edge',
+        kind: 'contains_symbol',
+        from: parentNodeId || fileId,
+        to: symId
+      });
+    }
+    log(`${pf.name} → ${symbols.length} Symbole`, 'ok');
+  }
+
+  // embeddingText → embedding[384] (deduped by text; history unchanged)
+  await attachEmbeddingsToSymbols(newSymbols);
+
+  state.commits.push(commit);
+  state.files.push(...newFiles);
+  state.symbols.push(...newSymbols);
+  state.edges.push(...newEdges);
+
+  await dbPutMany([commit, ...newFiles, ...newSymbols, ...newEdges]);
+
+  state.pendingFiles = [];
+  $('commitFiles').value = '';
+  $('commitHash').value = '';
+  $('commitMsg').value = '';
+  renderPendingFiles();
+
+  log(`Commit ${hash} angelegt · ${newFiles.length} Dateien · ${newSymbols.length} Symbole`, 'ok');
+
+  selectCommit(commitId);
+  updateMetrics();
+  updateHeader();
+  rebuildScene();
+}
+
+/* =========================================================
+   SELECT / RENDER
+========================================================= */
+function selectCommit(id) {
+  const c = state.commits.find(x => x.id === id);
+  if (!c) return;
+  state.selectedCommitId = id;
+  state.selectedNodeId = null;
+  state.selectedKind = 'commit';
+  // Semantic layer: top-K cosine neighbors within this commit only
+  computeSemanticNeighborsForCommit(id);
+  // 384D → 3D semantic positions for symbols of this commit
+  projectCommitSymbolsTo3D(id);
+  renderCommitList();
+  renderStructure();
+  $('deleteCommitBtn').disabled = false;
+  showInspector(c, 'commit');
+  rebuildScene();
+  focusCommit(c);
+}
+
+function renderCommitList() {
+  const list = $('commitList');
+  if (!state.commits.length) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:10px">Noch keine Commits.</div>';
+    return;
+  }
+  // chronological
+  const sorted = [...state.commits].sort((a, b) =>
+    String(a.timestamp).localeCompare(String(b.timestamp))
+  );
+  list.innerHTML = sorted.map(c => `
+    <div class="item ${c.id === state.selectedCommitId ? 'active' : ''}" data-id="${esc(c.id)}">
+      <div class="id">${esc(c.hash)}</div>
+      <div class="title">${esc(c.message)}</div>
+      <div class="meta">${new Date(c.timestamp).toLocaleString('de-DE')}
+        ${c.parentHash ? ` · ← ${esc(c.parentHash)}` : ' · ROOT'}</div>
+    </div>
+  `).join('');
+  list.querySelectorAll('.item').forEach(el => {
+    el.onclick = () => selectCommit(el.dataset.id);
+  });
+}
+
+function renderStructure() {
+  const tree = $('structTree');
+  const meta = $('structMeta');
+  if (!state.selectedCommitId) {
+    tree.innerHTML = '<div style="color:var(--muted);font-size:10px">—</div>';
+    meta.textContent = 'Commit auswählen.';
+    return;
+  }
+  const commit = state.commits.find(c => c.id === state.selectedCommitId);
+  const files = state.files.filter(f => f.commitId === state.selectedCommitId);
+  const symbols = state.symbols.filter(s => s.commitId === state.selectedCommitId);
+
+  meta.textContent = `${commit.hash} · ${files.length} Dateien · ${symbols.length} Symbole`;
+
+  let html = '';
+  for (const f of files) {
+    html += `
+      <div class="treeNode ${state.selectedNodeId === f.id ? 'selected' : ''}"
+           data-kind="file" data-id="${esc(f.id)}">
+        <span class="treeKind">FILE</span>
+        <span class="treeName">📄 ${esc(f.path)}</span>
+        <span class="treeLines">${f.size.toLocaleString('de-DE')} ch</span>
+      </div>`;
+    const syms = symbols.filter(s => s.fileId === f.id);
+    for (const s of syms) {
+      html += `
+        <div class="treeNode ${state.selectedNodeId === s.id ? 'selected' : ''}"
+             data-kind="symbol" data-id="${esc(s.id)}" style="padding-left:18px">
+          <span class="treeKind">${esc(s.kind)}</span>
+          <span class="treeName">${esc(s.name)}</span>
+          <span class="treeLines">L${s.startLine}–${s.endLine}</span>
+        </div>`;
+    }
+  }
+  tree.innerHTML = html || '<div style="color:var(--muted);font-size:10px">Keine Struktur.</div>';
+
+  tree.querySelectorAll('.treeNode').forEach(el => {
+    el.onclick = () => selectNode(el.dataset.kind, el.dataset.id);
+  });
+}
+
+function selectNode(kind, id) {
+  state.selectedKind = kind;
+  state.selectedNodeId = id;
+  renderStructure();
+
+  if (kind === 'file') {
+    const f = state.files.find(x => x.id === id);
+    if (!f) return;
+    $('codeHeader').textContent = `FILE · ${f.path}`;
+    $('codeBox').textContent = f.content;
+    $('copyCodeBtn').disabled = false;
+    showInspector(f, 'file');
+  } else if (kind === 'symbol') {
+    const s = state.symbols.find(x => x.id === id);
+    if (!s) return;
+    $('codeHeader').textContent = `${s.kind} · ${s.name} · ${s.path} · L${s.startLine}–${s.endLine}`;
+    $('codeBox').textContent = s.content;
+    $('copyCodeBtn').disabled = false;
+    showInspector(s, 'symbol');
+  }
+  rebuildScene();
+  if (typeof renderAgentContext === 'function') renderAgentContext();
+}
+
+function showInspector(obj, kind) {
+  $('inspector').classList.add('visible');
+  if (kind === 'commit') {
+    $('inspTitle').textContent = 'COMMIT';
+    $('inspId').textContent = obj.hash;
+    $('inspText').textContent = obj.message;
+    const fileCount = state.files.filter(f => f.commitId === obj.id).length;
+    const symCount = state.symbols.filter(s => s.commitId === obj.id).length;
+    $('inspMeta').innerHTML = `
+      ID: ${esc(obj.id)}<br>
+      TIME: ${esc(obj.timestamp)}<br>
+      PARENT: ${esc(obj.parentHash || '—')}<br>
+      DATEIEN: ${fileCount}<br>
+      SYMBOLE: ${symCount}
+    `;
+  } else if (kind === 'file') {
+    $('inspTitle').textContent = 'FILE';
+    $('inspId').textContent = obj.path;
+    $('inspText').textContent = obj.content.slice(0, 600) + (obj.content.length > 600 ? '…' : '');
+    $('inspMeta').innerHTML = `
+      ID: ${esc(obj.id)}<br>
+      COMMIT: ${esc(obj.commitId)}<br>
+      SIZE: ${obj.size.toLocaleString('de-DE')} Zeichen
+    `;
+  } else if (kind === 'symbol') {
+    $('inspTitle').textContent = 'SYMBOL';
+    $('inspId').textContent = `${obj.kind}:${obj.name}`;
+    $('inspText').textContent = obj.content;
+    const cls = classifySymbol(obj);
+    const pri = FUNC_GROUPS[cls.primary]?.label || cls.primary;
+    const sec = cls.secondary.map(k => FUNC_GROUPS[k]?.label || k).join(', ') || '—';
+    $('inspMeta').innerHTML = `
+      ID: ${esc(obj.id)}<br>
+      FILE: ${esc(obj.path)}<br>
+      RANGE: L${obj.startLine}–${obj.endLine}<br>
+      COMMIT: ${esc(obj.commitId)}<br>
+      FUNKTION: ${esc(pri)}<br>
+      NEBEN: ${esc(sec)}
+    `;
+  }
+}
+
+async function deleteSelectedCommit() {
+  const id = state.selectedCommitId;
+  if (!id) return;
+  if (!confirm(`Commit und alle zugehörigen Dateien/Symbole löschen?`)) return;
+
+  const toDelete = [
+    id,
+    ...state.files.filter(f => f.commitId === id).map(f => f.id),
+    ...state.symbols.filter(s => s.commitId === id).map(s => s.id),
+    ...state.edges.filter(e => e.from === id || e.to === id ||
+      state.files.some(f => f.commitId === id && (e.from === f.id || e.to === f.id))
+    ).map(e => e.id)
+  ];
+
+  for (const delId of toDelete) await dbDelete(delId);
+
+  state.commits = state.commits.filter(c => c.id !== id);
+  state.files = state.files.filter(f => f.commitId !== id);
+  state.symbols = state.symbols.filter(s => s.commitId !== id);
+  state.edges = state.edges.filter(e => !toDelete.includes(e.id));
+
+  state.selectedCommitId = null;
+  state.selectedNodeId = null;
+  $('deleteCommitBtn').disabled = true;
+  $('inspector').classList.remove('visible');
+  renderCommitList();
+  renderStructure();
+  updateMetrics();
+  updateHeader();
+  rebuildScene();
+  log(`Commit gelöscht.`, 'warn');
+}
+
+function updateMetrics() {
+  $('mCommits').textContent = state.commits.length;
+  $('mFiles').textContent = state.files.length;
+  $('mSymbols').textContent = state.symbols.length;
+}
+function updateHeader() {
+  $('headerStatus').innerHTML =
+    `<b>${esc(state.project.name)}</b> · ${state.commits.length} COMMITS · ${state.files.length} FILES · ${state.symbols.length} SYMBOLS`;
+}
+
+function exportProject() {
+  const payload = {
+    project: state.project,
+    commits: state.commits,
+    files: state.files.map(f => ({
+      id: f.id, commitId: f.commitId, path: f.path, size: f.size
+      // content optional: full export would be huge; include truncated
+      , contentPreview: f.content.slice(0, 200)
+    })),
+    symbols: state.symbols.map(s => ({
+      id: s.id, commitId: s.commitId, fileId: s.fileId,
+      path: s.path, kind: s.kind, name: s.name,
+      startLine: s.startLine, endLine: s.endLine,
+      content: s.content
+    })),
+    edges: state.edges,
+    exported_at: now()
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${state.project.name.replace(/\s+/g, '_')}_commit_graph.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  log('Project JSON exportiert.', 'ok');
+}
+
+async function copyCode() {
+  const text = $('codeBox').textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    log('Code kopiert.', 'ok');
+  } catch {
+    log('Kopieren fehlgeschlagen.', 'err');
+  }
+}
+
+/* =========================================================
+   3D GRAPH
+   - Commits on a timeline (X axis)
+   - When a commit is selected: its files + symbols fan out
+========================================================= */
+let scene, camera, renderer, controls, pointsMesh, linesGroup, raycaster, mouse;
+let graphNodes = []; // { id, kind, data, position: [x,y,z] }
+
+function initThree() {
+  const canvas = $('canvas3d');
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x05080c, 0.03);
+  camera = new THREE.PerspectiveCamera(55, 1, 0.1, 300);
+  camera.position.set(0, 8, 18);
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x000000, 0);
+  controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 2;
+  controls.maxDistance = 80;
+  scene.add(new THREE.AmbientLight(0x406080, 0.6));
+  const dir = new THREE.DirectionalLight(0x00e5ff, 0.4);
+  dir.position.set(5, 12, 8);
+  scene.add(dir);
+  const grid = new THREE.GridHelper(40, 40, 0x1a2a36, 0x0f1a22);
+  grid.material.transparent = true;
+  grid.material.opacity = 0.35;
+  scene.add(grid);
+  linesGroup = new THREE.Group();
+  scene.add(linesGroup);
+  raycaster = new THREE.Raycaster();
+  raycaster.params.Points.threshold = 0.35;
+  mouse = new THREE.Vector2();
+  canvas.addEventListener('pointerdown', onPointerDown);
+  resizeThree();
+  window.addEventListener('resize', resizeThree);
+  animate();
+}
+
+function resizeThree() {
+  if (!renderer) return;
+  const w = $('scene').clientWidth || 1;
+  const h = $('scene').clientHeight || 1;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h, false);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+function disposeObj(o) {
+  if (!o) return;
+  if (o.geometry) o.geometry.dispose();
+  if (o.material) {
+    if (Array.isArray(o.material)) o.material.forEach(m => m.dispose());
+    else o.material.dispose();
+  }
+}
+
+function layoutGraph() {
+  graphNodes = [];
+  const sorted = [...state.commits].sort((a, b) =>
+    String(a.timestamp).localeCompare(String(b.timestamp))
+  );
+
+  // Commits on X axis
+  sorted.forEach((c, i) => {
+    const x = (i - (sorted.length - 1) / 2) * 6;
+    graphNodes.push({
+      id: c.id,
+      kind: 'commit',
+      data: c,
+      position: [x, 0, 0]
+    });
+  });
+
+  // Expand selected commit: files (structural) + symbols (semantic pos3d when available)
+  if (state.selectedCommitId) {
+    const commitNode = graphNodes.find(n => n.id === state.selectedCommitId);
+    if (commitNode) {
+      const cx = commitNode.position[0];
+      const files = state.files.filter(f => f.commitId === state.selectedCommitId);
+      files.forEach((f, fi) => {
+        const fx = cx + (fi - (files.length - 1) / 2) * 2.8;
+        const fy = 3.2;
+        graphNodes.push({
+          id: f.id,
+          kind: 'file',
+          data: f,
+          position: [fx, fy, 0]
+        });
+        const syms = state.symbols.filter(s => s.fileId === f.id);
+        syms.forEach((s, si) => {
+          let position;
+          if (s.pos3d && s.pos3dSource === 'semantic') {
+            // Semantic cloud anchored above the commit on the timeline
+            position = [
+              cx + s.pos3d.x,
+              4.0 + s.pos3d.y,
+              s.pos3d.z
+            ];
+          } else {
+            // Fallback structural fan (no embedding / no projection yet)
+            const angle = (si / Math.max(syms.length, 1)) * Math.PI * 1.2 - Math.PI * 0.6;
+            const r = 1.6 + Math.min(2, syms.length * 0.08);
+            position = [
+              fx + Math.sin(angle) * r,
+              fy + 1.8 + Math.cos(angle) * 0.4,
+              Math.cos(angle) * r * 0.5
+            ];
+          }
+          graphNodes.push({
+            id: s.id,
+            kind: 'symbol',
+            data: s,
+            position
+          });
+        });
+      });
+    }
+  }
+}
+
+/**
+ * FUNKTION: updateFuncLegend()
+ *
+ * ZWECK:
+ * Zählt Symbol-Nodes je funktionaler Baugruppe (primary) und zeigt
+ * Legende + Diagnose. Nutzt dieselbe Klassifizierungslogik wie die Farben.
+ * Keine Mutation von Embeddings / pos3d.
+ */
+function updateFuncLegend() {
+  const rowsEl = $('funcLegendRows');
+  const diagEl = $('funcLegendDiag');
+  if (!rowsEl || !diagEl) return;
+
+  const counts = { UI: 0, RENDER3D: 0, RETRIEVAL: 0, GIT: 0, DATA: 0, CORE: 0 };
+  let multi = 0;
+  const symbols = state.selectedCommitId
+    ? state.symbols.filter(s => s.commitId === state.selectedCommitId)
+    : state.symbols;
+
+  for (const s of symbols) {
+    const cls = classifySymbol(s);
+    if (counts[cls.primary] != null) counts[cls.primary]++;
+    if (cls.secondary.length) multi++;
+  }
+
+  const order = ['UI', 'RENDER3D', 'RETRIEVAL', 'GIT', 'DATA', 'CORE'];
+  rowsEl.innerHTML = order.map(key => {
+    const g = FUNC_GROUPS[key];
+    const [r, gch, b] = g.color;
+    const css = `rgb(${Math.round(r * 255)},${Math.round(gch * 255)},${Math.round(b * 255)})`;
+    return `<div class="flRow">
+      <span class="flDot" style="background:${css};color:${css}"></span>
+      <span>${esc(g.label)}</span>
+      <span class="flCount">${counts[key]}</span>
+    </div>`;
+  }).join('');
+
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  diagEl.innerHTML =
+    `Symbole: ${total}` +
+    (state.selectedCommitId ? ' (Commit)' : ' (alle)') +
+    `<br>Mehrfach-Signale (≥2): ${multi}`;
+}
+
+function rebuildScene() {
+  layoutGraph();
+
+  // Points
+  if (pointsMesh) {
+    scene.remove(pointsMesh);
+    disposeObj(pointsMesh);
+    pointsMesh = null;
+  }
+
+  if (graphNodes.length) {
+    const n = graphNodes.length;
+    const positions = new Float32Array(n * 3);
+    const kinds = new Float32Array(n);
+    const selected = new Float32Array(n);
+    // Retrieval highlight intensity: 0=none, 1=weak, 2=medium, 3=strong, 4=intersection
+    // Pure visualization — does not alter positions, embeddings, or graph structure
+    const highlights = new Float32Array(n);
+    // Functional group id for symbols (2–7); commits=0, files=1 (structural)
+    const funcs = new Float32Array(n);
+    const hlMap = state.retrieval.highlightMap;
+
+    graphNodes.forEach((node, i) => {
+      positions[i * 3] = node.position[0];
+      positions[i * 3 + 1] = node.position[1];
+      positions[i * 3 + 2] = node.position[2];
+      kinds[i] = node.kind === 'commit' ? 0 : node.kind === 'file' ? 1 : 2;
+      selected[i] =
+        (node.kind === 'commit' && node.id === state.selectedCommitId) ||
+        (node.id === state.selectedNodeId)
+          ? 1 : 0;
+      highlights[i] = hlMap.has(node.id) ? (hlMap.get(node.id) || 0) : 0;
+
+      if (node.kind === 'symbol' && node.data) {
+        const cls = classifySymbol(node.data);
+        funcs[i] = funcGroupId(cls.primary);
+      } else if (node.kind === 'commit') {
+        funcs[i] = 0;
+      } else if (node.kind === 'file') {
+        funcs[i] = 1;
+      } else {
+        funcs[i] = FUNC_GROUPS.CORE.id;
+      }
+    });
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('aKind', new THREE.BufferAttribute(kinds, 1));
+    geo.setAttribute('aSelected', new THREE.BufferAttribute(selected, 1));
+    geo.setAttribute('aHighlight', new THREE.BufferAttribute(highlights, 1));
+    geo.setAttribute('aFunc', new THREE.BufferAttribute(funcs, 1));
+
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: `
+        attribute float aKind;
+        attribute float aSelected;
+        attribute float aHighlight;
+        attribute float aFunc;
+        varying float vKind;
+        varying float vSelected;
+        varying float vHighlight;
+        varying float vFunc;
+        void main() {
+          vKind = aKind;
+          vSelected = aSelected;
+          vHighlight = aHighlight;
+          vFunc = aFunc;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_Position = projectionMatrix * mv;
+          float size = aKind < 0.5 ? 12.0 : aKind < 1.5 ? 9.0 : 6.5;
+          if (aSelected > 0.5) size *= 1.35;
+          // Retrieval highlight enlarges points (visualization only)
+          if (aHighlight > 3.5) size *= 1.9;
+          else if (aHighlight > 2.5) size *= 1.65;
+          else if (aHighlight > 1.5) size *= 1.4;
+          else if (aHighlight > 0.5) size *= 1.2;
+          gl_PointSize = size * (260.0 / max(40.0, -mv.z));
+        }
+      `,
+      fragmentShader: `
+        varying float vKind;
+        varying float vSelected;
+        varying float vHighlight;
+        varying float vFunc;
+        void main() {
+          vec2 p = gl_PointCoord - 0.5;
+          float r = length(p);
+          if (r > 0.5) discard;
+          float core = 1.0 - smoothstep(0.02, 0.22, r);
+          float glow = 1.0 - smoothstep(0.1, 0.5, r);
+          // Structural: commit / file
+          vec3 pink = vec3(1.0, 0.18, 0.58);
+          vec3 cyan = vec3(0.0, 0.9, 1.0);
+          // Functional groups (symbols)
+          vec3 cUI        = vec3(0.25, 0.75, 1.00);
+          vec3 cRender3d  = vec3(0.20, 1.00, 0.55);
+          vec3 cRetrieval = vec3(1.00, 0.45, 0.90);
+          vec3 cGit       = vec3(1.00, 0.85, 0.20);
+          vec3 cData      = vec3(1.00, 0.55, 0.20);
+          vec3 cCore      = vec3(0.55, 0.60, 0.70);
+          vec3 yellow = vec3(1.0, 0.9, 0.0);
+          // Retrieval highlight palette
+          vec3 hlWeak   = vec3(1.0, 0.55, 0.15);
+          vec3 hlMed    = vec3(1.0, 0.35, 0.05);
+          vec3 hlStrong = vec3(1.0, 0.15, 0.05);
+          vec3 hlInter  = vec3(1.0, 0.0, 0.85);
+
+          vec3 c;
+          if (vFunc < 0.5) c = pink;           // commit
+          else if (vFunc < 1.5) c = cyan;      // file
+          else if (vFunc < 2.5) c = cUI;
+          else if (vFunc < 3.5) c = cRender3d;
+          else if (vFunc < 4.5) c = cRetrieval;
+          else if (vFunc < 5.5) c = cGit;
+          else if (vFunc < 6.5) c = cData;
+          else c = cCore;
+
+          if (vSelected > 0.5) c = yellow;
+          // Highlight overrides base/functional color for matched nodes only
+          if (vHighlight > 3.5) c = hlInter;
+          else if (vHighlight > 2.5) c = hlStrong;
+          else if (vHighlight > 1.5) c = hlMed;
+          else if (vHighlight > 0.5) c = hlWeak;
+          float alpha = max(core, glow * 0.65);
+          if (vHighlight > 0.5) alpha = max(alpha, 0.9);
+          gl_FragColor = vec4(c, alpha);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+
+    pointsMesh = new THREE.Points(geo, mat);
+    pointsMesh.userData.nodes = graphNodes;
+    scene.add(pointsMesh);
+  }
+
+  // Lines
+  while (linesGroup.children.length) {
+    const o = linesGroup.children.pop();
+    disposeObj(o);
+  }
+
+  const addLines = (pts, color, opacity) => {
+    if (!pts.length) return;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    linesGroup.add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({
+      color, transparent: true, opacity, depthWrite: false
+    })));
+  };
+
+  // Parent commit edges (timeline)
+  const posOf = id => graphNodes.find(n => n.id === id)?.position;
+  const timeline = [];
+  for (const e of state.edges.filter(x => x.kind === 'parent_commit')) {
+    const a = posOf(e.from), b = posOf(e.to);
+    if (a && b) timeline.push(...a, ...b);
+  }
+  addLines(timeline, 0xff2d95, 0.85);
+
+  // Contains edges for selected commit
+  if (state.selectedCommitId) {
+    const contain = [];
+    for (const e of state.edges) {
+      if (e.kind === 'contains_file' && e.from === state.selectedCommitId) {
+        const a = posOf(e.from), b = posOf(e.to);
+        if (a && b) contain.push(...a, ...b);
+      }
+      if (e.kind === 'contains_symbol') {
+        const file = state.files.find(f => f.id === e.from);
+        if (file && file.commitId === state.selectedCommitId) {
+          const a = posOf(e.from), b = posOf(e.to);
+          if (a && b) contain.push(...a, ...b);
+        }
+      }
+    }
+    addLines(contain, 0x00e5ff, 0.45);
+  }
+
+  const cCount = state.commits.length;
+  const fCount = state.selectedCommitId
+    ? state.files.filter(f => f.commitId === state.selectedCommitId).length
+    : 0;
+  const sCount = state.selectedCommitId
+    ? state.symbols.filter(s => s.commitId === state.selectedCommitId).length
+    : 0;
+  $('hudStatus').textContent = state.selectedCommitId
+    ? `${cCount} COMMITS · OPEN: ${fCount} FILES · ${sCount} SYMBOLS`
+    : `${cCount} COMMITS · TIMELINE`;
+
+  // Functional group legend / counts (visualization only)
+  updateFuncLegend();
+}
+
+function focusCommit(c) {
+  const node = graphNodes.find(n => n.id === c.id);
+  if (!node) return;
+  const p = node.position;
+  controls.target.set(p[0], p[1] + 1.5, p[2]);
+  camera.position.set(p[0] + 4, p[1] + 6, p[2] + 12);
+  controls.update();
+}
+
+function onPointerDown(event) {
+  if (event.button !== 0 || !pointsMesh) return;
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObject(pointsMesh);
+  if (!hits.length) return;
+  const node = pointsMesh.userData.nodes[hits[0].index];
+  if (!node) return;
+  if (node.kind === 'commit') selectCommit(node.id);
+  else selectNode(node.kind, node.id);
+}
+
+/* =========================================================
+   RESTORE
+========================================================= */
+async function restore() {
+  log('Lade Commit Graph …', 'info');
+  const records = await dbGetAll();
+
+  const proj = records.find(r => r.type === 'project');
+  if (proj) {
+    state.project = {
+      id: proj.id || 'PROJ-001',
+      name: proj.name || 'Neural Memory',
+      user: proj.user || '',
+      created_at: proj.created_at,
+      updated_at: proj.updated_at
+    };
+    $('projectName').value = state.project.name;
+    $('projectUser').value = state.project.user;
+  }
+
+  state.commits = records.filter(r => r.type === 'commit');
+  state.files = records.filter(r => r.type === 'file');
+  state.symbols = records.filter(r => r.type === 'symbol');
+  state.edges = records.filter(r => r.type === 'edge');
+
+  state.commits.sort((a, b) => String(a.timestamp).localeCompare(String(b.timestamp)));
+
+  // restore next ids
+  const maxNum = (arr, prefix) => {
+    let m = 0;
+    for (const x of arr) {
+      const n = Number(String(x.id).split('-').pop()) || 0;
+      if (n > m) m = n;
+    }
+    return m + 1;
+  };
+  state.nextIds.commit = maxNum(state.commits, 'COM');
+  state.nextIds.file = maxNum(state.files, 'FILE');
+  state.nextIds.symbol = maxNum(state.symbols, 'SYM');
+  state.nextIds.edge = maxNum(state.edges, 'EDGE');
+
+  // Seed embedding cache from persisted vectors (dedupe by embeddingText)
+  state.embeddingCache.clear();
+  let withEmb = 0;
+  for (const s of state.symbols) {
+    if (
+      s.embeddingText &&
+      Array.isArray(s.embedding) &&
+      s.embedding.length === EMBED_CONFIG.DIM &&
+      !state.embeddingCache.has(s.embeddingText)
+    ) {
+      state.embeddingCache.set(s.embeddingText, s.embedding.slice());
+    }
+    if (Array.isArray(s.embedding) && s.embedding.length === EMBED_CONFIG.DIM) withEmb++;
+  }
+
+  renderCommitList();
+  updateMetrics();
+  updateHeader();
+  rebuildScene();
+  log(`${state.commits.length} Commits · ${state.files.length} Dateien · ${state.symbols.length} Symbole · ${withEmb} mit Embedding`, 'ok');
+}
+
+
+/* =========================================================
+   AGENT READ API + WORKSPACE (vertical slice)
+   Wraps existing state / retrieval. Does NOT change 384D math.
+========================================================= */
+
+function agentGetProjectState() {
+  return {
+    project: { ...state.project },
+    commitCount: state.commits.length,
+    fileCount: state.files.length,
+    symbolCount: state.symbols.length,
+    edgeCount: state.edges.length,
+    selectedCommitId: state.selectedCommitId,
+    selectedNodeId: state.selectedNodeId,
+    agentContextNodeIds: state.agent.contextNodeIds.slice()
+  };
+}
+
+function agentGetNode(id) {
+  if (!id) return null;
+  const sym = state.symbols.find(s => s.id === id);
+  if (sym) {
+    return {
+      kind: 'symbol',
+      id: sym.id,
+      name: sym.name,
+      path: sym.path,
+      symbolKind: sym.kind,
+      commitId: sym.commitId,
+      fileId: sym.fileId,
+      startLine: sym.startLine,
+      endLine: sym.endLine,
+      content: sym.content,
+      hasEmbedding: Array.isArray(sym.embedding) && sym.embedding.length === EMBED_CONFIG.DIM,
+      parentNodeId: sym.parentNodeId || null
+    };
+  }
+  const file = state.files.find(f => f.id === id);
+  if (file) {
+    return {
+      kind: 'file',
+      id: file.id,
+      path: file.path,
+      commitId: file.commitId,
+      size: file.size,
+      contentPreview: String(file.content || '').slice(0, 2000)
+    };
+  }
+  const commit = state.commits.find(c => c.id === id);
+  if (commit) {
+    return {
+      kind: 'commit',
+      id: commit.id,
+      hash: commit.hash,
+      message: commit.message,
+      timestamp: commit.timestamp,
+      parentId: commit.parentId
+    };
+  }
+  return null;
+}
+
+function agentGetNeighbors(id, limit = 12) {
+  const sym = state.symbols.find(s => s.id === id);
+  if (!sym) return [];
+  // Prefer existing semanticNeighbors (already computed)
+  if (Array.isArray(sym.semanticNeighbors) && sym.semanticNeighbors.length) {
+    return sym.semanticNeighbors.slice(0, limit).map(nb => {
+      const n = state.symbols.find(s => s.id === nb.nodeId);
+      return {
+        id: nb.nodeId,
+        name: n ? n.name : nb.nodeId,
+        similarity: nb.similarity,
+        path: n ? n.path : null
+      };
+    });
+  }
+  // Fallback: cosine against same-commit symbols with embeddings
+  if (!Array.isArray(sym.embedding)) return [];
+  const peers = state.symbols.filter(
+    s => s.commitId === sym.commitId && s.id !== sym.id && Array.isArray(s.embedding)
+  );
+  const scored = peers.map(s => ({
+    id: s.id,
+    name: s.name,
+    path: s.path,
+    similarity: cosineSim(sym.embedding, s.embedding)
+  }));
+  scored.sort((a, b) => b.similarity - a.similarity);
+  return scored.slice(0, limit);
+}
+
+function agentGetFile(pathOrId) {
+  let file = state.files.find(f => f.id === pathOrId || f.path === pathOrId);
+  if (!file && state.selectedCommitId) {
+    file = state.files.find(
+      f => f.commitId === state.selectedCommitId && (f.path === pathOrId || f.id === pathOrId)
+    );
+  }
+  if (!file) {
+    // latest by path
+    const matches = state.files.filter(f => f.path === pathOrId);
+    file = matches.length ? matches[matches.length - 1] : null;
+  }
+  if (!file) return null;
+  return {
+    id: file.id,
+    path: file.path,
+    commitId: file.commitId,
+    size: file.size,
+    content: file.content
+  };
+}
+
+function agentGetCommit(id) {
+  const c = state.commits.find(x => x.id === id);
+  if (!c) return null;
+  const files = state.files.filter(f => f.commitId === c.id);
+  const symbols = state.symbols.filter(s => s.commitId === c.id);
+  return {
+    ...c,
+    fileCount: files.length,
+    symbolCount: symbols.length,
+    filePaths: files.map(f => f.path)
+  };
+}
+
+function agentGetHistory(limit = 20) {
+  return [...state.commits]
+    .sort((a, b) => String(a.timestamp).localeCompare(String(b.timestamp)))
+    .slice(-limit)
+    .map(c => ({
+      id: c.id,
+      hash: c.hash,
+      message: c.message,
+      timestamp: c.timestamp,
+      parentId: c.parentId
+    }));
+}
+
+/** Diff between two commits for a path (line-based simple). */
+function agentGetDiff(path, commitIdA, commitIdB) {
+  const fa = state.files.find(f => f.commitId === commitIdA && f.path === path);
+  const fb = state.files.find(f => f.commitId === commitIdB && f.path === path);
+  if (!fa && !fb) return { path, error: 'file not in either commit' };
+  const a = (fa && fa.content) || '';
+  const b = (fb && fb.content) || '';
+  if (a === b) return { path, changed: false, summary: 'identical' };
+  return {
+    path,
+    changed: true,
+    sizeA: a.length,
+    sizeB: b.length,
+    previewA: a.slice(0, 500),
+    previewB: b.slice(0, 500)
+  };
+}
+
+async function agentSemanticSearch(query, k = 8) {
+  if (!query || !String(query).trim()) return [];
+  // Reuse existing retrieval pipeline (slot 1), then restore panel state lightly
+  const prevActive = state.retrieval.active;
+  await runSemanticQuery(query, 1, k);
+  const results = (state.retrieval.results1 || []).slice(0, k).map(r => ({
+    nodeId: r.nodeId,
+    name: r.name,
+    kind: r.kind,
+    path: r.path,
+    similarity: r.similarity,
+    rank: r.rank,
+    startLine: r.startLine,
+    endLine: r.endLine
+  }));
+  return results;
+}
+
+function agentBuildContextObject() {
+  const nodes = state.agent.contextNodeIds
+    .map(id => agentGetNode(id))
+    .filter(Boolean);
+  const filePaths = [...new Set(nodes.map(n => n.path).filter(Boolean))];
+  const commitIds = [...new Set(nodes.map(n => n.commitId).filter(Boolean))];
+  return {
+    scope: 'user_selected',
+    nodes: nodes.map(n => ({
+      id: n.id,
+      ref: n.kind === 'symbol' ? `symbol:${n.name}` : `${n.kind}:${n.id}`,
+      name: n.name || n.path,
+      kind: n.kind,
+      path: n.path || null
+    })),
+    edges: [],
+    files: filePaths,
+    commits: commitIds,
+    reason: state.agent.reason || ''
+  };
+}
+
+function agentAddSelectedToContext() {
+  const id = state.selectedNodeId;
+  if (!id) {
+    log('Kein Node ausgewählt.', 'warn');
+    return;
+  }
+  if (!state.agent.contextNodeIds.includes(id)) {
+    state.agent.contextNodeIds.push(id);
+  }
+  renderAgentContext();
+  log(`Kontext: ${id} hinzugefügt.`, 'ok');
+}
+
+function agentClearContext() {
+  state.agent.contextNodeIds = [];
+  state.agent.reason = '';
+  state.agent.proposal = null;
+  renderAgentContext();
+  renderAgentProposal();
+  log('AI-Kontext geleert.', 'info');
+}
+
+function renderAgentContext() {
+  const box = $('agentContextSummary');
+  const chips = $('agentContextChips');
+  if (!box || !chips) return;
+  const ctx = agentBuildContextObject();
+  box.innerHTML =
+    `<b>${ctx.nodes.length}</b> Nodes · <b>${ctx.files.length}</b> Files · ` +
+    (ctx.commits[0] ? `Commit <b>${esc(String(ctx.commits[0]).slice(0, 12))}</b>` : 'kein Commit');
+  chips.innerHTML = ctx.nodes
+    .map(
+      n =>
+        `<span class="chip" data-id="${esc(n.id)}" title="${esc(n.id)}">${esc(n.ref || n.name)}</span>`
+    )
+    .join('');
+  chips.querySelectorAll('.chip').forEach(el => {
+    el.onclick = () => {
+      const id = el.getAttribute('data-id');
+      const node = state.symbols.find(s => s.id === id);
+      if (node) {
+        if (state.selectedCommitId !== node.commitId) selectCommit(node.commitId);
+        selectNode('symbol', id);
+      }
+    };
+  });
+}
+
+function agentAppendTranscript(role, body) {
+  state.agent.transcript.push({ role, body, ts: now() });
+  renderAgentTranscript();
+}
+
+function renderAgentTranscript() {
+  const el = $('agentTranscript');
+  if (!el) return;
+  if (!state.agent.transcript.length) {
+    el.innerHTML = '<div style="color:var(--muted)">Noch kein Durchlauf.</div>';
+    return;
+  }
+  el.innerHTML = state.agent.transcript
+    .map(t => {
+      const roleCls =
+        t.role === 'user' ? 'user' : t.role === 'agent' ? 'agent' : 'system';
+      return `<div class="agentTurn"><div class="role ${roleCls}">${esc(t.role.toUpperCase())}</div><div class="body">${esc(t.body)}</div></div>`;
+    })
+    .join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function renderAgentProposal() {
+  const box = $('agentProposalBox');
+  const meta = $('agentProposalMeta');
+  const diff = $('agentProposalDiff');
+  if (!box) return;
+  const p = state.agent.proposal;
+  if (!p) {
+    box.classList.remove('visible');
+    return;
+  }
+  box.classList.add('visible');
+  meta.textContent = `${p.operation} → ${p.targetName || p.target} · ${p.reason || ''}`;
+  const oldL = String(p.old || '').split('\n');
+  const newL = String(p.new || '').split('\n');
+  let html = '';
+  const max = Math.max(oldL.length, newL.length);
+  // Simple presentation: show old then new
+  html += '<div class="del">--- old</div>';
+  oldL.slice(0, 40).forEach(l => {
+    html += `<div class="del">${esc(l)}</div>`;
+  });
+  html += '<div class="add">+++ new</div>';
+  newL.slice(0, 40).forEach(l => {
+    html += `<div class="add">${esc(l)}</div>`;
+  });
+  diff.innerHTML = html;
+}
+
+
+/* =========================================================
+   LLM AGENT (uses existing agentGet* tools only)
+   Session-only API key. No IndexedDB secret storage.
+========================================================= */
+
+/** @type {{ apiKey: string }} */
+const llmSession = { apiKey: '' };
+
+const LLM_SYSTEM_PROMPT = `Du bist der Coding-Agent in NEURAL MEMORY.
+
+Regeln:
+- Project State ist die Quelle des Projektkontexts.
+- Commits/History sind die historische Wahrheit (kein separates Git nötig — state.commits).
+- Nodes sind extrahierte Projektbestandteile (Symbole/Dateien/Commits).
+- Der Context Scope begrenzt den initialen Kontext.
+- Zusätzlichen Kontext MUSS du über Tools anfordern (get_node, get_neighbors, get_file, get_diff, semantic_search, get_history, get_project_state, get_commit).
+- Behaupte nie, Code gelesen zu haben, ohne zugehörigen Tool-Result.
+- Du darfst NIEMALS Dateien direkt schreiben, Commits erzeugen oder Patches anwenden.
+- Änderungen nur als Proposal im JSON-Format am Ende vorschlagen.
+- Antworte auf Deutsch, knapp und technisch.
+
+Wenn du genug gelesen hast und eine Code-Änderung vorschlägst, beende mit einem Block:
+\`\`\`proposal
+{
+  "operation": "modify_node",
+  "target": "<symbolId>",
+  "targetName": "<functionName>",
+  "old": "<exakter bisheriger Symbol-content>",
+  "new": "<voller neuer Symbol-content>",
+  "reason": "<kurze Begründung>"
+}
+\`\`\`
+old muss EXAKT dem Tool-Result content entsprechen (sonst Apply scheitert).`;
+
+const LLM_TOOLS = [
+  {
+    type: 'function',
+    function: {
+      name: 'get_project_state',
+      description: 'Übersicht: Projekt, Anzahlen, Selektion, Agent-Kontext-IDs',
+      parameters: { type: 'object', properties: {}, additionalProperties: false }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_node',
+      description: 'Node anhand ID (symbol/file/commit). Symbole enthalten content.',
+      parameters: {
+        type: 'object',
+        properties: { id: { type: 'string', description: 'Node-ID z.B. SYM-…' } },
+        required: ['id']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_neighbors',
+      description: 'Semantische Nachbarn eines Symbol-Nodes',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          limit: { type: 'integer', minimum: 1, maximum: 20 }
+        },
+        required: ['id']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_file',
+      description: 'Datei anhand path oder file id',
+      parameters: {
+        type: 'object',
+        properties: { pathOrId: { type: 'string' } },
+        required: ['pathOrId']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_commit',
+      description: 'Commit-Metadaten und Dateiliste',
+      parameters: {
+        type: 'object',
+        properties: { id: { type: 'string' } },
+        required: ['id']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_history',
+      description: 'Commit-Historie (neueste zuletzt)',
+      parameters: {
+        type: 'object',
+        properties: { limit: { type: 'integer', minimum: 1, maximum: 50 } }
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_diff',
+      description: 'Grober Diff einer Datei zwischen zwei Commits',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string' },
+          commitIdA: { type: 'string' },
+          commitIdB: { type: 'string' }
+        },
+        required: ['path', 'commitIdA', 'commitIdB']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'semantic_search',
+      description: '384D Cosine Top-K über bestehende Embeddings (unveränderte Retrieval-Pipeline)',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string' },
+          k: { type: 'integer', minimum: 1, maximum: 20 }
+        },
+        required: ['query']
+      }
+    }
+  }
+];
+
+function llmResolveBaseUrl() {
+  const prov = ($('llmProvider') && $('llmProvider').value) || 'openai';
+  const custom = ($('llmBaseUrl') && $('llmBaseUrl').value.trim()) || '';
+  if (custom) return custom.replace(/\/$/, '');
+  if (prov === 'xai') return 'https://api.x.ai/v1';
+  return 'https://api.openai.com/v1';
+}
+
+function llmGetModel() {
+  return ($('llmModel') && $('llmModel').value.trim()) || 'gpt-4o-mini';
+}
+
+function llmGetApiKey() {
+  const fromInput = ($('llmApiKey') && $('llmApiKey').value.trim()) || '';
+  if (fromInput) llmSession.apiKey = fromInput;
+  return llmSession.apiKey || '';
+}
+
+async function llmChatCompletions(messages) {
+  const apiKey = llmGetApiKey();
+  if (!apiKey) throw new Error('API Key fehlt (nur Session, oben eintragen).');
+  const url = llmResolveBaseUrl() + '/chat/completions';
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + apiKey
+    },
+    body: JSON.stringify({
+      model: llmGetModel(),
+      messages,
+      tools: LLM_TOOLS,
+      tool_choice: 'auto',
+      temperature: 0.2
+    })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = (data && data.error && data.error.message) || res.statusText || String(res.status);
+    throw new Error('LLM HTTP ' + res.status + ': ' + msg);
+  }
+  return data;
+}
+
+async function llmExecuteTool(name, args) {
+  args = args || {};
+  switch (name) {
+    case 'get_project_state':
+      return agentGetProjectState();
+    case 'get_node':
+      return agentGetNode(args.id);
+    case 'get_neighbors':
+      return agentGetNeighbors(args.id, args.limit || 12);
+    case 'get_file': {
+      const f = agentGetFile(args.pathOrId);
+      if (!f) return null;
+      // Cap huge files in tool result
+      const content = String(f.content || '');
+      return {
+        id: f.id,
+        path: f.path,
+        commitId: f.commitId,
+        size: f.size,
+        content: content.length > 12000 ? content.slice(0, 12000) + '\n/* … truncated … */' : content
+      };
+    }
+    case 'get_commit':
+      return agentGetCommit(args.id);
+    case 'get_history':
+      return agentGetHistory(args.limit || 20);
+    case 'get_diff':
+      return agentGetDiff(args.path, args.commitIdA, args.commitIdB);
+    case 'semantic_search':
+      return await agentSemanticSearch(args.query, args.k || 8);
+    default:
+      return { error: 'unknown tool: ' + name };
+  }
+}
+
+function llmTruncateResult(obj) {
+  const s = JSON.stringify(obj);
+  if (s.length <= 14000) return s;
+  return s.slice(0, 14000) + '…"/* truncated */"';
+}
+
+function llmExtractProposal(text) {
+  if (!text) return null;
+  const fence = text.match(/```proposal\s*([\s\S]*?)```/i);
+  const raw = fence ? fence[1].trim() : null;
+  let jsonStr = raw;
+  if (!jsonStr) {
+    const m = text.match(/\{\s*"operation"\s*:\s*"modify_node"[\s\S]*\}/);
+    if (m) jsonStr = m[0];
+  }
+  if (!jsonStr) return null;
+  try {
+    const p = JSON.parse(jsonStr);
+    if (p && p.operation === 'modify_node' && p.old != null && p.new != null) return p;
+  } catch (e) {
+    return null;
+  }
+  return null;
+}
+
+function llmBuildInitialUserMessage(query) {
+  const ctx = agentBuildContextObject();
+  // Hydrate context nodes with real content (bounded) — no full project dump
+  const hydrated = ctx.nodes.map(n => {
+    const full = agentGetNode(n.id);
+    if (!full) return n;
+    const content = full.content != null ? String(full.content) : full.contentPreview || '';
+    return {
+      id: full.id,
+      ref: n.ref,
+      name: full.name || full.path,
+      kind: full.kind,
+      path: full.path || null,
+      startLine: full.startLine,
+      endLine: full.endLine,
+      content: content.length > 6000 ? content.slice(0, 6000) + '\n/* truncated */' : content
+    };
+  });
+  return {
+    role: 'user',
+    content:
+      'USER REQUEST:\n' +
+      query +
+      '\n\nINITIAL CONTEXT SCOPE (bereits geladen, kein weiteres get_node nötig außer für andere IDs):\n' +
+      JSON.stringify(
+        {
+          scope: ctx.scope,
+          reason: query,
+          nodes: hydrated,
+          files: ctx.files,
+          commits: ctx.commits
+        },
+        null,
+        2
+      ) +
+      '\n\nUntersuche den Kontext. Fordere fehlende Infos per Tools an. Erkläre die Ursache anhand gelesener Tool-Results. Schlage bei Bedarf ein Proposal vor.'
+  };
+}
+
+/**
+ * LLM agent loop — same tools & proposal path as before.
+ * Replaces deterministic analyst only.
+ */
+async function agentRun() {
+  const query = ($('agentQuery') && $('agentQuery').value.trim()) || '';
+  if (!query) {
+    log('Bitte eine Anfrage eingeben.', 'warn');
+    return;
+  }
+  if (!llmGetApiKey()) {
+    log('API Key fehlt (Session-Feld im AI-Panel).', 'warn');
+    agentAppendTranscript('system', 'API Key fehlt. Bitte im AI-Panel eintragen (wird nicht in IndexedDB gespeichert).');
+    return;
+  }
+
+  state.agent.reason = query;
+  state.agent.proposal = null;
+  renderAgentProposal();
+  agentAppendTranscript('user', query);
+
+  const ctx = agentBuildContextObject();
+  agentAppendTranscript(
+    'system',
+    'LLM start · model=' +
+      llmGetModel() +
+      ' · base=' +
+      llmResolveBaseUrl() +
+      ' · contextNodes=' +
+      ctx.nodes.length
+  );
+
+  const messages = [
+    { role: 'system', content: LLM_SYSTEM_PROMPT },
+    llmBuildInitialUserMessage(query)
+  ];
+
+  const maxRounds = 8;
+  try {
+    for (let round = 0; round < maxRounds; round++) {
+      agentAppendTranscript('system', 'LLM round ' + (round + 1) + '/' + maxRounds + '…');
+      const data = await llmChatCompletions(messages);
+      const choice = data.choices && data.choices[0];
+      const msg = choice && choice.message;
+      if (!msg) throw new Error('Leere LLM-Antwort');
+
+      // Assistant message (may include tool_calls)
+      messages.push({
+        role: 'assistant',
+        content: msg.content || null,
+        tool_calls: msg.tool_calls || undefined
+      });
+
+      if (msg.content && String(msg.content).trim()) {
+        agentAppendTranscript('agent', String(msg.content).trim());
+      }
+
+      const toolCalls = msg.tool_calls || [];
+      if (!toolCalls.length) {
+        // Final answer — try proposal extract
+        const prop = llmExtractProposal(msg.content || '');
+        if (prop) {
+          // Resolve target id if only name given
+          if (!prop.target || !String(prop.target).startsWith('SYM')) {
+            const byName = state.symbols.find(
+              s =>
+                s.name === prop.targetName ||
+                s.name === prop.target ||
+                s.id === prop.target
+            );
+            if (byName) {
+              prop.target = byName.id;
+              prop.targetName = byName.name;
+              prop.path = byName.path;
+              prop.fileId = byName.fileId;
+              prop.commitId = byName.commitId;
+            }
+          } else {
+            const byId = state.symbols.find(s => s.id === prop.target);
+            if (byId) {
+              prop.targetName = prop.targetName || byId.name;
+              prop.path = byId.path;
+              prop.fileId = byId.fileId;
+              prop.commitId = byId.commitId;
+            }
+          }
+          state.agent.proposal = prop;
+          renderAgentProposal();
+          agentAppendTranscript(
+            'system',
+            'Proposal erkannt: ' +
+              (prop.targetName || prop.target) +
+              ' — bitte Diff prüfen (ANWENDEN / ABLEHNEN).'
+          );
+        } else {
+          agentAppendTranscript('system', 'Kein Proposal-JSON in der finalen Antwort.');
+        }
+        log('LLM-Agent fertig.', 'ok');
+        return;
+      }
+
+      // Execute tools
+      for (const tc of toolCalls) {
+        const fname = (tc.function && tc.function.name) || '';
+        let args = {};
+        try {
+          args = JSON.parse((tc.function && tc.function.arguments) || '{}');
+        } catch (e) {
+          args = {};
+        }
+        agentAppendTranscript('system', 'TOOL → ' + fname + '(' + JSON.stringify(args) + ')');
+        let result;
+        try {
+          result = await llmExecuteTool(fname, args);
+        } catch (e) {
+          result = { error: e.message || String(e) };
+        }
+        const resultStr = llmTruncateResult(result);
+        agentAppendTranscript(
+          'system',
+          'RESULT ← ' +
+            fname +
+            '\n' +
+            (resultStr.length > 1200 ? resultStr.slice(0, 1200) + '…' : resultStr)
+        );
+        messages.push({
+          role: 'tool',
+          tool_call_id: tc.id,
+          content: resultStr
+        });
+      }
+    }
+    agentAppendTranscript('system', 'Max. Tool-Runden erreicht ohne finale Antwort.');
+    log('LLM-Agent: max rounds', 'warn');
+  } catch (e) {
+    console.error(e);
+    agentAppendTranscript('system', 'LLM Fehler: ' + (e.message || e));
+    log('LLM Fehler: ' + (e.message || e), 'err');
+  }
+}
+
+function agentRejectProposal() {
+  state.agent.proposal = null;
+  renderAgentProposal();
+  agentAppendTranscript('system', 'Proposal abgelehnt.');
+}
+
+/**
+ * Apply proposal → patch file content → new commit via existing createCommit pipeline.
+ */
+async function agentApplyProposal() {
+  const p = state.agent.proposal;
+  if (!p || p.operation !== 'modify_node') {
+    log('Kein anwendbares Proposal.', 'warn');
+    return;
+  }
+  const file = state.files.find(f => f.id === p.fileId);
+  if (!file) {
+    log('Proposal-Datei nicht im State gefunden.', 'err');
+    return;
+  }
+  const original = String(file.content || '');
+  if (!original.includes(p.old)) {
+    log('Old-Content nicht exakt in Datei gefunden (Offset/Version).', 'err');
+    agentAppendTranscript(
+      'system',
+      'Apply fehlgeschlagen: old content nicht in Datei gefunden. Bitte Commit/Symbol neu wählen.'
+    );
+    return;
+  }
+  // Single replacement of symbol body occurrence
+  const patched = original.replace(p.old, p.new);
+  if (patched === original) {
+    log('Patch erzeugte keine Änderung.', 'warn');
+    return;
+  }
+
+  // Build pending files = all files from same commit, with this path patched
+  const commitId = p.commitId || file.commitId;
+  const siblings = state.files.filter(f => f.commitId === commitId);
+  state.pendingFiles = siblings.map(f => ({
+    name: f.path,
+    content: f.path === file.path ? patched : f.content,
+    size: (f.path === file.path ? patched : f.content).length
+  }));
+  if (!$('commitMsg').value.trim()) {
+    $('commitMsg').value = `agent: ${p.targetName} — ${p.reason || 'proposal'}`.slice(0, 120);
+  }
+  if (!$('commitHash').value.trim()) {
+    $('commitHash').value = `agent-${Date.now().toString(36)}`;
+  }
+
+  state.agent.proposal = null;
+  renderAgentProposal();
+  agentAppendTranscript('system', 'Wende Proposal an → createCommit…');
+
+  try {
+    await createCommit();
+    agentAppendTranscript(
+      'system',
+      'Proposal angewendet. Neuer Commit erzeugt; Graph/State aktualisiert.'
+    );
+    log('Proposal angewendet + Commit erstellt.', 'ok');
+  } catch (e) {
+    log(`Apply fehlgeschlagen: ${e.message}`, 'err');
+    agentAppendTranscript('system', `Apply Fehler: ${e.message}`);
+  }
+}
+
+
+/* =========================================================
+   EVENTS + BOOT
+========================================================= */
+$('saveProjectBtn').onclick = saveProject;
+$('commitFiles').onchange = e => onFilesSelected(e.target.files);
+$('createCommitBtn').onclick = createCommit;
+$('deleteCommitBtn').onclick = deleteSelectedCommit;
+$('exportBtn').onclick = exportProject;
+$('copyCodeBtn').onclick = copyCode;
+$('resetCamBtn').onclick = () => {
+  camera.position.set(0, 8, 18);
+  controls.target.set(0, 0, 0);
+  controls.update();
+};
+$('focusTimelineBtn').onclick = () => {
+  state.selectedCommitId = null;
+  state.selectedNodeId = null;
+  renderCommitList();
+  renderStructure();
+  $('inspector').classList.remove('visible');
+  rebuildScene();
+  camera.position.set(0, 8, 18);
+  controls.target.set(0, 0, 0);
+  controls.update();
+};
+
+// --- Semantic Retrieval Debug UI ---
+$('showRetrievalBtn').onclick = () => {
+  const p = $('retrievalPanel');
+  p.classList.toggle('visible');
+};
+$('toggleRetrievalBtn').onclick = () => {
+  $('retrievalPanel').classList.remove('visible');
+};
+$('runQuery1Btn').onclick = async () => {
+  const q = $('retrievalQuery').value;
+  await runSemanticQuery(q, 1);
+};
+$('runQuery2Btn').onclick = async () => {
+  const q = $('retrievalQuery').value;
+  await runSemanticQuery(q, 2);
+};
+$('runIntersectBtn').onclick = () => {
+  if (!state.retrieval.results1.length || !state.retrieval.results2.length) {
+    log('Intersection: zuerst Q1 und Q2 ausführen.', 'warn');
+    return;
+  }
+  computeRetrievalIntersection();
+};
+$('clearRetrievalBtn').onclick = () => clearRetrieval();
+
+// Debug / Benchmark API (read-only access for console tests; no retrieval math change)
+window.__NM__ = {
+  get state() { return state; },
+  cosineSim,
+  embedQueryText,
+  embedEmbeddingText,
+  classifySymbol,
+  FUNC_GROUPS,
+  runSemanticQuery,
+  computeRetrievalIntersection,
+  clearRetrieval,
+  SEMANTIC_K: typeof SEMANTIC_K !== 'undefined' ? SEMANTIC_K : 8,
+  EMBED_CONFIG,
+  // Agent tools
+  agentGetProjectState,
+  agentGetNode,
+  agentGetNeighbors,
+  agentGetFile,
+  agentGetCommit,
+  agentGetHistory,
+  agentGetDiff,
+  agentSemanticSearch,
+  agentBuildContextObject,
+  agentRun
+};
+
+initThree();
+(async () => {
+  log('COMMIT GRAPH — Struktur + Embedding-Layer + Retrieval-Debug.', 'ok');
+  await restore();
+  await loadModel();
+})();
+</script>
+</body>
+</html>
