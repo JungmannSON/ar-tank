@@ -3,61 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>BRUCHWIESEN WORLD ENGINE 3.1</title>
+<title>BRUCHWIESEN EDITOR 3.2</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&display=swap');
   :root {
     --bg:#0a0c12; --panel:#10141e; --cyan:#00e5ff; --green:#00ff9d;
-    --magenta:#ff2d78; --yellow:#ffc107; --red:#ff3b5c;
+    --magenta:#ff2d78; --yellow:#ffc107; --red:#ff3b5c; --orange:#ff8c42;
     --text:#e8f0ff; --dim:#5a6a80; --border:#1c2535;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;overflow:hidden;touch-action:none}
   .app{display:flex;flex-direction:column;height:100%;height:100dvh}
-  .top{height:46px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 10px;flex-shrink:0;gap:6px}
+  .top{height:46px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 8px;flex-shrink:0;gap:4px}
   .logo{font-family:Orbitron,sans-serif;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--cyan);white-space:nowrap}
-  .top-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
-  .btn{height:30px;padding:0 9px;border-radius:5px;border:1px solid #1e3a5f;background:#0f1c2e;color:var(--cyan);font-size:10px;font-family:inherit;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+  .top-actions{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+  .btn{height:28px;padding:0 8px;border-radius:5px;border:1px solid #1e3a5f;background:#0f1c2e;color:var(--cyan);font-size:9px;font-family:inherit;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;cursor:pointer}
   .btn:active{opacity:.7}
   .btn.play{border-color:var(--magenta);color:var(--magenta)}
   .btn.ok{border-color:var(--green);color:var(--green)}
+  .btn.active{background:#0a2a3a;border-color:var(--cyan);box-shadow:0 0 6px rgba(0,229,255,.3)}
+  .btn.warn{border-color:var(--yellow);color:var(--yellow)}
   .main{flex:1;display:flex;overflow:hidden}
   .view{flex:1;position:relative;overflow:hidden;background:#07090f}
   canvas{position:absolute;transform-origin:0 0;image-rendering:pixelated}
-  .side{width:160px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;font-size:11px;overflow:hidden}
-  .side-sec{padding:8px 10px;border-bottom:1px solid var(--border)}
-  .side-title{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+  #satCanvas{pointer-events:none;opacity:0.55}
+  .side{width:168px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;font-size:11px;overflow:hidden}
+  .side-sec{padding:7px 9px;border-bottom:1px solid var(--border)}
+  .side-title{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
   .status{height:26px;background:#080c14;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:10px;color:var(--dim);flex-shrink:0}
-  .info{font-size:11px;color:var(--dim);line-height:1.4}
-  .feature{padding:5px 0;border-bottom:1px solid #1a2230;font-size:10px;cursor:pointer}
+  .info{font-size:10px;color:var(--dim);line-height:1.35}
+  .feature{padding:4px 0;border-bottom:1px solid #1a2230;font-size:10px;cursor:pointer}
   .feature:active,.feature.sel{background:#0c1a28}
   .feature .n{color:var(--text)}
-  .feature .t{color:var(--dim);font-size:9px}
+  .feature .t{color:var(--dim);font-size:8px}
   .feature.uncertain .n{color:var(--yellow)}
-  #fileJson{display:none}
-  .drop{border:1px dashed #1e3a5f;border-radius:6px;padding:10px 6px;text-align:center;color:var(--dim);font-size:10px;margin-bottom:6px}
+  #fileJson,#fileSat{display:none}
+  .drop{border:1px dashed #1e3a5f;border-radius:5px;padding:8px 5px;text-align:center;color:var(--dim);font-size:9px;margin-bottom:5px}
   .drop.active{border-color:var(--cyan);color:var(--cyan)}
-  .err{color:var(--red);font-size:10px;margin-top:4px;line-height:1.3}
-  .okmsg{color:var(--green);font-size:10px;margin-top:4px}
-  /* JSON paste modal */
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+  .err{color:var(--red);font-size:9px;margin-top:3px;line-height:1.3}
+  .okmsg{color:var(--green);font-size:9px;margin-top:3px}
+  .tool-row{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px}
+  .tool{height:26px;min-width:48px;padding:0 5px;border-radius:4px;border:1px solid #1e3a5f;background:#0c1520;color:var(--dim);font-size:9px;font-family:inherit;cursor:pointer}
+  .tool.active{border-color:var(--cyan);color:var(--cyan);background:#0a2230}
+  .slider-row{display:flex;align-items:center;gap:6px;margin:4px 0}
+  .slider-row input[type=range]{flex:1;height:4px;accent-color:var(--cyan)}
+  .slider-row span{font-size:9px;color:var(--dim);min-width:28px}
+  .layer-btn{display:block;width:100%;text-align:left;padding:3px 4px;border:none;background:transparent;color:var(--dim);font-size:9px;font-family:inherit;cursor:pointer}
+  .layer-btn.on{color:var(--green)}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;z-index:100;padding:14px}
   .modal.show{display:flex}
   .modal-box{background:var(--panel);border:1px solid var(--border);border-radius:10px;width:100%;max-width:420px;max-height:80vh;display:flex;flex-direction:column}
-  .modal-head{padding:12px 14px;border-bottom:1px solid var(--border);font-family:Orbitron,sans-serif;font-size:12px;color:var(--cyan)}
-  .modal-body{padding:12px 14px;flex:1;overflow:auto}
-  .modal-body textarea{width:100%;height:180px;background:#080c14;border:1px solid #1a2a40;border-radius:6px;color:var(--text);padding:10px;font-size:12px;font-family:inherit;resize:vertical}
-  .modal-foot{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
-  @media(max-width:480px){.side{width:130px}}
+  .modal-head{padding:11px 13px;border-bottom:1px solid var(--border);font-family:Orbitron,sans-serif;font-size:12px;color:var(--cyan)}
+  .modal-body{padding:11px 13px;flex:1;overflow:auto}
+  .modal-body textarea{width:100%;height:170px;background:#080c14;border:1px solid #1a2a40;border-radius:6px;color:var(--text);padding:9px;font-size:11px;font-family:inherit;resize:vertical}
+  .modal-foot{padding:9px 13px;border-top:1px solid var(--border);display:flex;gap:7px;justify-content:flex-end}
+  .hint{font-size:8px;color:var(--dim);margin-top:3px;line-height:1.3}
+  @media(max-width:480px){.side{width:140px}.logo{font-size:10px}}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="top">
-    <div class="logo">WORLD ENGINE 3.1</div>
+    <div class="logo">EDITOR 3.2</div>
     <div class="top-actions">
       <button class="btn" id="btnJson">JSON</button>
+      <button class="btn" id="btnSat">SAT</button>
       <button class="btn" id="btnPaste">PASTE</button>
-      <button class="btn" id="btnExample">EXAMPLE</button>
       <button class="btn" id="btnExport">EXPORT</button>
       <button class="btn play" id="btnPlay">▶ PLAY</button>
     </div>
@@ -65,19 +76,50 @@
 
   <div class="main">
     <div class="view" id="view">
+      <canvas id="satCanvas"></canvas>
       <canvas id="c"></canvas>
     </div>
     <div class="side">
       <div class="side-sec">
+        <div class="side-title">Werkzeuge</div>
+        <div class="tool-row">
+          <button class="tool active" data-tool="select" id="tSelect">SELECT</button>
+          <button class="tool" data-tool="move" id="tMove">MOVE</button>
+          <button class="tool" data-tool="node" id="tNode">NODE</button>
+          <button class="tool" data-tool="draw" id="tDraw">DRAW</button>
+          <button class="tool" data-tool="measure" id="tMeasure">MEASURE</button>
+        </div>
+        <div class="hint">SELECT: wählen · MOVE: Objekt · NODE: Ecken · DRAW: neue Fläche</div>
+      </div>
+
+      <div class="side-sec">
+        <div class="side-title">Satelliten-Overlay</div>
+        <div class="slider-row">
+          <span>α</span>
+          <input type="range" id="satAlpha" min="0" max="100" value="55">
+          <span id="satAlphaVal">55%</span>
+        </div>
+        <div class="slider-row">
+          <span>Mix</span>
+          <input type="range" id="mixSlider" min="0" max="100" value="50">
+          <span id="mixVal">50%</span>
+        </div>
+        <div class="hint">Mix 0 = nur Sat · 100 = nur Welt</div>
+        <button class="btn" id="btnLockSat" style="width:100%;margin-top:4px">LOCK SAT</button>
+      </div>
+
+      <div class="side-sec">
         <div class="side-title">Import</div>
-        <div class="drop" id="drop">BW_WORLD.json<br>ablegen / tippen</div>
-        <button class="btn" id="btnLoad" style="width:100%;margin-bottom:4px">DATEI</button>
+        <div class="drop" id="drop">BW_WORLD.json<br>oder Sat-Bild</div>
+        <button class="btn" id="btnLoad" style="width:100%;margin-bottom:3px">DATEI</button>
         <div id="importMsg"></div>
       </div>
+
       <div class="side-sec">
         <div class="side-title">Welt</div>
         <div class="info" id="worldInfo">Kein JSON geladen</div>
       </div>
+
       <div class="side-sec" style="flex:1;overflow:auto">
         <div class="side-title">Features</div>
         <div id="featureList"></div>
@@ -86,7 +128,7 @@
   </div>
 
   <div class="status">
-    <span id="status">Warte auf BW_WORLD.json v1.0</span>
+    <span id="status">EDITOR 3.2 – JSON + Sat laden</span>
     <span id="zoom">100%</span>
   </div>
 </div>
@@ -107,6 +149,7 @@
 </div>
 
 <input type="file" id="fileJson" accept="application/json,.json">
+<input type="file" id="fileSat" accept="image/*">
 
 <script>
 (function(){
@@ -116,17 +159,29 @@
 
   let world = null;
   let selectedId = null;
+  let selectedNode = -1;
   let scale = 1, ox = 0, oy = 0;
   let canvasW = 1000, canvasH = 800;
   let boundsW = 10000, boundsH = 10000;
+  let tool = "select";
+  let satImg = null;
+  let satLocked = true;
+  let satAlpha = 0.55;
+  let mix = 0.5;
+  let measurePts = [];
+  let drawPts = [];
+  let dragging = false;
+  let dragStart = null;
+  let nodeDrag = false;
 
   // pan state
   let panning = false;
   let panStartX = 0, panStartY = 0, panOrigX = 0, panOrigY = 0;
-  let lastTap = 0;
 
   const canvas = document.getElementById("c");
   const ctx = canvas.getContext("2d");
+  const satCanvas = document.getElementById("satCanvas");
+  const satCtx = satCanvas.getContext("2d");
   const view = document.getElementById("view");
   const statusEl = document.getElementById("status");
   const zoomEl = document.getElementById("zoom");
@@ -134,20 +189,26 @@
   const featureList = document.getElementById("featureList");
   const drop = document.getElementById("drop");
   const fileJson = document.getElementById("fileJson");
+  const fileSat = document.getElementById("fileSat");
   const importMsg = document.getElementById("importMsg");
   const pasteModal = document.getElementById("pasteModal");
   const pasteArea = document.getElementById("pasteArea");
   const pasteErr = document.getElementById("pasteErr");
 
-  // ===== COORDINATES (fixed: uses bounds) =====
+  // ===== COORDINATES =====
   function toCanvasX(x) {
     return ((x - (world?.world?.bounds?.x || 0)) / boundsW) * canvasW;
   }
   function toCanvasY(y) {
     return ((y - (world?.world?.bounds?.y || 0)) / boundsH) * canvasH;
   }
+  function fromCanvasX(cx) {
+    return (cx / canvasW) * boundsW + (world?.world?.bounds?.x || 0);
+  }
+  function fromCanvasY(cy) {
+    return (cy / canvasH) * boundsH + (world?.world?.bounds?.y || 0);
+  }
 
-  // ===== POINT IN POLYGON (ray casting) =====
   function pointInPoly(x, y, points) {
     let inside = false;
     for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
@@ -160,7 +221,11 @@
     return inside;
   }
 
-  // ===== VALIDATION (stricter) =====
+  function dist(a, b) {
+    return Math.hypot(a[0]-b[0], a[1]-b[1]);
+  }
+
+  // ===== VALIDATION =====
   function validate(data) {
     const errors = [];
     if (!data || typeof data !== "object") {
@@ -168,74 +233,45 @@
       return errors;
     }
     if (data.schemaVersion !== SCHEMA_VERSION) {
-      errors.push(`schemaVersion muss "${SCHEMA_VERSION}" sein (gefunden: ${data.schemaVersion})`);
+      errors.push(`schemaVersion muss "${SCHEMA_VERSION}" sein`);
     }
-    if (!data.meta || typeof data.meta !== "object") {
-      errors.push("meta fehlt");
-    } else if (typeof data.meta.imageAspect !== "number" || data.meta.imageAspect <= 0) {
-      errors.push("meta.imageAspect muss eine positive Zahl sein");
-    }
-    if (!data.world || !data.world.bounds) {
-      errors.push("world.bounds fehlt");
-    } else {
+    if (!data.meta || typeof data.meta !== "object") errors.push("meta fehlt");
+    else if (typeof data.meta.imageAspect !== "number" || data.meta.imageAspect <= 0)
+      errors.push("meta.imageAspect muss positiv sein");
+    if (!data.world || !data.world.bounds) errors.push("world.bounds fehlt");
+    else {
       const b = data.world.bounds;
-      if (typeof b.w !== "number" || typeof b.h !== "number" || b.w <= 0 || b.h <= 0) {
-        errors.push("world.bounds.w/h müssen positive Zahlen sein");
-      }
+      if (typeof b.w !== "number" || typeof b.h !== "number" || b.w <= 0 || b.h <= 0)
+        errors.push("world.bounds.w/h müssen positiv sein");
     }
-    if (!data.materials || typeof data.materials !== "object") {
-      errors.push("materials fehlt");
-    }
-    if (!Array.isArray(data.features)) {
-      errors.push("features muss ein Array sein");
-    } else {
+    if (!data.materials || typeof data.materials !== "object") errors.push("materials fehlt");
+    if (!Array.isArray(data.features)) errors.push("features muss Array sein");
+    else {
       const ids = new Set();
       data.features.forEach((f, i) => {
-        if (!f.id || typeof f.id !== "string") {
-          errors.push(`features[${i}]: id fehlt oder ist kein String`);
-        } else if (ids.has(f.id)) {
-          errors.push(`features[${i}]: doppelte id "${f.id}"`);
-        } else {
-          ids.add(f.id);
-        }
-        if (!f.geometry || !f.geometry.kind) {
-          errors.push(`features[${i}]: geometry.kind fehlt`);
-        } else {
+        if (!f.id || typeof f.id !== "string") errors.push(`features[${i}]: id fehlt`);
+        else if (ids.has(f.id)) errors.push(`doppelte id "${f.id}"`);
+        else ids.add(f.id);
+        if (!f.geometry || !f.geometry.kind) errors.push(`features[${i}]: geometry.kind fehlt`);
+        else {
           const g = f.geometry;
-          if (!["polygon", "linestring", "point"].includes(g.kind)) {
-            errors.push(`features[${i}]: unbekannte geometry.kind "${g.kind}"`);
-          }
-          if (!Array.isArray(g.points) || g.points.length === 0) {
-            errors.push(`features[${i}]: geometry.points fehlt oder leer`);
-          } else {
-            if (g.kind === "polygon" && g.points.length < 3) {
-              errors.push(`features[${i}]: polygon braucht ≥ 3 Punkte`);
-            }
-            if (g.kind === "linestring" && g.points.length < 2) {
-              errors.push(`features[${i}]: linestring braucht ≥ 2 Punkte`);
-            }
-            g.points.forEach((p, pi) => {
-              if (!Array.isArray(p) || p.length < 2 || typeof p[0] !== "number" || typeof p[1] !== "number") {
-                errors.push(`features[${i}].points[${pi}] ungültig`);
-              } else if (p[0] < 0 || p[0] > 10000 || p[1] < 0 || p[1] > 10000) {
-                errors.push(`features[${i}].points[${pi}] außerhalb 0–10000`);
-              }
-            });
-          }
+          if (!["polygon","linestring","point"].includes(g.kind))
+            errors.push(`features[${i}]: unbekannte kind`);
+          if (!Array.isArray(g.points) || g.points.length === 0)
+            errors.push(`features[${i}]: points fehlen`);
         }
       });
-    }
-    if (data.playerStart) {
-      if (typeof data.playerStart.x !== "number" || typeof data.playerStart.y !== "number") {
-        errors.push("playerStart.x/y müssen Zahlen sein");
-      }
     }
     return errors;
   }
 
   // ===== RENDER =====
   function render() {
-    if (!world) return;
+    if (!world) {
+      ctx.fillStyle = "#0a0c12";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      return;
+    }
 
     const b = world.world.bounds;
     boundsW = b.w || 10000;
@@ -253,15 +289,38 @@
 
     canvas.width = canvasW;
     canvas.height = canvasH;
+    satCanvas.width = canvasW;
+    satCanvas.height = canvasH;
 
+    // satellite underlay
+    satCtx.clearRect(0,0,canvasW,canvasH);
+    if (satImg) {
+      satCtx.globalAlpha = satAlpha * (1 - mix * 0.7);
+      // fit satellite to canvas (cover)
+      const imgAspect = satImg.width / satImg.height;
+      let dw, dh, dx=0, dy=0;
+      if (imgAspect > aspect) {
+        dh = canvasH; dw = canvasH * imgAspect;
+        dx = (canvasW - dw) / 2;
+      } else {
+        dw = canvasW; dh = canvasW / imgAspect;
+        dy = (canvasH - dh) / 2;
+      }
+      satCtx.drawImage(satImg, dx, dy, dw, dh);
+      satCtx.globalAlpha = 1;
+    }
+
+    // world layer
+    ctx.clearRect(0,0,canvasW,canvasH);
+    ctx.globalAlpha = 0.15 + mix * 0.85;
     ctx.fillStyle = "#1a2f1a";
-    ctx.fillRect(0, 0, canvasW, canvasH);
+    ctx.fillRect(0,0,canvasW,canvasH);
 
-    const typeOrder = ["terrain", "street", "path", "sport", "building", "vegetation", "object", "unknown"];
-    const sorted = [...world.features].sort((a, b) => {
-      const ta = typeOrder.indexOf(a.type || "unknown");
-      const tb = typeOrder.indexOf(b.type || "unknown");
-      return (ta < 0 ? 99 : ta) - (tb < 0 ? 99 : tb);
+    const typeOrder = ["terrain","street","path","sport","building","vegetation","object","unknown"];
+    const sorted = [...world.features].sort((a,b) => {
+      const ta = typeOrder.indexOf(a.type||"unknown");
+      const tb = typeOrder.indexOf(b.type||"unknown");
+      return (ta<0?99:ta) - (tb<0?99:tb);
     });
 
     sorted.forEach(f => {
@@ -273,38 +332,66 @@
 
       if (g.kind === "polygon" && g.points.length >= 3) {
         ctx.beginPath();
-        g.points.forEach((p, i) => {
+        g.points.forEach((p,i) => {
           const x = toCanvasX(p[0]), y = toCanvasY(p[1]);
-          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
         });
         ctx.closePath();
         ctx.fillStyle = mat.color;
+        ctx.globalAlpha = (0.2 + mix * 0.8) * (selected ? 0.95 : 0.75);
         ctx.fill();
-        ctx.strokeStyle = selected ? "#00e5ff" : (uncertain ? "rgba(255,193,7,0.9)" : "rgba(0,0,0,0.3)");
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = selected ? "#00e5ff" : (uncertain ? "rgba(255,193,7,0.9)" : "rgba(0,0,0,0.35)");
         ctx.lineWidth = selected ? 2.5 : (uncertain ? 2 : 1);
         ctx.stroke();
+
+        // nodes when selected + NODE tool
+        if (selected && (tool === "node" || tool === "select")) {
+          g.points.forEach((p, i) => {
+            const x = toCanvasX(p[0]), y = toCanvasY(p[1]);
+            ctx.beginPath();
+            ctx.arc(x, y, selectedNode === i ? 7 : 5, 0, Math.PI*2);
+            ctx.fillStyle = selectedNode === i ? "#ff2d78" : "#00e5ff";
+            ctx.fill();
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          });
+        }
       }
 
       if (g.kind === "linestring" && g.points.length >= 2) {
-        const widthPx = Math.max(2, ((g.width || 120) / boundsW) * canvasW);
+        const widthPx = Math.max(2, ((g.width||120)/boundsW)*canvasW);
         ctx.beginPath();
-        g.points.forEach((p, i) => {
+        g.points.forEach((p,i) => {
           const x = toCanvasX(p[0]), y = toCanvasY(p[1]);
-          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
         });
         ctx.strokeStyle = selected ? "#00e5ff" : mat.color;
         ctx.lineWidth = widthPx;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
+        ctx.globalAlpha = 0.3 + mix * 0.7;
         ctx.stroke();
+        ctx.globalAlpha = 1;
+
+        if (selected && (tool === "node" || tool === "select")) {
+          g.points.forEach((p, i) => {
+            const x = toCanvasX(p[0]), y = toCanvasY(p[1]);
+            ctx.beginPath();
+            ctx.arc(x, y, selectedNode === i ? 7 : 5, 0, Math.PI*2);
+            ctx.fillStyle = selectedNode === i ? "#ff2d78" : "#00e5ff";
+            ctx.fill();
+          });
+        }
       }
 
       if (g.kind === "point" && g.points[0]) {
         const x = toCanvasX(g.points[0][0]);
         const y = toCanvasY(g.points[0][1]);
-        const r = Math.max(3, ((g.radius || 80) / boundsW) * canvasW);
+        const r = Math.max(3, ((g.radius||80)/boundsW)*canvasW);
         ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.arc(x,y,r,0,Math.PI*2);
         ctx.fillStyle = mat.color;
         ctx.fill();
         if (selected) {
@@ -321,11 +408,58 @@
       const py = toCanvasY(world.playerStart.y);
       ctx.fillStyle = "#00ff9d";
       ctx.beginPath();
-      ctx.arc(px, py, 8, 0, Math.PI * 2);
+      ctx.arc(px, py, 8, 0, Math.PI*2);
       ctx.fill();
       ctx.strokeStyle = "#fff";
       ctx.lineWidth = 2;
       ctx.stroke();
+    }
+
+    // draw in progress
+    if (tool === "draw" && drawPts.length > 0) {
+      ctx.beginPath();
+      drawPts.forEach((p,i) => {
+        const x = toCanvasX(p[0]), y = toCanvasY(p[1]);
+        if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.strokeStyle = "#ffc107";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6,4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      drawPts.forEach(p => {
+        const x = toCanvasX(p[0]), y = toCanvasY(p[1]);
+        ctx.beginPath();
+        ctx.arc(x,y,4,0,Math.PI*2);
+        ctx.fillStyle = "#ffc107";
+        ctx.fill();
+      });
+    }
+
+    // measure
+    if (tool === "measure" && measurePts.length > 0) {
+      measurePts.forEach((p,i) => {
+        const x = toCanvasX(p[0]), y = toCanvasY(p[1]);
+        ctx.beginPath();
+        ctx.arc(x,y,5,0,Math.PI*2);
+        ctx.fillStyle = "#ff8c42";
+        ctx.fill();
+        if (i > 0) {
+          const prev = measurePts[i-1];
+          ctx.beginPath();
+          ctx.moveTo(toCanvasX(prev[0]), toCanvasY(prev[1]));
+          ctx.lineTo(x,y);
+          ctx.strokeStyle = "#ff8c42";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          const d = dist(prev, p);
+          const mx = (toCanvasX(prev[0])+x)/2;
+          const my = (toCanvasY(prev[1])+y)/2;
+          ctx.fillStyle = "#fff";
+          ctx.font = "11px monospace";
+          ctx.fillText(Math.round(d) + "u", mx+4, my-4);
+        }
+      });
     }
 
     fit();
@@ -340,37 +474,37 @@
   }
 
   function applyTransform() {
-    canvas.style.transform = `translate(${ox}px,${oy}px) scale(${scale})`;
+    const t = `translate(${ox}px,${oy}px) scale(${scale})`;
+    canvas.style.transform = t;
+    satCanvas.style.transform = t;
     zoomEl.textContent = Math.round(scale * 100) + "%";
   }
 
-  // ===== LOAD / VALIDATE =====
+  // ===== LOAD =====
   function loadWorld(data) {
     const errors = validate(data);
     importMsg.innerHTML = "";
     if (errors.length) {
-      importMsg.innerHTML = `<div class="err">${errors.slice(0, 5).join("<br>")}</div>`;
+      importMsg.innerHTML = `<div class="err">${errors.slice(0,4).join("<br>")}</div>`;
       setStatus("Validierung fehlgeschlagen");
       return false;
     }
-
-    // keep unknown materials, mark uncertain
     data.features.forEach(f => {
       if (!data.materials[f.material]) {
         f.properties = f.properties || {};
-        f.properties.uncertain = true;           // FIXED typo
+        f.properties.uncertain = true;
         data.materials[f.material] = { color: "#888800", walkable: true };
       }
       if (!f.type) f.type = "unknown";
     });
-
     world = data;
     selectedId = null;
+    selectedNode = -1;
     render();
     updateUI();
     importMsg.innerHTML = `<div class="okmsg">OK – ${data.features.length} Features</div>`;
     setStatus("Welt geladen: " + (data.meta?.name || "Unbenannt"));
-    try { localStorage.setItem("bw_world_v31", JSON.stringify(data)); } catch(e) {}
+    try { localStorage.setItem("bw_world_v32", JSON.stringify(data)); } catch(e) {}
     return true;
   }
 
@@ -386,6 +520,7 @@
       d.innerHTML = `<div class="n">${esc(f.name||f.id)}</div><div class="t">${f.type} · ${f.material}</div>`;
       d.onclick = () => {
         selectedId = f.id;
+        selectedNode = -1;
         updateUI();
         render();
         setStatus("Ausgewählt: " + (f.name || f.id));
@@ -398,8 +533,322 @@
     return String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
   }
 
-  // ===== FILE / DROP / PASTE =====
+  function persist() {
+    if (!world) return;
+    try { localStorage.setItem("bw_world_v32", JSON.stringify(world)); } catch(e) {}
+  }
+
+  // ===== HIT TESTING =====
+  function hitFeature(wx, wy) {
+    if (!world) return null;
+    // reverse order (topmost first)
+    for (let i = world.features.length - 1; i >= 0; i--) {
+      const f = world.features[i];
+      if (f.type === "terrain") continue;
+      const g = f.geometry;
+      if (!g || !g.points) continue;
+      if (g.kind === "polygon" && g.points.length >= 3) {
+        if (pointInPoly(wx, wy, g.points)) return f;
+      }
+      if (g.kind === "linestring") {
+        for (let j = 0; j < g.points.length - 1; j++) {
+          const a = g.points[j], b = g.points[j+1];
+          const d = distToSegment(wx, wy, a, b);
+          if (d < (g.width || 120) * 0.6) return f;
+        }
+      }
+      if (g.kind === "point" && g.points[0]) {
+        if (dist([wx,wy], g.points[0]) < (g.radius || 80) * 1.5) return f;
+      }
+    }
+    return null;
+  }
+
+  function distToSegment(px, py, a, b) {
+    const l2 = (a[0]-b[0])**2 + (a[1]-b[1])**2;
+    if (l2 === 0) return dist([px,py], a);
+    let t = ((px-a[0])*(b[0]-a[0]) + (py-a[1])*(b[1]-a[1])) / l2;
+    t = Math.max(0, Math.min(1, t));
+    return dist([px,py], [a[0]+t*(b[0]-a[0]), a[1]+t*(b[1]-a[1])]);
+  }
+
+  function hitNode(wx, wy, f) {
+    if (!f || !f.geometry || !f.geometry.points) return -1;
+    const threshold = 180; // world units
+    let best = -1, bestD = threshold;
+    f.geometry.points.forEach((p, i) => {
+      const d = dist([wx,wy], p);
+      if (d < bestD) { bestD = d; best = i; }
+    });
+    return best;
+  }
+
+  // ===== INTERACTION =====
+  function canvasCoords(e) {
+    const rect = view.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const mx = (clientX - rect.left - ox) / scale;
+    const my = (clientY - rect.top - oy) / scale;
+    return { cx: mx, cy: my, wx: fromCanvasX(mx), wy: fromCanvasY(my) };
+  }
+
+  function onPointerDown(e) {
+    if (!world) return;
+    const { wx, wy, cx, cy } = canvasCoords(e);
+    e.preventDefault();
+
+    if (tool === "select") {
+      const f = hitFeature(wx, wy);
+      selectedId = f ? f.id : null;
+      selectedNode = -1;
+      if (f) setStatus("Ausgewählt: " + (f.name || f.id));
+      updateUI();
+      render();
+    }
+    else if (tool === "move") {
+      const f = hitFeature(wx, wy);
+      if (f) {
+        selectedId = f.id;
+        dragging = true;
+        dragStart = { wx, wy, points: f.geometry.points.map(p => [...p]) };
+        setStatus("Verschiebe: " + (f.name || f.id));
+        updateUI();
+        render();
+      }
+    }
+    else if (tool === "node") {
+      if (selectedId) {
+        const f = world.features.find(x => x.id === selectedId);
+        const ni = hitNode(wx, wy, f);
+        if (ni >= 0) {
+          selectedNode = ni;
+          nodeDrag = true;
+          setStatus("Knoten " + ni + " ziehen");
+          render();
+        } else {
+          // add node on edge if close
+          const g = f.geometry;
+          if (g.kind === "polygon" || g.kind === "linestring") {
+            for (let i = 0; i < g.points.length; i++) {
+              const a = g.points[i];
+              const b = g.points[(i+1) % g.points.length];
+              if (g.kind === "linestring" && i === g.points.length-1) break;
+              if (distToSegment(wx, wy, a, b) < 120) {
+                g.points.splice(i+1, 0, [Math.round(wx), Math.round(wy)]);
+                selectedNode = i+1;
+                nodeDrag = true;
+                persist();
+                setStatus("Knoten hinzugefügt");
+                render();
+                return;
+              }
+            }
+          }
+        }
+      } else {
+        const f = hitFeature(wx, wy);
+        if (f) {
+          selectedId = f.id;
+          selectedNode = -1;
+          updateUI();
+          render();
+        }
+      }
+    }
+    else if (tool === "draw") {
+      drawPts.push([Math.round(wx), Math.round(wy)]);
+      setStatus("DRAW: " + drawPts.length + " Punkte (Doppelklick/Enter zum Schließen)");
+      render();
+    }
+    else if (tool === "measure") {
+      measurePts.push([Math.round(wx), Math.round(wy)]);
+      if (measurePts.length >= 2) {
+        const d = dist(measurePts[measurePts.length-2], measurePts[measurePts.length-1]);
+        setStatus("Distanz: " + Math.round(d) + " Einheiten");
+      }
+      render();
+    }
+  }
+
+  function onPointerMove(e) {
+    if (!world) return;
+    const { wx, wy } = canvasCoords(e);
+
+    if (dragging && selectedId && dragStart) {
+      const f = world.features.find(x => x.id === selectedId);
+      if (!f) return;
+      const dx = wx - dragStart.wx;
+      const dy = wy - dragStart.wy;
+      f.geometry.points = dragStart.points.map(p => [
+        Math.round(p[0] + dx),
+        Math.round(p[1] + dy)
+      ]);
+      render();
+    }
+    else if (nodeDrag && selectedId && selectedNode >= 0) {
+      const f = world.features.find(x => x.id === selectedId);
+      if (!f) return;
+      f.geometry.points[selectedNode] = [Math.round(wx), Math.round(wy)];
+      render();
+    }
+  }
+
+  function onPointerUp() {
+    if (dragging || nodeDrag) {
+      persist();
+      setStatus("Geometrie aktualisiert → JSON");
+    }
+    dragging = false;
+    nodeDrag = false;
+    dragStart = null;
+  }
+
+  // mouse
+  view.addEventListener("mousedown", e => {
+    if (e.button === 0) onPointerDown(e);
+  });
+  window.addEventListener("mousemove", e => {
+    if (dragging || nodeDrag) onPointerMove(e);
+    else if (panning) {
+      ox = panOrigX + (e.clientX - panStartX);
+      oy = panOrigY + (e.clientY - panStartY);
+      applyTransform();
+    }
+  });
+  window.addEventListener("mouseup", () => {
+    onPointerUp();
+    panning = false;
+  });
+
+  // right-click / middle for pan
+  view.addEventListener("mousedown", e => {
+    if (e.button === 1 || e.button === 2) {
+      panning = true;
+      panStartX = e.clientX;
+      panStartY = e.clientY;
+      panOrigX = ox;
+      panOrigY = oy;
+      e.preventDefault();
+    }
+  });
+  view.addEventListener("contextmenu", e => e.preventDefault());
+
+  // touch
+  view.addEventListener("touchstart", e => {
+    if (e.touches.length === 1) {
+      onPointerDown(e);
+    } else if (e.touches.length === 2) {
+      panning = false;
+    }
+  }, {passive: false});
+
+  view.addEventListener("touchmove", e => {
+    if (e.touches.length === 1 && (dragging || nodeDrag)) {
+      e.preventDefault();
+      onPointerMove(e);
+    }
+  }, {passive: false});
+
+  view.addEventListener("touchend", () => onPointerUp());
+
+  // double-click to close draw
+  view.addEventListener("dblclick", e => {
+    if (tool === "draw" && drawPts.length >= 3) {
+      finishDraw();
+    }
+  });
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Enter" && tool === "draw" && drawPts.length >= 3) finishDraw();
+    if (e.key === "Escape") {
+      drawPts = [];
+      measurePts = [];
+      selectedNode = -1;
+      render();
+    }
+    if (e.key === "Delete" || e.key === "Backspace") {
+      if (selectedId && selectedNode >= 0) {
+        const f = world.features.find(x => x.id === selectedId);
+        if (f && f.geometry.points.length > (f.geometry.kind === "polygon" ? 3 : 2)) {
+          f.geometry.points.splice(selectedNode, 1);
+          selectedNode = -1;
+          persist();
+          render();
+          setStatus("Knoten gelöscht");
+        }
+      }
+    }
+  });
+
+  function finishDraw() {
+    if (drawPts.length < 3) return;
+    const id = "drawn_" + Date.now();
+    const feat = {
+      id,
+      type: "building",
+      material: "building",
+      name: "Neue Fläche",
+      geometry: { kind: "polygon", points: drawPts.map(p => [...p]) },
+      properties: { collision: true }
+    };
+    world.features.push(feat);
+    if (!world.materials.building) world.materials.building = { color: "#5a5a6e", walkable: false };
+    selectedId = id;
+    drawPts = [];
+    persist();
+    updateUI();
+    render();
+    setStatus("Neue Fläche angelegt: " + id);
+  }
+
+  // wheel zoom
+  view.addEventListener("wheel", e => {
+    e.preventDefault();
+    const d = e.deltaY > 0 ? 0.9 : 1.1;
+    const ns = Math.min(Math.max(scale * d, 0.2), 8);
+    const rect = view.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    ox = mx - (mx - ox) * (ns / scale);
+    oy = my - (my - oy) * (ns / scale);
+    scale = ns;
+    applyTransform();
+  }, {passive: false});
+
+  // ===== TOOLS =====
+  document.querySelectorAll(".tool").forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll(".tool").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      tool = btn.dataset.tool;
+      drawPts = [];
+      measurePts = [];
+      selectedNode = -1;
+      setStatus("Werkzeug: " + tool.toUpperCase());
+      render();
+    };
+  });
+
+  // ===== SAT =====
+  document.getElementById("satAlpha").oninput = e => {
+    satAlpha = e.target.value / 100;
+    document.getElementById("satAlphaVal").textContent = e.target.value + "%";
+    render();
+  };
+  document.getElementById("mixSlider").oninput = e => {
+    mix = e.target.value / 100;
+    document.getElementById("mixVal").textContent = e.target.value + "%";
+    render();
+  };
+  document.getElementById("btnLockSat").onclick = () => {
+    satLocked = !satLocked;
+    document.getElementById("btnLockSat").textContent = satLocked ? "LOCK SAT" : "UNLOCK SAT";
+    setStatus(satLocked ? "Satellitenbild gesperrt" : "Satellitenbild freigegeben");
+  };
+
+  // ===== FILE =====
   document.getElementById("btnJson").onclick = () => fileJson.click();
+  document.getElementById("btnSat").onclick = () => fileSat.click();
   document.getElementById("btnLoad").onclick = () => fileJson.click();
   drop.onclick = () => fileJson.click();
 
@@ -414,21 +863,46 @@
     r.readAsText(f);
   };
 
+  fileSat.onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        satImg = img;
+        render();
+        setStatus("Satellitenbild geladen (" + img.width + "×" + img.height + ")");
+      };
+      img.src = r.result;
+    };
+    r.readAsDataURL(f);
+  };
+
   drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("active"); });
   drop.addEventListener("dragleave", () => drop.classList.remove("active"));
   drop.addEventListener("drop", e => {
     e.preventDefault(); drop.classList.remove("active");
     const f = e.dataTransfer.files[0];
     if (!f) return;
-    const r = new FileReader();
-    r.onload = () => {
-      try { loadWorld(JSON.parse(r.result)); }
-      catch (err) { importMsg.innerHTML = `<div class="err">Parse Fehler</div>`; }
-    };
-    r.readAsText(f);
+    if (f.type.startsWith("image/")) {
+      const r = new FileReader();
+      r.onload = () => {
+        const img = new Image();
+        img.onload = () => { satImg = img; render(); setStatus("Sat geladen"); };
+        img.src = r.result;
+      };
+      r.readAsDataURL(f);
+    } else {
+      const r = new FileReader();
+      r.onload = () => {
+        try { loadWorld(JSON.parse(r.result)); }
+        catch (err) { importMsg.innerHTML = `<div class="err">Parse Fehler</div>`; }
+      };
+      r.readAsText(f);
+    }
   });
 
-  // Paste dialog
   document.getElementById("btnPaste").onclick = () => {
     pasteArea.value = "";
     pasteErr.textContent = "";
@@ -439,42 +913,35 @@
     try {
       const data = JSON.parse(pasteArea.value);
       if (loadWorld(data)) pasteModal.classList.remove("show");
-      else pasteErr.textContent = "Validierung fehlgeschlagen – siehe Meldung";
+      else pasteErr.textContent = "Validierung fehlgeschlagen";
     } catch (err) {
-      pasteErr.textContent = "JSON Parse Fehler: " + err.message;
+      pasteErr.textContent = "JSON Parse: " + err.message;
     }
   };
-
-  document.getElementById("btnExample").onclick = () => loadWorld(MINIMAL_VALID_WORLD);
 
   document.getElementById("btnExport").onclick = () => {
     if (!world) { setStatus("Keine Welt"); return; }
     const blob = new Blob([JSON.stringify(world, null, 2)], {type:"application/json"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "BW_WORLD_export.json";
+    a.download = "BW_WORLD_export_v32.json";
     a.click();
-    setStatus("Exportiert");
+    setStatus("JSON exportiert");
   };
 
-  // ===== PLAY with proper polygon collision =====
+  // PLAY (same as v3.1)
   document.getElementById("btnPlay").onclick = () => {
     if (!world) { setStatus("Zuerst JSON laden"); return; }
-
     const aspect = world.meta.imageAspect || 1.25;
     const GRID_W = 64;
     const GRID_H = Math.max(8, Math.round(GRID_W / aspect));
     const walk = Array.from({length: GRID_H}, () => Array(GRID_W).fill(true));
-
-    // rasterize using point-in-polygon (deterministic)
     world.features.forEach(f => {
       const mat = world.materials[f.material];
       const coll = (f.properties && f.properties.collision === true) || (mat && mat.walkable === false);
       if (!coll) return;
       const g = f.geometry;
       if (!g || g.kind !== "polygon" || !g.points || g.points.length < 3) return;
-
-      // bounding box for speed, then precise test
       let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
       g.points.forEach(p => {
         minX=Math.min(minX,p[0]); maxX=Math.max(maxX,p[0]);
@@ -484,7 +951,6 @@
       const r1 = Math.max(0, Math.floor(minY/10000*GRID_H));
       const c2 = Math.min(GRID_W-1, Math.floor(maxX/10000*GRID_W));
       const r2 = Math.min(GRID_H-1, Math.floor(maxY/10000*GRID_H));
-
       for (let r = r1; r <= r2; r++) {
         for (let c = c1; c <= c2; c++) {
           const wx = ((c + 0.5) / GRID_W) * 10000;
@@ -493,17 +959,14 @@
         }
       }
     });
-
     const sc = Math.floor(((world.playerStart && world.playerStart.x) || 5000) / 10000 * GRID_W);
     const sr = Math.floor(((world.playerStart && world.playerStart.y) || 5000) / 10000 * GRID_H);
-
     const playData = {
       name: world.meta?.name || "BRUCHWIESEN",
       gridW: GRID_W, gridH: GRID_H,
       walk, startC: Math.max(0, Math.min(GRID_W-1, sc)),
       startR: Math.max(0, Math.min(GRID_H-1, sr))
     };
-
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>${playData.name}</title>
 <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0c12;color:#eee;font-family:monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;touch-action:none}
 .bar{height:36px;background:#10141e;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:12px}
@@ -536,177 +999,23 @@ v.onclick=e=>{const r=v.getBoundingClientRect();const x0=(e.clientX-r.left-ox)/s
 const pc=p.c*T+T/2,pr=p.r*T+T/2;const dx=x0-pc,dy=y0-pr;if(Math.abs(dx)>Math.abs(dy))mv(Math.sign(dx),0);else mv(0,Math.sign(dy))};
 draw();
 <\/script></body></html>`;
-
     const blob = new Blob([html], {type:"text/html"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "bruchwiesen_play.html";
     a.click();
-    setStatus("Spiel generiert (Polygon-Kollision)");
+    setStatus("Spiel generiert");
   };
-
-  // ===== TOUCH: one-finger pan + pinch zoom =====
-  let lastDist = 0, lastMid = null;
-  let touches = 0;
-
-  view.addEventListener("touchstart", e => {
-    touches = e.touches.length;
-    if (e.touches.length === 1) {
-      panning = true;
-      panStartX = e.touches[0].clientX;
-      panStartY = e.touches[0].clientY;
-      panOrigX = ox;
-      panOrigY = oy;
-    } else if (e.touches.length === 2) {
-      panning = false;
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      lastDist = Math.hypot(dx, dy);
-      lastMid = {
-        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
-        y: (e.touches[0].clientY + e.touches[1].clientY) / 2
-      };
-    }
-  }, {passive: true});
-
-  view.addEventListener("touchmove", e => {
-    if (e.touches.length === 1 && panning) {
-      e.preventDefault();
-      ox = panOrigX + (e.touches[0].clientX - panStartX);
-      oy = panOrigY + (e.touches[0].clientY - panStartY);
-      applyTransform();
-    } else if (e.touches.length === 2) {
-      e.preventDefault();
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      const dist = Math.hypot(dx, dy);
-      const mid = {
-        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
-        y: (e.touches[0].clientY + e.touches[1].clientY) / 2
-      };
-      const ns = Math.min(Math.max(scale * (dist / lastDist), 0.25), 6);
-      const rect = view.getBoundingClientRect();
-      const mx = mid.x - rect.left, my = mid.y - rect.top;
-      ox = mx - (mx - ox) * (ns / scale);
-      oy = my - (my - oy) * (ns / scale);
-      scale = ns;
-      lastDist = dist;
-      if (lastMid) {
-        ox += mid.x - lastMid.x;
-        oy += mid.y - lastMid.y;
-      }
-      lastMid = mid;
-      applyTransform();
-    }
-  }, {passive: false});
-
-  view.addEventListener("touchend", () => {
-    panning = false;
-    touches = 0;
-  });
-
-  // desktop wheel + drag pan
-  view.addEventListener("wheel", e => {
-    e.preventDefault();
-    const d = e.deltaY > 0 ? 0.9 : 1.1;
-    const ns = Math.min(Math.max(scale * d, 0.25), 6);
-    const rect = view.getBoundingClientRect();
-    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    ox = mx - (mx - ox) * (ns / scale);
-    oy = my - (my - oy) * (ns / scale);
-    scale = ns;
-    applyTransform();
-  }, {passive: false});
-
-  let mousePan = false;
-  view.addEventListener("mousedown", e => {
-    if (e.button === 0) {
-      mousePan = true;
-      panStartX = e.clientX;
-      panStartY = e.clientY;
-      panOrigX = ox;
-      panOrigY = oy;
-    }
-  });
-  window.addEventListener("mousemove", e => {
-    if (mousePan) {
-      ox = panOrigX + (e.clientX - panStartX);
-      oy = panOrigY + (e.clientY - panStartY);
-      applyTransform();
-    }
-  });
-  window.addEventListener("mouseup", () => { mousePan = false; });
 
   function setStatus(m) { statusEl.textContent = m; }
 
-  // ===== MINIMAL VALID WORLD =====
-  const MINIMAL_VALID_WORLD = {
-    schemaVersion: "1.0",
-    editorVersion: "3.1",
-    meta: {
-      name: "Minimal Test World",
-      location: "Test",
-      coords: "0,0",
-      imageAspect: 1.25,
-      createdAt: "2026-11-11T00:00:00Z",
-      source: "test"
-    },
-    world: {
-      bounds: { x: 0, y: 0, w: 10000, h: 8000 },
-      layers: ["terrain", "paths", "buildings"]
-    },
-    materials: {
-      grass:    { color: "#3d7a37", walkable: true },
-      path:     { color: "#7a7a7a", walkable: true },
-      building: { color: "#5a5a6e", walkable: false },
-      tennis:   { color: "#c4783a", walkable: true },
-      trees:    { color: "#1e3d1a", walkable: false }
-    },
-    features: [
-      {
-        id: "terrain_base",
-        type: "terrain",
-        material: "grass",
-        name: "Gras",
-        geometry: { kind: "polygon", points: [[0,0],[10000,0],[10000,8000],[0,8000]] },
-        properties: { collision: false }
-      },
-      {
-        id: "building_1",
-        type: "building",
-        material: "building",
-        name: "Testgebäude",
-        geometry: { kind: "polygon", points: [[2000,2000],[5000,2000],[5000,4000],[2000,4000]] },
-        properties: { collision: true }
-      },
-      {
-        id: "path_1",
-        type: "path",
-        material: "path",
-        name: "Weg",
-        geometry: { kind: "linestring", points: [[3500,1000],[3500,7000]], width: 200 },
-        properties: { collision: false }
-      },
-      {
-        id: "tennis_1",
-        type: "sport",
-        material: "tennis",
-        name: "Tennis",
-        geometry: { kind: "polygon", points: [[5500,4500],[8500,4500],[8500,7000],[5500,7000]] },
-        properties: { collision: false }
-      }
-    ],
-    playerStart: { x: 3500, y: 5000 },
-    collision: { mode: "fromGeometry", gridSize: 64 }
-  };
-
   // restore
   try {
-    const s = localStorage.getItem("bw_world_v31");
+    const s = localStorage.getItem("bw_world_v32") || localStorage.getItem("bw_world_v31");
     if (s) loadWorld(JSON.parse(s));
   } catch(e) {}
 
-  setStatus("JSON laden, PASTE oder EXAMPLE");
+  setStatus("EDITOR 3.2 bereit – JSON + Satellitenbild laden");
 })();
 </script>
 </body>
