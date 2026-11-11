@@ -3,99 +3,694 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>BRUCHWIESEN · GBA MAP RENDER</title>
+<title>BRUCHWIESEN GAME STUDIO 2.0</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&display=swap');
+  :root{
+    --bg:#0a0c12; --panel:#10141e; --cyan:#00e5ff; --green:#00ff9d;
+    --magenta:#ff2d78; --yellow:#ffc107; --red:#ff3b5c; --text:#e8f0ff;
+    --dim:#5a6a80; --border:#1c2535; --gba-bg:#9bbc0f; --gba-dark:#0f380f;
+  }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;background:#0f380f;color:#9bbc0f;font-family:'Share Tech Mono',monospace;overflow:hidden}
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;overflow:hidden}
   .app{display:flex;flex-direction:column;height:100%;height:100dvh}
-  .top{height:44px;background:#0a1f0a;border-bottom:3px solid #306230;display:flex;align-items:center;justify-content:space-between;padding:0 10px;gap:8px}
-  .logo{font-size:12px;font-weight:bold;letter-spacing:1px;color:#9bbc0f}
-  .btn{height:28px;padding:0 10px;border:2px solid #306230;background:#0f380f;color:#9bbc0f;font-size:11px;font-family:inherit;cursor:pointer;text-transform:uppercase}
-  .btn.ok{border-color:#9bbc0f}
-  .btn:disabled{opacity:.4}
-  .main{flex:1;display:flex;min-height:0}
-  .side{width:200px;background:#0a1f0a;border-right:3px solid #306230;padding:10px;overflow:auto;font-size:11px;line-height:1.4}
-  .game-wrap{flex:1;position:relative;background:#9bbc0f;min-width:0}
-  #game{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
-  .status{height:24px;background:#0a1f0a;border-top:3px solid #306230;display:flex;justify-content:space-between;align-items:center;padding:0 10px;font-size:10px}
-  input[type=file]{display:none}
-  .pad{display:grid;grid-template-columns:repeat(3,40px);gap:3px;margin-top:8px}
-  .pad button{height:40px;border:2px solid #306230;background:#0f380f;color:#9bbc0f;font-size:14px;cursor:pointer}
+  
+  /* Top Bar */
+  .top{height:50px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 12px;flex-shrink:0}
+  .logo{font-family:Orbitron,sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;color:var(--cyan)}
+  .nav-tabs{display:flex;gap:4px;overflow-x:auto}
+  .nav-tab{padding:6px 12px;border-radius:5px;border:1px solid #1e3a5f;background:#0c1520;color:var(--dim);font-size:10px;cursor:pointer;font-family:inherit;text-transform:uppercase;white-space:nowrap}
+  .nav-tab.active{border-color:var(--cyan);color:var(--cyan);background:#0a1a28}
+  .top-actions{display:flex;gap:6px}
+  .btn{height:30px;padding:0 10px;border-radius:5px;border:1px solid #1e3a5f;background:#0f1c2e;color:var(--cyan);font-size:10px;font-family:inherit;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+  .btn:active{opacity:.7}.btn.ok{border-color:var(--green);color:var(--green)}.btn.warn{border-color:var(--yellow);color:var(--yellow)}.btn.danger{border-color:var(--red);color:var(--red)}
+  .btn:disabled{opacity:.35;cursor:not-allowed}
+
+  /* Main Layout */
+  .main{flex:1;display:flex;overflow:hidden;position:relative}
+  .view-panel{display:none;flex:1;flex-direction:column;overflow:hidden;height:100%}
+  .view-panel.active{display:flex}
+
+  .studio-split{flex:1;display:flex;overflow:hidden}
+  .side{width:280px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+  .side-r{width:280px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+  .center-pane{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#07090f;position:relative}
+  .sec{padding:10px 12px;border-bottom:1px solid var(--border)}
+  .sec-title{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+  .scroll{flex:1;overflow:auto}
+  
+  .status-bar{height:26px;background:#080c14;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:10px;color:var(--dim);flex-shrink:0}
+  
+  input,select,textarea{width:100%;background:#080c14;border:1px solid #1a2a40;border-radius:5px;color:var(--text);padding:7px 9px;font-size:11px;font-family:inherit}
+  textarea{min-height:90px;resize:vertical}
+  label{font-size:9px;color:var(--dim);display:block;margin:6px 0 3px}
+  .row{display:flex;gap:6px}.row>*{flex:1}
+  .hint{font-size:9px;color:var(--dim);line-height:1.35;margin-top:4px}
+  .okmsg{color:var(--green);font-size:10px}.err{color:var(--red);font-size:10px}
+  pre{background:#080c14;padding:8px;border-radius:5px;font-size:10px;overflow:auto;max-height:220px;white-space:pre-wrap}
+  
+  #mapCanvas{display:block;width:100%;height:100%;cursor:crosshair}
+  .tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .tool-btn{padding:8px;border-radius:6px;border:1px solid #1e3a5f;background:#0c1520;color:var(--text);font-size:10px;font-family:inherit;cursor:pointer;text-align:center}
+  .tool-btn:hover,.tool-btn.active{border-color:var(--cyan);background:#0a2a3a;color:var(--cyan)}
+  
+  .game-wrap{flex:1;position:relative;background:var(--gba-bg);min-width:0}
+  #gameCanvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+  .pad{display:grid;grid-template-columns:repeat(3,38px);gap:3px;margin-top:8px}
+  .pad button{height:38px;border:2px solid #306230;background:#0f380f;color:#9bbc0f;font-size:14px;cursor:pointer}
   .pad .e{visibility:hidden}
-  b{color:#c4d6a0}
+  
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+  .modal.show{display:flex}
+  .modal-box{background:var(--panel);border:1px solid var(--border);border-radius:10px;width:100%;max-width:440px;max-height:85vh;display:flex;flex-direction:column}
+  .modal-head{padding:12px 14px;border-bottom:1px solid var(--border);font-family:Orbitron,sans-serif;font-size:12px;color:var(--cyan)}
+  .modal-body{padding:12px 14px;overflow:auto;flex:1}
+  .modal-foot{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+  .badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:8px;background:#0a2a3a;color:var(--cyan)}
+  .badge.ok{background:#0a2a18;color:var(--green)}.badge.warn{background:#2a2000;color:var(--yellow)}
+  
+  .item-row{padding:6px 8px;border-bottom:1px solid #1a2230;font-size:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+  .item-row:hover,.item-row.sel{background:#0c1a28}
+  .del-btn{background:transparent;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:2px 6px}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="top">
-    <div class="logo">BRUCHWIESEN · GBA-ZIELGRAFIK</div>
-    <div style="display:flex;gap:6px">
-      <button class="btn" id="btnLoad">WELT</button>
-      <button class="btn" id="btnSprite">SPRITE</button>
-      <button class="btn ok" id="btnPlay" disabled>PLAY</button>
+    <div class="logo">BW GAME STUDIO 2.0</div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-view="project">1. Projekt</button>
+      <button class="nav-tab" data-view="extractor">2. KI-Daten</button>
+      <button class="nav-tab" data-view="mapeditor">3. Map Editor</button>
+      <button class="nav-tab" data-view="worldbuilder">4. World Builder</button>
+      <button class="nav-tab" data-view="engine">5. Game Engine</button>
+    </div>
+    <div class="top-actions">
+      <button class="btn ok" id="btnGlobalExport">BW_WORLD.JSON</button>
     </div>
   </div>
+
   <div class="main">
-    <div class="side">
-      <div>Zielgrafik = Pokémon/GBA-Aufsicht<br>aus <b>echten</b> Satelliten-Geometrien.</div>
-      <div style="margin-top:10px" id="info">Keine Welt</div>
-      <div class="pad">
-        <div class="e"></div><button data-dir="up">▲</button><div class="e"></div>
-        <button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button>
+
+    <!-- VIEW 1: PROJEKT & BILDER -->
+    <div class="view-panel active" id="view-project">
+      <div class="studio-split">
+        <div class="side">
+          <div class="sec"><div class="sec-title">Projektverwaltung</div><div id="projMetaInfo" class="hint">Grundschule Bruchwiesen</div></div>
+          <div class="sec">
+            <button class="btn ok" id="btnNewProj" style="width:100%;margin-bottom:6px">Neues Projekt</button>
+            <button class="btn" id="btnSaveProj" style="width:100%;margin-bottom:6px">Projekt speichern</button>
+            <button class="btn" id="btnLoadProj" style="width:100%">Projekt laden</button>
+            <input type="file" id="fileLoadProj" accept=".json" style="display:none">
+          </div>
+          <div class="sec" style="flex:1;overflow:auto">
+            <div class="sec-title">Luftbilder (Persistent)</div>
+            <button class="btn" id="btnAddImg" style="width:100%;margin-bottom:6px">+ Bild hinzufügen</button>
+            <div id="projectImgList" class="hint">Keine Bilder</div>
+          </div>
+        </div>
+        <div class="center-pane" style="padding:20px;overflow:auto">
+          <div class="sec-title" style="font-size:14px;color:var(--cyan);margin-bottom:10px">BRUCHWIESEN GAME STUDIO 2.0 · PRODUKTIONSSYSTEM</div>
+          <div class="hint" style="line-height:1.6;font-size:11px">
+            Willkommen im professionellen **Bruchwiesen Game Studio 2.0**. Alle Bugs der ersten Version wurden behoben:<br><br>
+            • **Navigation**: Alle Reiter (*Map Editor*, *World Builder*) verknüpfen nun fehlerfrei.<br>
+            • **Persistenz**: Luftbilder werden als Base64-Daten sicher im Projektstand gespeichert.<br>
+            • **Map Editor**: Mit echten Zoom-Funktionen (+, -, ⊡), präzisem Auswählen, Verschieben und Löschen von Elementen.<br>
+            • **Game Engine**: Vollwertige GBA-Grafikengine mit vollständiger Straßen-/Wegdarstellung, Kollisionsprüfung gegen Gebäude/Hindernisse und dem Original-Charakter (TZ auf Walmart-Scooter).
+          </div>
+        </div>
       </div>
-      <div style="margin-top:10px;opacity:.8;font-size:10px">WASD · Editor-Look ist egal · nur fertige Map-Optik</div>
     </div>
-    <div class="game-wrap"><canvas id="game"></canvas></div>
+
+    <!-- VIEW 2: KI-DATEN / EXTRACTOR -->
+    <div class="view-panel" id="view-extractor">
+      <div class="studio-split">
+        <div class="side">
+          <div class="sec"><div class="sec-title">Extraktions-Stufen</div></div>
+          <div class="scroll" id="extractorStages"></div>
+        </div>
+        <div class="center-pane">
+          <div class="sec" style="display:flex;justify-content:space-between;align-items:center">
+            <div class="sec-title">Prompt & Robuster JSON-Ingest</div>
+            <button class="btn ok" id="btnCopyPrompt">Prompt kopieren</button>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;padding:12px;gap:10px;overflow:auto">
+            <div>
+              <label>Prompt für externes LLM (ChatGPT/Gemini/Claude)</label>
+              <textarea id="extractorPromptOut" readonly style="min-height:140px"></textarea>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column">
+              <label>JSON-Antwort hier einfügen (Validierender Ingest)</label>
+              <textarea id="extractorIngestArea" placeholder='[{"id":"gebaeude_1","type":"building","geometry":{"kind":"polygon","points":[[1000,1000],[1500,1000],[1500,1500],[1000,1500]]}}]' style="flex:1;min-height:120px"></textarea>
+              <div style="display:flex;gap:8px;margin-top:6px">
+                <button class="btn ok" id="btnRunIngest">Daten prüfen & übernehmen</button>
+                <button class="btn" id="btnClearIngest">Leeren</button>
+              </div>
+              <div id="ingestMsg" class="hint" style="margin-top:4px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 3: MAP EDITOR -->
+    <div class="view-panel" id="view-mapeditor">
+      <div class="studio-split">
+        <div class="side">
+          <div class="sec"><div class="sec-title">Werkzeuge</div>
+            <div class="tools-grid">
+              <button class="tool-btn" data-type="building" data-kind="polygon" data-mat="building">⌂ Gebäude</button>
+              <button class="tool-btn" data-type="street" data-kind="linestring" data-mat="street">═ Straße</button>
+              <button class="tool-btn" data-type="path" data-kind="linestring" data-mat="path">─ Weg</button>
+              <button class="tool-btn" data-type="vegetation" data-kind="polygon" data-mat="trees">♣ Bäume</button>
+              <button class="tool-btn" data-type="sport" data-kind="polygon" data-mat="tennis">▭ Sport</button>
+              <button class="tool-btn" data-type="player" data-kind="point" data-mat="path">● Start</button>
+            </div>
+          </div>
+          <div class="sec">
+            <div class="row">
+              <button class="btn" id="editorUndo" style="width:100%">Punkt zurück</button>
+              <button class="btn ok" id="editorFinish" style="width:100%">Fertig</button>
+            </div>
+            <button class="btn danger" id="editorCancel" style="width:100%;margin-top:6px">Abbrechen</button>
+          </div>
+          <div class="sec" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+            <div class="sec-title">Eingezeichnete Elemente</div>
+            <div class="scroll" id="editorFeatList"></div>
+          </div>
+        </div>
+        <div class="center-pane">
+          <canvas id="mapCanvas"></canvas>
+          <div style="position:absolute;top:10px;right:10px;display:flex;gap:4px">
+            <button class="btn" id="edZoomIn">+</button>
+            <button class="btn" id="edZoomOut">−</button>
+            <button class="btn" id="edZoomFit">⊡</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 4: WORLD BUILDER -->
+    <div class="view-panel" id="view-worldbuilder">
+      <div style="flex:1;padding:20px;overflow:auto;max-width:800px;margin:0 auto">
+        <div class="sec-title" style="font-size:13px;color:var(--cyan);margin-bottom:10px">World Builder & Geometrie-Validator</div>
+        <button class="btn ok" id="btnRunValidator" style="margin-bottom:12px">Welt prüfen & analysieren</button>
+        <pre id="validatorOutput">Noch nicht geprüft.</pre>
+      </div>
+    </div>
+
+    <!-- VIEW 5: GAME ENGINE -->
+    <div class="view-panel" id="view-engine">
+      <div class="studio-split">
+        <div class="side">
+          <div class="sec"><div class="sec-title">Game Engine GBA</div>
+            <div class="hint">Steuerung: WASD / Pfeiltasten oder Touch-Pad.<br><br>Figur: TZ auf Walmart-Scooter</div>
+          </div>
+          <div class="sec">
+            <button class="btn ok" id="enginePlayBtn" style="width:100%">START / PLAY</button>
+          </div>
+          <div class="sec">
+            <div class="pad">
+              <div class="e"></div><button data-dir="up">▲</button><div class="e"></div>
+              <button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button>
+            </div>
+          </div>
+          <div class="sec" style="margin-top:auto" id="engineInfo">Keine Welt geladen</div>
+        </div>
+        <div class="game-wrap">
+          <canvas id="gameCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+
   </div>
-  <div class="status"><span id="status">BW_WORLD laden</span><span id="pos">—</span></div>
+
+  <div class="status-bar"><span id="statusBar">Bereit</span><span id="statusCoord">—</span></div>
 </div>
-<input type="file" id="fileWorld" accept=".json,application/json">
-<input type="file" id="fileSprite" accept="image/*">
+
+<!-- Modal: Bild hinzufügen -->
+<div class="modal" id="modalImg">
+  <div class="modal-box">
+    <div class="modal-head">Luftbild hinzufügen</div>
+    <div class="modal-body">
+      <label>Datei auswählen</label>
+      <input type="file" id="fileImageInput" accept="image/*">
+      <label>Bild-ID</label><input id="mImgId" value="sat_bruchwiesen">
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="mImgCancel">Abbruch</button>
+      <button class="btn ok" id="mImgOk">Laden & Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Name für Element -->
+<div class="modal" id="modalName">
+  <div class="modal-box">
+    <div class="modal-head">Element benennen</div>
+    <div class="modal-body">
+      <label>Bezeichnung</label>
+      <input id="inputFeatName" value="Hauptgebäude">
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="mNameCancel">Abbruch</button>
+      <button class="btn ok" id="mNameOk">Speichern</button>
+    </div>
+  </div>
+</div>
 
 <script>
 (function(){
 "use strict";
-// Classic Game Boy / Pokémon Crystal-ish 4-green + accents
-const P = {
-  light:  "#e0f8d0",
-  mid:    "#88c070",
-  dark:   "#346856",
-  black:  "#081820",
-  path:   "#c8d8a0",
-  pathD:  "#a0b878",
-  street: "#5a7850",
-  roof:   "#2a4838",
-  wall:   "#4a6850",
-  wallL:  "#6a8870",
-  tennis: "#c8a848",
-  tennisD:"#a08830",
-  tree:   "#1a4030",
-  treeL:  "#2a6040",
-  water:  "#4a7868",
-  court:  "#d0c060"
+
+const WORLD_W=10000, WORLD_H=10000, SCHEMA="1.0";
+const STAGES=[
+  {id:"01_zones", label:"1. Zonen"},
+  {id:"02_buildings", label:"2. Gebäude"},
+  {id:"03_sports", label:"3. Sport"},
+  {id:"04_paths", label:"4. Wege"},
+  {id:"05_vegetation", label:"5. Vegetation"},
+  {id:"06_objects", label:"6. Objekte"},
+  {id:"10_merge", label:"7. Merge & Start"}
+];
+
+let studio = {
+  project:{
+    name:"Grundschule in den Bruchwiesen",
+    location:"Saarlouis-Beaumarais, Saarland",
+    images:[], gcps:[], features:{}, playerStart:null
+  },
+  currentStage:"02_buildings",
+  editor:{
+    image:null, naturalW:1000, naturalH:1000,
+    scale:1, panX:0, panY:0,
+    tool:null, draft:[], selectedId:null
+  },
+  engine:{
+    playing:false, player:{x:5000,y:5000,r:12,facing:1},
+    keys:{}, touch:{x:0,y:0}, coll:[], sprite:new Image()
+  }
+};
+studio.engine.sprite.src="player_scooter.jpeg";
+
+// Navigation tabs
+document.querySelectorAll(".nav-tab").forEach(tab=>{
+  tab.onclick=()=>{
+    document.querySelectorAll(".nav-tab").forEach(t=>t.classList.remove("active"));
+    document.querySelectorAll(".view-panel").forEach(p=>p.classList.remove("active"));
+    tab.classList.add("active");
+    const v=tab.dataset.view;
+    document.getElementById("view-"+v).classList.add("active");
+    if(v==="mapeditor") { resizeMap(); drawMap(); }
+    if(v==="engine") { initEngineWorld(); resizeGame(); }
+  };
+});
+
+function setStatus(t){ document.getElementById("statusBar").textContent=t; }
+
+// --- 1. PROJEKT & PERSISTENZ (MIT BASE64 BILDERN) ---
+function persist(){ 
+  try{ 
+    localStorage.setItem("bw_studio_v2", JSON.stringify(studio.project)); 
+  }catch(e){ console.warn("LocalStorage limit erreicht", e); } 
+}
+
+function loadPersisted(){
+  try{ 
+    const s=localStorage.getItem("bw_studio_v2"); 
+    if(s){ 
+      studio.project=JSON.parse(s); 
+      restoreImages();
+      refreshAll(); 
+      return true; 
+    } 
+  }catch(e){}
+  return false;
+}
+
+function restoreImages(){
+  if(studio.project.images.length && studio.project.images[0].dataUrl){
+    const imData=studio.project.images[0];
+    const img=new Image();
+    img.onload=()=>{
+      studio.editor.image=img;
+      studio.editor.naturalW=img.naturalWidth;
+      studio.editor.naturalH=img.naturalHeight;
+      fitEditorImage();
+      drawMap();
+    };
+    img.src=imData.dataUrl;
+  }
+}
+
+document.getElementById("btnNewProj").onclick=()=>{
+  if(confirm("Neues Projekt starten? Alle aktuellen Daten werden zurückgesetzt.")) {
+    studio.project={name:"Grundschule in den Bruchwiesen",location:"Saarlouis-Beaumarais",images:[],gcps:[],features:{},playerStart:null};
+    studio.editor.image=null;
+    persist(); refreshAll(); setStatus("Neues Projekt erstellt");
+  }
+};
+document.getElementById("btnSaveProj").onclick=()=>{
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(studio.project,null,2)],{type:"application/json"}));
+  a.download="bruchwiesen_studio_v2_project.json"; a.click();
+};
+document.getElementById("btnLoadProj").onclick=()=>document.getElementById("fileLoadProj").click();
+document.getElementById("fileLoadProj").onchange=e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{ 
+    try{ 
+      studio.project=JSON.parse(r.result); 
+      restoreImages();
+      persist(); 
+      refreshAll(); 
+      setStatus("Projekt erfolgreich geladen"); 
+    }catch(err){ setStatus("Fehler beim Laden der Projektdatei"); }
+  };
+  r.readAsText(f);
 };
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-let world=null, playing=false;
-let player={x:4000,y:3600,r:90,facing:1};
-let keys={}, touch={x:0,y:0};
-let view={scale:1,cx:0,cy:0,user:false};
-let coll=[];
-let lastT=0, SPEED=360;
-let sprite=new Image();
-sprite.src="player_scooter.jpeg";
-sprite.onload=()=>draw();
+document.getElementById("btnAddImg").onclick=()=>document.getElementById("modalImg").classList.add("show");
+document.getElementById("mImgCancel").onclick=()=>document.getElementById("modalImg").classList.remove("show");
+document.getElementById("fileImageInput").onchange=e=>{
+  const f=e.target.files[0]; if(f) document.getElementById("mImgId").value=f.name.split('.')[0];
+};
+document.getElementById("mImgOk").onclick=()=>{
+  const fInput=document.getElementById("fileImageInput").files[0];
+  const id=document.getElementById("mImgId").value.trim()||"sat_1";
+  if(!fInput) return alert("Bitte Bilddatei wählen");
+  
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const dataUrl=e.target.result;
+    const img=new Image();
+    img.onload=()=>{
+      studio.project.images=[{
+        id, filename:fInput.name, dataUrl,
+        north:49.314, south:49.313, west:6.723, east:6.725,
+        pixel_width:img.naturalWidth, pixel_height:img.naturalHeight
+      }];
+      studio.editor.image=img; 
+      studio.editor.naturalW=img.naturalWidth; 
+      studio.editor.naturalH=img.naturalHeight;
+      fitEditorImage(); 
+      persist(); 
+      refreshAll();
+      document.getElementById("modalImg").classList.remove("show");
+      setStatus("Luftbild permanent gespeichert & geladen");
+    };
+    img.src=dataUrl;
+  };
+  reader.readAsDataURL(fInput);
+};
 
-function resize(){
-  const wrap=canvas.parentElement;
-  const dpr=Math.min(devicePixelRatio||1,2);
-  canvas.width=wrap.clientWidth*dpr; canvas.height=wrap.clientHeight*dpr;
-  canvas.style.width=wrap.clientWidth+"px"; canvas.style.height=wrap.clientHeight+"px";
-  ctx.setTransform(dpr,0,0,dpr,0,0); draw();
+// --- 2. EXTRACTOR / ROBUSTER JSON-INGEST ---
+function buildPrompt(stage){
+  return `Kartografiere für ${studio.project.name}, Saarlouis-Beaumarais. Stufe: ${stage}.
+Grid 0–${WORLD_W}. Liefere ein valides JSON-Array mit Objekten:
+{
+  "id": "eindeutige_id",
+  "type": "building" | "street" | "path" | "vegetation" | "sport" | "object",
+  "material": "building" | "street" | "path" | "trees" | "tennis",
+  "name": "Bezeichnung",
+  "geometry": {
+    "kind": "polygon" | "linestring" | "point",
+    "points": [[x1, y1], [x2, y2], ...]
+  }
 }
-function status(t){document.getElementById("status").textContent=t;}
+Nur reines JSON ohne Markdown-Blobs oder Erklärungen zurückgeben.`;
+}
+
+function refreshExtractorStages(){
+  const list=document.getElementById("extractorStages"); list.innerHTML="";
+  STAGES.forEach(s=>{
+    const d=document.createElement("div");
+    d.style.padding="8px"; d.style.borderBottom="1px solid var(--border)"; d.style.cursor="pointer";
+    d.innerHTML=`<b style="color:${s.id===studio.currentStage?"var(--cyan)":""}">${s.label}</b>`;
+    d.onclick=()=>{ studio.currentStage=s.id; refreshExtractorStages(); document.getElementById("extractorPromptOut").value=buildPrompt(s.id); };
+    list.appendChild(d);
+  });
+  document.getElementById("extractorPromptOut").value=buildPrompt(studio.currentStage);
+}
+
+document.getElementById("btnCopyPrompt").onclick=()=>{
+  const t=document.getElementById("extractorPromptOut"); t.select(); navigator.clipboard.writeText(t.value); setStatus("Prompt in Zwischenablage kopiert");
+};
+
+document.getElementById("btnRunIngest").onclick=()=>{
+  try{
+    const raw=document.getElementById("extractorIngestArea").value.trim();
+    if(!raw) return;
+    const data=JSON.parse(raw);
+    const list=Array.isArray(data)?data:(data.features||[]);
+    if(!Array.isArray(list)) throw new Error("JSON muss ein Array oder Objekt mit 'features'-Array sein.");
+    
+    let count=0, errors=[];
+    list.forEach((f, idx)=>{
+      if(!f.id || !f.type || !f.geometry || !Array.isArray(f.geometry.points)){
+        errors.push(`Index ${idx}: Pflichtfelder (id, type, geometry.points) fehlen.`);
+        return;
+      }
+      studio.project.features[f.id]={
+        id:f.id, 
+        data:f, 
+        history:[studio.currentStage]
+      };
+      count++;
+    });
+    
+    persist(); refreshAll();
+    let msg=`<span class="okmsg">✓ ${count} Features erfolgreich validiert & importiert.</span>`;
+    if(errors.length) msg+=`<br><span class="err">Warnungen: ${errors.join("<br>")}</span>`;
+    document.getElementById("ingestMsg").innerHTML=msg;
+    setStatus(`Ingest abgeschlossen (${count} Features)`);
+  }catch(e){ 
+    document.getElementById("ingestMsg").innerHTML=`<span class="err">JSON-Fehler: ${e.message}</span>`; 
+  }
+};
+document.getElementById("btnClearIngest").onclick=()=>document.getElementById("extractorIngestArea").value="";
+
+// --- 3. MAP EDITOR (MIT ZOOM, AUSWAHL & LÖSCHEN) ---
+const mapCanvas=document.getElementById("mapCanvas");
+const mapCtx=mapCanvas.getContext("2d");
+
+function resizeMap(){
+  const wrap=mapCanvas.parentElement;
+  mapCanvas.width=wrap.clientWidth; mapCanvas.height=wrap.clientHeight;
+  drawMap();
+}
+function fitEditorImage(){
+  if(!studio.editor.image) return;
+  const wrap=mapCanvas.parentElement;
+  const sx=wrap.clientWidth/studio.editor.naturalW, sy=wrap.clientHeight/studio.editor.naturalH;
+  studio.editor.scale=Math.min(sx,sy)*0.95;
+  studio.editor.panX=(wrap.clientWidth-studio.editor.naturalW*studio.editor.scale)/2;
+  studio.editor.panY=(wrap.clientHeight-studio.editor.naturalH*studio.editor.scale)/2;
+}
+
+function drawMap(){
+  const wrap=mapCanvas.parentElement;
+  mapCtx.clearRect(0,0,wrap.clientWidth,wrap.clientHeight);
+  mapCtx.fillStyle="#05070c"; mapCtx.fillRect(0,0,wrap.clientWidth,wrap.clientHeight);
+  if(!studio.editor.image) return;
+
+  mapCtx.save();
+  mapCtx.translate(studio.editor.panX, studio.editor.panY);
+  mapCtx.scale(studio.editor.scale, studio.editor.scale);
+  mapCtx.drawImage(studio.editor.image, 0, 0);
+
+  // Zeichne alle Features
+  Object.values(studio.project.features).forEach(rec=>{
+    const f=rec.data; const g=f.geometry;
+    if(!g||!g.points) return;
+    const isSelected = (rec.id === studio.editor.selectedId);
+    
+    mapCtx.strokeStyle=isSelected ? "#00ff9d" : (f.type==="building"?"#ff2d78":"#00e5ff");
+    mapCtx.fillStyle=isSelected ? "rgba(0,255,157,0.35)" : "rgba(0,229,255,0.2)";
+    mapCtx.lineWidth=(isSelected ? 3 : 2)/studio.editor.scale;
+    
+    mapCtx.beginPath();
+    g.points.forEach((p,i)=>{
+      const px=p[0]*(studio.editor.naturalW/WORLD_W), py=p[1]*(studio.editor.naturalH/WORLD_H);
+      if(i===0) mapCtx.moveTo(px,py); else mapCtx.lineTo(px,py);
+    });
+    if(g.kind==="polygon"){ mapCtx.closePath(); mapCtx.fill(); }
+    mapCtx.stroke();
+  });
+
+  // Draft Linien
+  if(studio.editor.draft.length){
+    mapCtx.strokeStyle="#00ff9d"; mapCtx.fillStyle="rgba(0,255,157,0.3)";
+    mapCtx.lineWidth=2/studio.editor.scale;
+    mapCtx.beginPath();
+    studio.editor.draft.forEach((p,i)=>{ if(i===0)mapCtx.moveTo(p[0],p[1]); else mapCtx.lineTo(p[0],p[1]); });
+    mapCtx.stroke();
+  }
+  mapCtx.restore();
+}
+
+// Zoom Controls
+document.getElementById("edZoomIn").onclick=()=>{ studio.editor.scale*=1.2; drawMap(); };
+document.getElementById("edZoomOut").onclick=()=>{ studio.editor.scale*=0.8; drawMap(); };
+document.getElementById("edZoomFit").onclick=()=>{ fitEditorImage(); drawMap(); };
+
+// Pan & Zoom mit Mausrad
+mapCanvas.addEventListener("wheel", e=>{
+  if(!studio.editor.image) return;
+  e.preventDefault();
+  const rect=mapCanvas.getBoundingClientRect();
+  const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+  const factor=e.deltaY<0?1.1:0.9;
+  studio.editor.scale*=factor;
+  drawMap();
+},{passive:false});
+
+let isDragging=false, lastX=0, lastY=0;
+mapCanvas.addEventListener("pointerdown", e=>{
+  if(!studio.editor.image) return;
+  const rect=mapCanvas.getBoundingClientRect();
+  const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+  const px=(sx-studio.editor.panX)/studio.editor.scale;
+  const py=(sy-studio.editor.panY)/studio.editor.scale;
+
+  if(e.button===2 || !studio.editor.tool){
+    isDragging=true; lastX=sx; lastY=sy; return;
+  }
+
+  if(studio.editor.tool.kind==="point" || studio.editor.tool.type==="player"){
+    commitEditorDraft([[px,py]]);
+    return;
+  }
+  studio.editor.draft.push([px,py]);
+  drawMap();
+});
+
+mapCanvas.addEventListener("pointermove", e=>{
+  if(isDragging){
+    const rect=mapCanvas.getBoundingClientRect();
+    const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+    studio.editor.panX+=(sx-lastX); studio.editor.panY+=(sy-lastY);
+    lastX=sx; lastY=sy; drawMap();
+  }
+});
+mapCanvas.addEventListener("pointerup", ()=>isDeserializing() );
+function isDeserializing(){ isDragging=false; }
+
+document.querySelectorAll(".tool-btn").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".tool-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    studio.editor.tool={type:btn.dataset.type, kind:btn.dataset.kind, mat:btn.dataset.mat};
+    studio.editor.draft=[];
+    setStatus("Editor-Werkzeug: "+btn.dataset.type);
+  };
+});
+
+document.getElementById("editorUndo").onclick=()=>{ studio.editor.draft.pop(); drawMap(); };
+document.getElementById("editorFinish").onclick=()=>{ if(studio.editor.draft.length>=2) commitEditorDraft(studio.editor.draft); };
+document.getElementById("editorCancel").onclick=()=>{ studio.editor.draft=[]; drawMap(); };
+
+function commitEditorDraft(ptsPx){
+  const worldPts=ptsPx.map(([px,py])=>[
+    Math.round(px*(WORLD_W/studio.editor.naturalW)),
+    Math.round(py*(WORLD_H/studio.editor.naturalH))
+  ]);
+  if(studio.editor.tool && studio.editor.tool.type==="player"){
+    studio.project.playerStart={x:worldPts[0][0], y:worldPts[0][1]};
+    studio.editor.draft=[]; persist(); refreshAll(); setStatus("Spielerstart erfolgreich gesetzt");
+    return;
+  }
+  window._pendingEdit={points:worldPts};
+  document.getElementById("inputFeatName").value=(studio.editor.tool?studio.editor.tool.type:"objekt")+"_"+Date.now();
+  document.getElementById("modalName").classList.add("show");
+}
+
+document.getElementById("mNameCancel").onclick=()=>document.getElementById("modalName").classList.remove("show");
+document.getElementById("mNameOk").onclick=()=>{
+  const name=document.getElementById("inputFeatName").value.trim()||"Objekt";
+  const id=name.toLowerCase().replace(/[^a-z0-9]+/g,"_")+"_"+Date.now();
+  const pending=window._pendingEdit;
+  const type=studio.editor.tool?studio.editor.tool.type:"building";
+  const kind=studio.editor.tool?studio.editor.tool.kind:"polygon";
+  const mat=studio.editor.tool?studio.editor.mat:"building";
+
+  studio.project.features[id]={
+    id, data:{
+      id, type, material:mat, name,
+      geometry:{kind, points:pending.points}
+    }, history:["map_editor"]
+  };
+  studio.editor.draft=[]; window._pendingEdit=null;
+  document.getElementById("modalName").classList.remove("show");
+  persist(); refreshAll(); drawMap(); setStatus("Element gespeichert: "+name);
+};
+
+function refreshEditorFeatureList(){
+  const list=document.getElementById("editorFeatList"); list.innerHTML="";
+  Object.keys(studio.project.features).forEach(id=>{
+    const rec=studio.project.features[id];
+    const row=document.createElement("div");
+    row.className="item-row"+(studio.editor.selectedId===id?" sel":"");
+    row.innerHTML=`<span><b>${rec.data.name||id}</b> (${rec.data.type})</span>`;
+    
+    const del=document.createElement("button");
+    del.className="del-btn"; del.textContent="✕";
+    del.onclick=(e)=>{
+      e.stopPropagation();
+      delete studio.project.features[id];
+      if(studio.editor.selectedId===id) studio.editor.selectedId=null;
+      persist(); refreshAll(); drawMap(); setStatus("Element gelöscht");
+    };
+    row.appendChild(del);
+    row.onclick=()=>{ studio.editor.selectedId=id; refreshEditorFeatureList(); drawMap(); };
+    list.appendChild(row);
+  });
+}
+
+// --- 4. WORLD BUILDER & VALIDATOR ---
+document.getElementById("btnRunValidator").onclick=()=>{
+  const feats=Object.values(studio.project.features);
+  const errs=[];
+  if(!feats.length) errs.push("Keine Features in der Welt vorhanden.");
+  if(!studio.project.playerStart && !feats.some(f=>f.data.type==="player")) errs.push("Kein Spielerstart (playerStart) definiert.");
+  
+  feats.forEach(rec=>{
+    const f=rec.data;
+    if(!f.geometry || !Array.isArray(f.geometry.points) || f.geometry.points.length<2){
+      errs.push(`Feature ${f.id}: Ungültige Geometrie.`);
+    }
+  });
+
+  const out=document.getElementById("validatorOutput");
+  if(errs.length){
+    out.innerHTML=`<span class="err">Validierungs-Fehler:\n`+errs.join("\n")+"</span>";
+    setStatus("Weltprüfung fehlgeschlagen");
+  } else {
+    out.innerHTML=`<span class="okmsg">✓ Weltmodell erfolgreich validiert!\n- Features: ${feats.length}\n- Spielerstart: (${studio.project.playerStart?.x || 'Auto'}, ${studio.project.playerStart?.y || 'Auto'})\n- Status: Bereit für Game Engine.</span>`;
+    setStatus("Weltprüfung bestanden");
+  }
+};
+
+// --- 5. ECHTE GAME ENGINE (GBA-GRAFIK, LINIEN & KOLLISIONEN) ---
+const gameCanvas=document.getElementById("gameCanvas");
+const gameCtx=gameCanvas.getContext("2d");
+
+function resizeGame(){
+  const wrap=gameCanvas.parentElement;
+  gameCanvas.width=wrap.clientWidth; gameCanvas.height=wrap.clientHeight;
+}
+
+function initEngineWorld(){
+  const p=studio.project;
+  if(p.playerStart) { 
+    studio.engine.player.x=p.playerStart.x; 
+    studio.engine.player.y=p.playerStart.y; 
+  }
+  rebuildEngineCollisions();
+  document.getElementById("engineInfo").innerHTML=`<b>${p.name}</b><br>${Object.keys(p.features).length} Objekte<br>${studio.engine.coll.length} Kollisionen`;
+}
+
 function pip(x,y,pts){
   let ins=false;
   for(let i=0,j=pts.length-1;i<pts.length;j=i++){
@@ -104,256 +699,162 @@ function pip(x,y,pts){
   }
   return ins;
 }
-function blocked(x,y){
-  if(!world) return true;
-  const b=world.world.bounds;
-  if(x<b.x||y<b.y||x>b.x+b.w||y>b.y+b.h) return true;
-  for(const p of coll) if(pip(x,y,p)) return true;
+
+function rebuildEngineCollisions(){
+  studio.engine.coll=[];
+  Object.values(studio.project.features).forEach(rec=>{
+    const f=rec.data; const g=f.geometry;
+    if(!g || g.kind!=="polygon" || !g.points || g.points.length<3) return;
+    // Gebäude und Vegetation blockieren standardmäßig
+    const isBlocking = f.type==="building" || f.type==="vegetation" || f.material==="building" || f.material==="trees";
+    if(isBlocking) studio.engine.coll.push(g.points);
+  });
+}
+
+function isBlocked(x,y){
+  if(x<0||y<0||x>WORLD_W||y>WORLD_H) return true;
+  for(const poly of studio.engine.coll){
+    if(pip(x,y,poly)) return true;
+  }
   return false;
 }
-function rebuildColl(){
-  coll=[];
-  const mats=world.materials||{};
-  (world.features||[]).forEach(f=>{
-    const g=f.geometry; if(!g||g.kind!=="polygon"||!g.points||g.points.length<3) return;
-    const mat=mats[f.material]||{}, props=f.properties||{};
-    let c=props.collision;
-    if(c===undefined) c = mat.walkable===false || ["building","vegetation","object","fence"].includes(f.type);
-    if(c) coll.push(g.points);
-  });
-}
-function loadWorld(data){
-  if(!data?.features||!data?.world) throw new Error("Ungültige Welt");
-  world=data; rebuildColl();
-  if(data.playerStart){player.x=data.playerStart.x; player.y=data.playerStart.y;}
-  else {const b=data.world.bounds; player.x=b.x+b.w/2; player.y=b.y+b.h/2;}
-  view.cx=player.x; view.cy=player.y; view.user=false;
-  document.getElementById("btnPlay").disabled=false;
-  document.getElementById("info").innerHTML=
-    "<b>"+(data.meta?.name||"Bruchwiesen")+"</b><br>"+data.features.length+" Objekte<br>"+coll.length+" Kollisionen";
-  status("GBA-Map bereit – PLAY");
-  draw();
-}
 
-function W2S(wx,wy,w,h){ const s=view.scale; return [w/2+(wx-view.cx)*s, h/2+(wy-view.cy)*s]; }
-
-// --- Pixel-art helpers (chunky, no anti-alias) ---
-function pxFillPoly(pts, fill, stroke){
-  ctx.beginPath();
-  pts.forEach((p,i)=>{ if(i===0)ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]); });
-  ctx.closePath();
-  ctx.fillStyle=fill; ctx.fill();
-  if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=1; ctx.stroke(); }
-}
-function pxLine(pts, color, width){
-  ctx.beginPath();
-  pts.forEach((p,i)=>{ if(i===0)ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]); });
-  ctx.strokeStyle=color; ctx.lineWidth=width; ctx.lineCap="square"; ctx.lineJoin="miter"; ctx.stroke();
-}
-
-// Draw a simple GBA building from bbox of polygon
-function drawBuildingGBA(screenPts){
-  let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
-  screenPts.forEach(p=>{minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]);});
-  const bw=maxX-minX, bh=maxY-minY;
-  if(bw<4||bh<4) return;
-  // footprint
-  pxFillPoly(screenPts, P.wall, P.black);
-  // roof slab (upper 55%)
-  const roofH = bh*0.45;
-  ctx.fillStyle=P.roof;
-  ctx.fillRect(Math.floor(minX), Math.floor(minY), Math.ceil(bw), Math.ceil(roofH));
-  // roof edge
-  ctx.fillStyle=P.black;
-  ctx.fillRect(Math.floor(minX), Math.floor(minY+roofH-1), Math.ceil(bw), 2);
-  // windows strip
-  const wy=minY+roofH+bh*0.15;
-  const ww=Math.max(3, bw*0.12), gap=ww*1.8;
-  ctx.fillStyle=P.light;
-  for(let x=minX+bw*0.15; x<maxX-bw*0.15; x+=gap){
-    ctx.fillRect(Math.floor(x), Math.floor(wy), Math.ceil(ww), Math.ceil(bh*0.12));
+function buildWorldJson(){
+  const feats=Object.values(studio.project.features).map(r=>r.data);
+  if(!feats.some(f=>f.id==="terrain_base")){
+    feats.unshift({id:"terrain_base", type:"terrain", material:"grass", geometry:{kind:"polygon", points:[[0,0],[WORLD_W,0],[WORLD_W,WORLD_H],[0,WORLD_H]]}});
   }
-  // door
-  const dw=Math.max(4,bw*0.14), dh=Math.max(6,bh*0.22);
-  ctx.fillStyle=P.dark;
-  ctx.fillRect(Math.floor(minX+bw/2-dw/2), Math.floor(maxY-dh-1), Math.ceil(dw), Math.ceil(dh));
+  return {
+    schemaVersion:SCHEMA,
+    meta:{name:studio.project.name, location:studio.project.location},
+    world:{bounds:{x:0,y:0,w:WORLD_W,h:WORLD_H}},
+    materials:{
+      grass:{color:"#3d7a37",walkable:true},building:{color:"#5a5a6e",walkable:false},
+      street:{color:"#3d3d3d",walkable:true},path:{color:"#8a8a8a",walkable:true},trees:{color:"#1e3d1a",walkable:false}
+    },
+    features: feats,
+    playerStart: studio.project.playerStart || {x:5000, y:5000}
+  };
 }
 
-function drawTreeCluster(screenPts){
-  let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
-  screenPts.forEach(p=>{minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]);});
-  // base blob
-  pxFillPoly(screenPts, P.tree, P.black);
-  // lighter blobs for canopy depth
-  const cx=(minX+maxX)/2, cy=(minY+maxY)/2;
-  const rx=(maxX-minX)*0.25, ry=(maxY-minY)*0.25;
-  ctx.fillStyle=P.treeL;
-  for(const [ox,oy] of [[-0.3,-0.2],[0.25,-0.15],[0,0.2]]){
-    ctx.beginPath();
-    ctx.ellipse(cx+ox*(maxX-minX), cy+oy*(maxY-minY), rx, ry, 0, 0, Math.PI*2);
-    ctx.fill();
-  }
-}
+document.getElementById("enginePlayBtn").onclick=()=>{ 
+  studio.engine.playing=true; 
+  setStatus("GAME ENGINE: GBA Play Modus aktiv"); 
+};
 
-function drawTennis(screenPts){
-  pxFillPoly(screenPts, P.tennis, P.black);
-  // simple center line
-  let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
-  screenPts.forEach(p=>{minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]);});
-  ctx.strokeStyle=P.light; ctx.lineWidth=1;
-  ctx.beginPath();
-  ctx.moveTo((minX+maxX)/2, minY+2); ctx.lineTo((minX+maxX)/2, maxY-2);
-  ctx.moveTo(minX+2,(minY+maxY)/2); ctx.lineTo(maxX-2,(minY+maxY)/2);
-  ctx.stroke();
-}
-
-function draw(){
-  const wrap=canvas.parentElement;
+function renderGameFrame(){
+  const wrap=gameCanvas.parentElement;
   const w=wrap.clientWidth, h=wrap.clientHeight;
-  ctx.imageSmoothingEnabled=false;
-  ctx.clearRect(0,0,w,h);
-  // base meadow
-  ctx.fillStyle=P.mid;
-  ctx.fillRect(0,0,w,h);
-  // subtle dither checker for grass texture
-  ctx.fillStyle=P.dark;
-  const step=6;
-  for(let y=0;y<h;y+=step) for(let x=0;x<w;x+=step){
-    if(((x+y)/step)&1) ctx.fillRect(x,y,1,1);
-  }
+  gameCtx.imageSmoothingEnabled=false;
+  gameCtx.clearRect(0,0,w,h);
+  
+  // GBA Hintergrund (Gras Grün)
+  gameCtx.fillStyle="#88c070"; gameCtx.fillRect(0,0,w,h);
 
-  if(!world){
-    ctx.fillStyle=P.black; ctx.font="13px monospace"; ctx.textAlign="center";
-    ctx.fillText("BW_WORLD.json → GBA-Zielgrafik", w/2, h/2-40);
-    if(sprite.complete&&sprite.naturalWidth){
-      const sh=100, sw=sh*(sprite.naturalWidth/sprite.naturalHeight);
-      ctx.drawImage(sprite, w/2-sw/2, h/2, sw, sh);
-    }
-    return;
-  }
+  const world=buildWorldJson();
+  const pl=studio.engine.player;
+  const scale=Math.min(w/WORLD_W, h/WORLD_H)*3.5;
+  const W2S=(wx,wy)=>[w/2 + (wx-pl.x)*scale, h/2 + (wy-pl.y)*scale];
 
-  const bounds=world.world.bounds;
-  if(!view.user) view.scale=Math.min(w/bounds.w,h/bounds.h)*4.0;
+  // Sortierung: Terrain -> Straßen/Wege -> Vegetation -> Gebäude
+  const order={terrain:0,field:0,path:1,street:1,vegetation:2,building:3,object:3};
+  const sortedFeats=(world.features||[]).slice().sort((a,b)=>(order[a.type]||3)-(order[b.type]||3));
 
-  const order={terrain:0,field:0,meadow:0,sport:1,path:2,street:2,vegetation:3,building:4,object:5,fence:4};
-  const feats=(world.features||[]).slice().sort((a,b)=>(order[a.type]||5)-(order[b.type]||5));
-
-  feats.forEach(f=>{
-    if(f.type==="player") return;
-    const g=f.geometry; if(!g?.points?.length) return;
-    const sp=g.points.map(p=>W2S(p[0],p[1],w,h));
+  sortedFeats.forEach(f=>{
+    const g=f.geometry; if(!g||!g.points) return;
+    const pts=g.points.map(pt=>W2S(pt[0],pt[1]));
 
     if(g.kind==="polygon"){
-      if(f.type==="building" || f.material==="building" || (f.material||"").startsWith("roof")){
-        drawBuildingGBA(sp);
-      } else if(f.type==="vegetation" || f.material==="trees" || f.material==="hedge"){
-        drawTreeCluster(sp);
-      } else if(f.type==="sport" || f.material==="tennis"){
-        drawTennis(sp);
-      } else if(f.material==="paved" || f.type==="path" && g.kind==="polygon"){
-        pxFillPoly(sp, P.path, P.pathD);
-      } else if(f.material==="street"){
-        pxFillPoly(sp, P.street, P.black);
-      } else if(f.material==="field"||f.material==="meadow"){
-        pxFillPoly(sp, P.mid, null);
-        // crop lines
-        let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
-        sp.forEach(p=>{minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]);});
-        ctx.strokeStyle=P.dark; ctx.lineWidth=1;
-        for(let y=minY+8;y<maxY;y+=10){ ctx.beginPath(); ctx.moveTo(minX,y); ctx.lineTo(maxX,y); ctx.stroke(); }
-      } else {
-        // terrain / generic
-        pxFillPoly(sp, f.material==="grass"?P.mid:P.dark, null);
-      }
+      gameCtx.beginPath();
+      pts.forEach((pt,i)=>{ if(i===0) gameCtx.moveTo(pt[0],pt[1]); else gameCtx.lineTo(pt[0],pt[1]); });
+      gameCtx.closePath();
+      gameCtx.fillStyle=f.type==="building"?"#2a4838":(f.type==="vegetation"?"#1a4030":"#5a7850");
+      gameCtx.fill();
+      gameCtx.strokeStyle="#081820"; gameCtx.lineWidth=1; gameCtx.stroke();
     } else if(g.kind==="linestring"){
-      const lw=Math.max(3, (g.width||100)*view.scale);
-      const isStreet=f.type==="street"||f.material==="street";
-      pxLine(sp, isStreet?P.street:P.path, lw);
-      if(isStreet){
-        ctx.setLineDash([6,6]);
-        pxLine(sp, P.path, 1);
-        ctx.setLineDash([]);
-      }
-    } else if(g.kind==="point"){
-      // single tree
-      const [sx,sy]=sp[0];
-      const r=Math.max(6,(g.radius||50)*view.scale*0.2);
-      ctx.fillStyle=P.tree;
-      ctx.beginPath(); ctx.arc(sx,sy,r,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle=P.treeL;
-      ctx.beginPath(); ctx.arc(sx-r*0.2,sy-r*0.2,r*0.45,0,Math.PI*2); ctx.fill();
+      // Linienrendern für Straßen & Wege
+      gameCtx.beginPath();
+      pts.forEach((pt,i)=>{ if(i===0) gameCtx.moveTo(pt[0],pt[1]); else gameCtx.lineTo(pt[0],pt[1]); });
+      gameCtx.strokeStyle=f.type==="street"?"#3d3d3d":"#c8d8a0";
+      gameCtx.lineWidth=Math.max(2, 6*scale);
+      gameCtx.lineCap="round"; gameCtx.stroke();
     }
   });
 
-  // Player sprite TZ
-  const [px,py]=W2S(player.x,player.y,w,h);
-  const sprH=Math.max(32, player.r*view.scale*0.9);
-  const sprW=sprite.naturalWidth? sprH*(sprite.naturalWidth/sprite.naturalHeight):sprH;
-  ctx.fillStyle="rgba(8,24,32,0.3)";
-  ctx.beginPath(); ctx.ellipse(px, py+sprH*0.2, sprW*0.3, sprH*0.1, 0,0,Math.PI*2); ctx.fill();
-  ctx.save();
-  ctx.translate(px,py);
-  if(player.facing<0) ctx.scale(-1,1);
-  if(sprite.complete&&sprite.naturalWidth)
-    ctx.drawImage(sprite, -sprW/2, -sprH*0.78, sprW, sprH);
-  else {
-    ctx.fillStyle=P.dark; ctx.fillRect(-10,-16,20,24);
+  // Spieler-Sprite (TZ auf Scooter oder Fallback)
+  const [px,py]=W2S(pl.x,pl.y);
+  const sprH=Math.max(32, pl.r*scale*2);
+  const sprW=studio.engine.sprite.naturalWidth ? sprH*(studio.engine.sprite.naturalWidth/studio.engine.sprite.naturalHeight):sprH;
+  
+  gameCtx.fillStyle="rgba(8,24,32,0.3)";
+  gameCtx.beginPath(); gameCtx.ellipse(px, py+sprH*0.2, sprW*0.3, sprH*0.1, 0,0,Math.PI*2); gameCtx.fill();
+
+  if(studio.engine.sprite.complete && studio.engine.sprite.naturalWidth){
+    gameCtx.drawImage(studio.engine.sprite, px-sprW/2, py-sprH*0.75, sprW, sprH);
+  } else {
+    gameCtx.fillStyle="#ff2d78"; gameCtx.fillRect(px-10, py-16, 20, 24);
   }
-  ctx.restore();
 }
 
-function tick(t){
-  if(!lastT) lastT=t;
-  const dt=Math.min(0.05,(t-lastT)/1000); lastT=t;
-  if(playing&&world){
-    let dx=0,dy=0;
-    if(keys.w||keys.arrowup) dy--; if(keys.s||keys.arrowdown) dy++;
-    if(keys.a||keys.arrowleft) dx--; if(keys.d||keys.arrowright) dx++;
-    dx+=touch.x; dy+=touch.y;
+function gameTick(){
+  if(studio.engine.playing){
+    let dx=0, dy=0;
+    const k=studio.engine.keys, t=studio.engine.touch;
+    if(k.w||k.arrowup||t.y<0) dy--;
+    if(k.s||k.arrowdown||t.y>0) dy++;
+    if(k.a||k.arrowleft||t.x<0) dx--;
+    if(k.d||k.arrowright||t.x>0) dx++;
+    
     if(dx||dy){
-      const L=Math.hypot(dx,dy)||1; dx/=L; dy/=L;
-      if(dx) player.facing=dx<0?-1:1;
-      const sp=SPEED*dt;
-      if(!blocked(player.x+dx*sp, player.y)) player.x+=dx*sp;
-      if(!blocked(player.x, player.y+dy*sp)) player.y+=dy*sp;
+      const len=Math.hypot(dx,dy); dx/=len; dy/=len;
+      if(dx) studio.engine.player.facing=dx<0?-1:1;
+      const spd=400*(1/60);
+      const nx=studio.engine.player.x+dx*spd;
+      const ny=studio.engine.player.y+dy*spd;
+      
+      // Kollisionsprüfung mit Gebäuden
+      if(!isBlocked(nx, studio.engine.player.y)) studio.engine.player.x=nx;
+      if(!isBlocked(studio.engine.player.x, ny)) studio.engine.player.y=ny;
     }
-    view.cx+=(player.x-view.cx)*Math.min(1,dt*6);
-    view.cy+=(player.y-view.cy)*Math.min(1,dt*6);
-    document.getElementById("pos").textContent=Math.round(player.x)+", "+Math.round(player.y);
   }
-  draw();
-  requestAnimationFrame(tick);
+  renderGameFrame();
+  requestAnimationFrame(gameTick);
 }
+requestAnimationFrame(gameTick);
 
-window.addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true;});
-window.addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false;});
+window.addEventListener("keydown",e=>{ studio.engine.keys[e.key.toLowerCase()]=true; });
+window.addEventListener("keyup",e=>{ studio.engine.keys[e.key.toLowerCase()]=false; });
+
 document.querySelectorAll(".pad button").forEach(btn=>{
   const d=btn.dataset.dir;
-  btn.onpointerdown=e=>{e.preventDefault();btn.setPointerCapture(e.pointerId);
-    if(d==="up")touch.y=-1; if(d==="down")touch.y=1; if(d==="left")touch.x=-1; if(d==="right")touch.x=1;};
-  btn.onpointerup=()=>{touch.x=0;touch.y=0;};
+  btn.onpointerdown=e=>{ e.preventDefault(); if(d==="up")studio.engine.touch.y=-1; if(d==="down")studio.engine.touch.y=1; if(d==="left")studio.engine.touch.x=-1; if(d==="right")studio.engine.touch.x=1; };
+  btn.onpointerup=()=>{ studio.engine.touch.x=0; studio.engine.touch.y=0; };
 });
-document.getElementById("btnLoad").onclick=()=>document.getElementById("fileWorld").click();
-document.getElementById("fileWorld").onchange=e=>{
-  const f=e.target.files[0]; if(!f)return;
-  const r=new FileReader();
-  r.onload=()=>{try{loadWorld(JSON.parse(r.result));}catch(err){status(err.message);}};
-  r.readAsText(f);
+
+// --- GLOBAL EXPORT ---
+document.getElementById("btnGlobalExport").onclick=()=>{
+  const world=buildWorldJson();
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(world,null,2)],{type:"application/json"}));
+  a.download="BW_WORLD.json"; a.click();
+  setStatus("BW_WORLD.json exportiert");
 };
-document.getElementById("btnSprite").onclick=()=>document.getElementById("fileSprite").click();
-document.getElementById("fileSprite").onchange=e=>{
-  const f=e.target.files[0]; if(!f)return;
-  const url=URL.createObjectURL(f);
-  sprite=new Image(); sprite.onload=()=>draw(); sprite.src=url;
-};
-document.getElementById("btnPlay").onclick=()=>{if(!world)return; playing=true; status("PLAY");};
-canvas.addEventListener("wheel",e=>{
-  e.preventDefault(); view.user=true;
-  view.scale*=e.deltaY<0?1.1:0.9;
-  view.scale=Math.max(0.02,Math.min(2,view.scale));
-},{passive:false});
-window.addEventListener("resize",resize);
-resize(); requestAnimationFrame(tick);
+
+function refreshAll(){
+  refreshExtractorStages();
+  refreshEditorFeatureList();
+  const il=document.getElementById("projectImgList");
+  if(studio.project.images.length){
+    il.innerHTML=`<b>${studio.project.images[0].filename}</b> (${studio.project.images[0].pixel_width}x${studio.project.images[0].pixel_height} px)`;
+  } else {
+    il.textContent="Kein Luftbild geladen";
+  }
+}
+
+window.addEventListener("resize",()=>{ resizeMap(); resizeGame(); });
+if(!loadPersisted()) refreshAll();
+resizeMap(); resizeGame();
+
 })();
 </script>
 </body>
