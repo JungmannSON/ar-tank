@@ -2,1047 +2,810 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>BRUCHWIESEN // LEVEL 001 // MAP CORE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>BRUCHWIESEN Editor</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&display=swap');
 
   :root {
-    --bg: #05070b;
-    --panel: #0a0e17;
-    --border: #1a2332;
-    --cyan: #00f0ff;
-    --cyan-dim: #00f0ff88;
-    --magenta: #ff00aa;
+    --bg: #07090f;
+    --panel: #0d111a;
+    --cyan: #00e5ff;
     --green: #00ff9d;
-    --red: #ff3366;
-    --text: #e0f2fe;
-    --text-dim: #64748b;
-    --cell-hover: rgba(0, 240, 255, 0.14);
-    --cell-selected: rgba(0, 240, 255, 0.32);
-    --cell-labeled: rgba(0, 255, 157, 0.20);
+    --red: #ff3b5c;
+    --text: #e8f4ff;
+    --dim: #6b7a8f;
+    --border: #1c2535;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-  body {
+  html, body {
+    height: 100%;
     background: var(--bg);
     color: var(--text);
     font-family: 'Share Tech Mono', monospace;
-    height: 100vh;
     overflow: hidden;
+    touch-action: none;
+  }
+
+  /* ===== LAYOUT ===== */
+  .app {
     display: flex;
     flex-direction: column;
-    background-image: 
-      radial-gradient(ellipse at 20% 50%, rgba(0, 240, 255, 0.03) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 20%, rgba(255, 0, 170, 0.03) 0%, transparent 50%);
+    height: 100%;
+    height: 100dvh;
   }
 
-  body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
-    pointer-events: none;
-    z-index: 9999;
-    opacity: 0.3;
-  }
-
-  header {
-    background: linear-gradient(180deg, #0c1220 0%, #0a0e17 100%);
+  /* Top bar */
+  .topbar {
+    flex-shrink: 0;
+    height: 48px;
+    background: var(--panel);
     border-bottom: 1px solid var(--border);
-    box-shadow: 0 0 40px rgba(0, 240, 255, 0.06);
-    padding: 0 16px;
-    height: 54px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    flex-shrink: 0;
-    position: relative;
+    padding: 0 10px;
+    gap: 8px;
   }
 
-  header::before {
-    content: "";
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
-    opacity: 0.5;
-  }
-
-  .logo { display: flex; align-items: center; gap: 10px; }
-
-  .logo-icon {
-    width: 26px; height: 26px;
-    background: linear-gradient(135deg, var(--cyan), var(--magenta));
-    border-radius: 4px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 900; color: #000;
+  .title {
     font-family: 'Orbitron', sans-serif;
-  }
-
-  .logo h1 {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 12px; font-weight: 700; letter-spacing: 2px;
-    background: linear-gradient(90deg, var(--cyan), var(--text));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-
-  .logo span { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; display: block; }
-
-  .header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-
-  button {
-    background: linear-gradient(180deg, #132033 0%, #0c1525 100%);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
     color: var(--cyan);
-    border: 1px solid #1e3a5f;
-    border-radius: 4px;
-    padding: 6px 11px;
-    font-size: 10px; font-weight: 500;
-    font-family: 'Share Tech Mono', monospace;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: all 0.15s;
+    white-space: nowrap;
   }
 
-  button:hover {
-    border-color: var(--cyan);
-    box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
+  .top-btns {
+    display: flex;
+    gap: 6px;
   }
 
-  button:active { transform: scale(0.97); }
-
-  button.active, button.success {
-    background: linear-gradient(180deg, #0a2a2a 0%, #063030 100%);
-    border-color: var(--green);
-    color: var(--green);
-    box-shadow: 0 0 16px rgba(0, 255, 157, 0.2);
+  /* Map area */
+  .map-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #05070c;
   }
 
-  button.danger { border-color: #5f1e2e; color: var(--red); }
-  button.danger:hover { border-color: var(--red); box-shadow: 0 0 12px rgba(255, 51, 102, 0.25); }
-
-  .main { flex: 1; display: flex; overflow: hidden; }
-
-  .map-container {
-    flex: 1; position: relative; overflow: hidden;
-    background: #030508; touch-action: none;
+  #mapWrap {
+    position: absolute;
+    transform-origin: 0 0;
+    will-change: transform;
   }
 
-  .map-container::before {
-    content: "";
-    position: absolute; inset: 0;
-    background: 
-      linear-gradient(90deg, rgba(0,240,255,0.02) 1px, transparent 1px),
-      linear-gradient(rgba(0,240,255,0.02) 1px, transparent 1px);
-    background-size: 32px 32px;
-    pointer-events: none; z-index: 1; opacity: 0.5;
+  #sat {
+    display: block;
+    max-width: none;
+    pointer-events: none;
+    user-select: none;
   }
 
-  #mapWrapper {
-    position: absolute; transform-origin: 0 0;
-    will-change: transform; z-index: 2;
+  #grid {
+    position: absolute;
+    top: 0; left: 0;
+    pointer-events: none;
   }
 
-  #satelliteImg {
-    display: block; max-width: none;
-    user-select: none; pointer-events: none;
-    filter: contrast(1.04) saturate(0.9);
-  }
-
-  #gridCanvas { position: absolute; top: 0; left: 0; pointer-events: none; }
-
-  .cell-overlay {
-    position: absolute; top: 0; left: 0;
-    pointer-events: auto;
+  .cells {
+    position: absolute;
+    top: 0; left: 0;
   }
 
   .cell {
     position: absolute;
-    border: 1px solid rgba(0, 240, 255, 0.1);
-    cursor: crosshair;
-    transition: background 0.08s, border-color 0.08s;
+    border: 1px solid rgba(0,229,255,0.12);
   }
 
-  .cell:hover {
-    background: var(--cell-hover);
-    border-color: rgba(0, 240, 255, 0.4);
-  }
-
-  .cell.selected {
-    background: var(--cell-selected);
+  .cell.sel {
+    background: rgba(0,229,255,0.35);
     border-color: var(--cyan);
-    box-shadow: inset 0 0 12px rgba(0, 240, 255, 0.25);
   }
 
-  .cell.labeled { background: var(--cell-labeled); }
-  .cell.selected.labeled { background: rgba(0, 240, 255, 0.35); }
-
-  .cell-label {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 7px; font-weight: 600;
-    color: var(--green);
-    text-shadow: 0 0 6px rgba(0, 255, 157, 0.7);
-    pointer-events: none; text-align: center;
-    padding: 1px; overflow: hidden;
-    font-family: 'Orbitron', sans-serif; letter-spacing: 0.2px;
+  .cell.marked {
+    background: rgba(0,255,157,0.22);
   }
 
-  /* Selection rectangle while dragging */
-  #selectRect {
-    position: absolute;
-    border: 1px solid var(--cyan);
-    background: rgba(0, 240, 255, 0.12);
-    pointer-events: none;
-    z-index: 5;
-    display: none;
+  .cell.sel.marked {
+    background: rgba(0,229,255,0.45);
   }
 
-  .sidebar {
-    width: 320px;
-    background: linear-gradient(180deg, #0a0e17 0%, #080c14 100%);
-    border-left: 1px solid var(--border);
-    box-shadow: -12px 0 40px rgba(0,0,0,0.45);
-    display: flex; flex-direction: column;
-    overflow: hidden; flex-shrink: 0; position: relative;
-  }
-
-  .sidebar::before {
-    content: "";
-    position: absolute; top: 0; left: 0; bottom: 0; width: 1px;
-    background: linear-gradient(180deg, var(--cyan), transparent, var(--magenta));
-    opacity: 0.35;
-  }
-
-  .sidebar-header {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--border);
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 600; font-size: 10px; letter-spacing: 2px;
-    color: var(--cyan); text-transform: uppercase;
-    display: flex; align-items: center; gap: 8px;
-  }
-
-  .sidebar-header::before { content: "▸"; color: var(--magenta); }
-
-  .sidebar-content { flex: 1; overflow-y: auto; padding: 12px; }
-
-  .sidebar-content::-webkit-scrollbar { width: 4px; }
-  .sidebar-content::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 2px; }
-
-  .form-group { margin-bottom: 12px; }
-
-  .form-group label {
-    display: block; font-size: 9px; color: var(--text-dim);
-    margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;
-  }
-
-  input[type="text"], textarea, select {
-    width: 100%;
-    background: #060a12;
-    border: 1px solid #1a2a40;
-    border-radius: 4px;
-    color: var(--text);
-    padding: 9px 11px;
-    font-size: 13px;
-    font-family: 'Share Tech Mono', monospace;
-  }
-
-  input:focus, textarea:focus, select:focus {
-    outline: none;
-    border-color: var(--cyan);
-    box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.12);
-  }
-
-  textarea { min-height: 56px; resize: vertical; }
-
-  .coord-display {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 18px; font-weight: 700;
-    color: var(--cyan);
-    margin-bottom: 12px;
-    text-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
-    letter-spacing: 1px;
-  }
-
-  .hint {
-    font-size: 10px;
-    color: var(--text-dim);
-    margin-bottom: 12px;
-    line-height: 1.4;
-  }
-
-  .area-list { list-style: none; }
-
-  .area-item {
-    background: linear-gradient(135deg, #0c1220 0%, #0a0e17 100%);
-    border: 1px solid #1a2a40;
-    border-radius: 4px;
-    padding: 9px 11px;
-    margin-bottom: 6px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .area-item:hover {
-    border-color: var(--cyan);
-    box-shadow: 0 0 14px rgba(0, 240, 255, 0.15);
-  }
-
-  .area-item .coords {
-    font-size: 10px; color: var(--cyan); font-weight: 600;
-    font-family: 'Orbitron', sans-serif; letter-spacing: 0.5px;
-  }
-
-  .area-item .name { font-weight: 600; margin: 2px 0; font-size: 12px; }
-  .area-item .cat { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
-
-  .status-bar {
-    background: #080c14;
-    border-top: 1px solid var(--border);
-    padding: 5px 14px;
-    font-size: 10px; color: var(--text-dim);
-    display: flex; justify-content: space-between;
+  /* Bottom panel */
+  .bottom {
     flex-shrink: 0;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    max-height: 42%;
+    display: flex;
+    flex-direction: column;
   }
 
-  .status-bar span { display: flex; align-items: center; gap: 6px; }
-
-  .status-dot {
-    width: 6px; height: 6px;
-    background: var(--green);
-    border-radius: 50%;
-    box-shadow: 0 0 8px var(--green);
-    animation: pulse 2s infinite;
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
   }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
+  .tab {
+    flex: 1;
+    padding: 10px 4px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--dim);
+    border: none;
+    background: none;
+    font-family: inherit;
   }
 
-  .empty-state {
-    text-align: center; color: var(--text-dim);
-    padding: 24px 8px; font-size: 11px; line-height: 1.55;
-  }
-
-  .upload-zone {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    background: radial-gradient(ellipse at center, #0a1220 0%, #05070b 70%);
-    z-index: 20; gap: 16px; padding: 20px; text-align: center;
-  }
-
-  .upload-zone.hidden { display: none; }
-
-  .upload-zone .icon {
-    width: 60px; height: 60px;
-    border: 2px dashed var(--cyan-dim);
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; color: var(--cyan);
-  }
-
-  .upload-zone h2 {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 14px; letter-spacing: 3px;
-    color: var(--cyan); text-transform: uppercase;
-  }
-
-  .upload-zone p { color: var(--text-dim); font-size: 12px; max-width: 260px; line-height: 1.5; }
-
-  #fileInput { display: none; }
-
-  .mode-indicator {
-    position: absolute; top: 12px; left: 12px;
-    background: rgba(5, 7, 11, 0.9);
-    border: 1px solid #1e3a5f;
+  .tab.on {
     color: var(--cyan);
-    padding: 5px 12px; border-radius: 4px;
-    font-size: 10px; font-family: 'Orbitron', sans-serif;
-    letter-spacing: 1px; z-index: 10;
-    pointer-events: none; backdrop-filter: blur(8px);
+    border-bottom: 2px solid var(--cyan);
+  }
+
+  .panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .panel.hidden { display: none; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 6px;
+    border: 1px solid #1e3a5f;
+    background: #0f1c2e;
+    color: var(--cyan);
+    font-size: 11px;
+    font-family: inherit;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
   }
 
-  .section-title {
-    font-size: 9px; font-weight: 600; color: var(--text-dim);
-    text-transform: uppercase; letter-spacing: 1.5px;
-    margin: 16px 0 8px;
-    display: flex; align-items: center; gap: 8px;
+  .btn:active { opacity: 0.7; }
+  .btn.on { border-color: var(--green); color: var(--green); background: #0a2218; }
+  .btn.red { border-color: #5a1a2a; color: var(--red); }
+  .btn.big {
+    width: 100%;
+    height: 44px;
+    font-size: 13px;
+    margin-top: 8px;
   }
 
-  .section-title::after {
-    content: ""; flex: 1; height: 1px;
-    background: linear-gradient(90deg, #1a2a40, transparent);
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
   }
 
-  @media (max-width: 700px) {
-    .main { flex-direction: column; }
-    .sidebar { width: 100%; height: 38%; border-left: none; border-top: 1px solid var(--border); }
-    .logo h1 { font-size: 11px; }
-    header { height: 48px; padding: 0 10px; }
-    button { padding: 5px 8px; font-size: 9px; }
+  .btn-row .btn { flex: 1; }
+
+  /* Form */
+  label {
+    display: block;
+    font-size: 10px;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    background: #080c14;
+    border: 1px solid #1a2a40;
+    border-radius: 6px;
+    color: var(--text);
+    padding: 10px 12px;
+    font-size: 15px;
+    font-family: inherit;
+    margin-bottom: 10px;
+  }
+
+  textarea { min-height: 60px; resize: none; }
+
+  .coord {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--cyan);
+    margin-bottom: 4px;
+  }
+
+  .sub {
+    font-size: 11px;
+    color: var(--dim);
+    margin-bottom: 12px;
+  }
+
+  /* Sector list */
+  .sector {
+    background: #0c1220;
+    border: 1px solid #1a2a40;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+  }
+
+  .sector .c { font-size: 11px; color: var(--cyan); }
+  .sector .n { font-size: 14px; font-weight: 600; margin: 2px 0; }
+  .sector .t { font-size: 10px; color: var(--dim); text-transform: uppercase; }
+
+  /* Status */
+  .status {
+    flex-shrink: 0;
+    height: 28px;
+    background: #080c14;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    font-size: 10px;
+    color: var(--dim);
+  }
+
+  /* Upload overlay */
+  .upload {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 50;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .upload.hidden { display: none; }
+  .upload h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--cyan);
+  }
+  .upload p { font-size: 13px; color: var(--dim); max-width: 260px; line-height: 1.4; }
+
+  /* Selection count badge */
+  .badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.75);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    z-index: 10;
+    font-family: 'Orbitron', sans-serif;
   }
 </style>
 </head>
 <body>
+<div class="app">
 
-<header>
-  <div class="logo">
-    <div class="logo-icon">B</div>
-    <div>
-      <h1>BRUCHWIESEN</h1>
-      <span>LEVEL 001 // MAP CORE</span>
+  <!-- TOP -->
+  <div class="topbar">
+    <div class="title">BRUCHWIESEN</div>
+    <div class="top-btns">
+      <button class="btn" id="btnMode">SELECT</button>
+      <button class="btn" id="btnExport">JSON</button>
+      <button class="btn" id="btnGame">GAME</button>
     </div>
   </div>
-  <div class="header-actions">
-    <button id="btnMulti">MULTI</button>
-    <button id="btnClearSel">CLEAR SEL</button>
-    <button id="btnExport">EXPORT</button>
-    <button id="btnImport">IMPORT</button>
-    <button class="danger" id="btnClear">PURGE</button>
-  </div>
-</header>
 
-<div class="main">
-  <div class="map-container" id="mapContainer">
-    <div class="upload-zone" id="uploadZone">
-      <div class="icon">⬆</div>
-      <h2>Satellite Uplink</h2>
-      <p>Lade das Satellitenbild der Grundschule in den Bruchwiesen</p>
-      <button id="btnLoadImage">BILD LADEN</button>
-      <input type="file" id="fileInput" accept="image/*">
+  <!-- MAP -->
+  <div class="map-area" id="mapArea">
+    <div class="upload" id="upload">
+      <h2>BILD LADEN</h2>
+      <p>Satellitenbild der Grundschule hier auswählen</p>
+      <button class="btn big" id="btnLoad" style="max-width:220px">BILD AUSWÄHLEN</button>
+      <input type="file" id="file" accept="image/*" style="display:none">
     </div>
 
-    <div id="mapWrapper">
-      <img id="satelliteImg" alt="Satellitenkarte">
-      <canvas id="gridCanvas"></canvas>
-      <div class="cell-overlay" id="cellOverlay"></div>
-      <div id="selectRect"></div>
+    <div id="mapWrap">
+      <img id="sat" alt="">
+      <canvas id="grid"></canvas>
+      <div class="cells" id="cells"></div>
     </div>
 
-    <div class="mode-indicator" id="modeIndicator">SINGLE SELECT</div>
+    <div class="badge" id="badge" style="display:none">0</div>
   </div>
 
-  <aside class="sidebar">
-    <div class="sidebar-header">Sector Editor</div>
-    <div class="sidebar-content">
-      <div class="empty-state" id="emptyState">
-        Tippe auf Felder oder ziehe ein Rechteck<br>
-        (MULTI = mehrere Felder sammeln)
+  <!-- BOTTOM -->
+  <div class="bottom">
+    <div class="tabs">
+      <button class="tab on" data-tab="edit">EDIT</button>
+      <button class="tab" data-tab="list">LISTE</button>
+      <button class="tab" data-tab="help">HILFE</button>
+    </div>
+
+    <!-- EDIT TAB -->
+    <div class="panel" id="tab-edit">
+      <div id="emptyMsg" class="sub" style="text-align:center;padding:16px 0">
+        Tippe auf Felder um sie auszuwählen.<br>
+        Im MULTI-Modus kannst du mehrere sammeln.
       </div>
 
-      <div id="editForm" style="display:none;">
-        <div class="coord-display" id="coordDisplay">—</div>
-        <div class="hint" id="selectionHint"></div>
+      <div id="form" style="display:none">
+        <div class="coord" id="coord">—</div>
+        <div class="sub" id="count">0 Felder</div>
 
-        <div class="form-group">
-          <label>Bezeichnung</label>
-          <input type="text" id="inputName" placeholder="z.B. Schulgebäude">
-        </div>
+        <label>Name</label>
+        <input type="text" id="name" placeholder="z.B. Schulgebäude">
 
-        <div class="form-group">
-          <label>Kategorie</label>
-          <select id="inputCategory">
-            <option value="gebaeude">Gebäude</option>
-            <option value="sportflaeche">Sportfläche</option>
-            <option value="wiese">Wiese</option>
-            <option value="hof">Hof / Asphalt</option>
-            <option value="strasse">Straße</option>
-            <option value="weg">Weg</option>
-            <option value="wald">Wald / Bäume</option>
-            <option value="sonstiges">Sonstiges</option>
-          </select>
-        </div>
+        <label>Typ</label>
+        <select id="type">
+          <option value="building">Gebäude</option>
+          <option value="tennis">Tennisplatz</option>
+          <option value="court">Sportfläche</option>
+          <option value="path">Weg / Hof</option>
+          <option value="street">Straße</option>
+          <option value="grass">Wiese</option>
+          <option value="trees">Bäume</option>
+          <option value="other">Sonstiges</option>
+        </select>
 
-        <div class="form-group">
-          <label>Beschreibung</label>
-          <textarea id="inputDesc" placeholder="Optionale Notizen..."></textarea>
+        <div class="btn-row">
+          <button class="btn" id="btnSave" style="flex:2;border-color:var(--green);color:var(--green)">SPEICHERN</button>
+          <button class="btn red" id="btnDel">LÖSCHEN</button>
         </div>
-
-        <div style="display:flex; gap:8px; margin-top:4px;">
-          <button class="success" id="btnSave" style="flex:1;">SAVE</button>
-          <button class="danger" id="btnDelete" style="flex:1;">DELETE</button>
-        </div>
+        <button class="btn big" id="btnClearSel" style="margin-top:8px">AUSWAHL LEEREN</button>
       </div>
-
-      <div class="section-title">Captured Sectors</div>
-      <ul class="area-list" id="areaList"></ul>
     </div>
-  </aside>
-</div>
 
-<div class="status-bar">
-  <span><span class="status-dot"></span> <span id="statusText">SYSTEM READY</span></span>
-  <span id="zoomText">ZOOM 100%</span>
+    <!-- LIST TAB -->
+    <div class="panel hidden" id="tab-list">
+      <div id="list"></div>
+    </div>
+
+    <!-- HELP TAB -->
+    <div class="panel hidden" id="tab-help">
+      <div class="sub" style="line-height:1.6">
+        <b style="color:var(--cyan)">Bedienung (iPhone)</b><br><br>
+        • <b>Tippen</b> = Feld auswählen / abwählen<br>
+        • <b>SELECT</b> oben = Einzel-Modus<br>
+        • <b>MULTI</b> oben = mehrere Felder sammeln<br>
+        • Zwei Finger = zoomen & verschieben<br>
+        • Nach dem Markieren → Name + Typ → SPEICHERN<br><br>
+        <b style="color:var(--cyan)">Workflow</b><br>
+        1. Bild laden<br>
+        2. Gebäude / Tennisplätze etc. antippen<br>
+        3. Speichern<br>
+        4. GAME drücken → spielbare Datei
+      </div>
+    </div>
+  </div>
+
+  <div class="status">
+    <span id="status">Bereit</span>
+    <span id="zoom">100%</span>
+  </div>
 </div>
 
 <script>
-(function() {
-  // Square grid: we choose a cell size that fits the image well
-  const TARGET_CELLS = 12; // approx number of cells on the longer side
-  let COLS = 10, ROWS = 10;
-  let COL_LABELS = [];
-  let cellSize = 0;
+(function(){
+  // ===== STATE =====
+  let COLS=10, ROWS=10, cellSize=40, labels=[];
+  let areas = JSON.parse(localStorage.getItem("bw_v4") || "[]");
+  let selected = new Set();
+  let multi = false;
+  let scale=1, ox=0, oy=0;
+  let imgW=0, imgH=0;
+  let panning=false, lastDist=0, lastMid=null;
 
-  let areas = JSON.parse(localStorage.getItem("bruchwiesen_areas_v2") || "[]");
-  let selectedCells = new Set();
-  let multiMode = false;
-  let scale = 1, offsetX = 0, offsetY = 0;
-  let isPanning = false, startPanX, startPanY;
-  let isSelecting = false;
-  let selectStart = null;
-  let imgNaturalWidth = 0, imgNaturalHeight = 0;
+  // ===== DOM =====
+  const mapArea = document.getElementById("mapArea");
+  const mapWrap = document.getElementById("mapWrap");
+  const sat = document.getElementById("sat");
+  const grid = document.getElementById("grid");
+  const cellsEl = document.getElementById("cells");
+  const upload = document.getElementById("upload");
+  const file = document.getElementById("file");
+  const badge = document.getElementById("badge");
+  const form = document.getElementById("form");
+  const emptyMsg = document.getElementById("emptyMsg");
+  const coordEl = document.getElementById("coord");
+  const countEl = document.getElementById("count");
+  const nameEl = document.getElementById("name");
+  const typeEl = document.getElementById("type");
+  const listEl = document.getElementById("list");
+  const statusEl = document.getElementById("status");
+  const zoomEl = document.getElementById("zoom");
+  const btnMode = document.getElementById("btnMode");
 
-  const mapContainer = document.getElementById("mapContainer");
-  const mapWrapper = document.getElementById("mapWrapper");
-  const satelliteImg = document.getElementById("satelliteImg");
-  const gridCanvas = document.getElementById("gridCanvas");
-  const cellOverlay = document.getElementById("cellOverlay");
-  const selectRect = document.getElementById("selectRect");
-  const uploadZone = document.getElementById("uploadZone");
-  const fileInput = document.getElementById("fileInput");
-  const modeIndicator = document.getElementById("modeIndicator");
-  const coordDisplay = document.getElementById("coordDisplay");
-  const selectionHint = document.getElementById("selectionHint");
-  const inputName = document.getElementById("inputName");
-  const inputCategory = document.getElementById("inputCategory");
-  const inputDesc = document.getElementById("inputDesc");
-  const editForm = document.getElementById("editForm");
-  const emptyState = document.getElementById("emptyState");
-  const areaList = document.getElementById("areaList");
-  const statusText = document.getElementById("statusText");
-  const zoomText = document.getElementById("zoomText");
+  // ===== LOAD IMAGE =====
+  document.getElementById("btnLoad").onclick = () => file.click();
+  file.onchange = e => { if(e.target.files[0]) load(URL.createObjectURL(e.target.files[0])); };
 
-  document.getElementById("btnLoadImage").addEventListener("click", () => fileInput.click());
-  fileInput.addEventListener("change", e => {
-    if (e.target.files[0]) loadImage(URL.createObjectURL(e.target.files[0]));
-  });
+  function load(src){
+    sat.onload = () => {
+      imgW = sat.naturalWidth;
+      imgH = sat.naturalHeight;
+      sat.style.width = imgW + "px";
+      sat.style.height = imgH + "px";
 
-  mapContainer.addEventListener("dragover", e => e.preventDefault());
-  mapContainer.addEventListener("drop", e => {
-    e.preventDefault();
-    const f = e.dataTransfer.files[0];
-    if (f && f.type.startsWith("image/")) loadImage(URL.createObjectURL(f));
-  });
+      // square cells
+      const target = 12;
+      cellSize = Math.max(16, Math.floor(Math.min(imgW, imgH) / target));
+      COLS = Math.floor(imgW / cellSize);
+      ROWS = Math.floor(imgH / cellSize);
+      cellSize = Math.floor(Math.min(imgW / COLS, imgH / ROWS));
+      COLS = Math.floor(imgW / cellSize);
+      ROWS = Math.floor(imgH / cellSize);
 
-  function loadImage(src) {
-    satelliteImg.onload = () => {
-      imgNaturalWidth = satelliteImg.naturalWidth;
-      imgNaturalHeight = satelliteImg.naturalHeight;
-      satelliteImg.style.width = imgNaturalWidth + "px";
-      satelliteImg.style.height = imgNaturalHeight + "px";
+      labels = Array.from({length:COLS}, (_,i) => i<26 ? String.fromCharCode(65+i) : "A"+String.fromCharCode(65+i-26));
 
-      // Calculate square cell size
-      cellSize = Math.floor(Math.min(imgNaturalWidth, imgNaturalHeight) / TARGET_CELLS);
-      COLS = Math.floor(imgNaturalWidth / cellSize);
-      ROWS = Math.floor(imgNaturalHeight / cellSize);
-      COL_LABELS = [];
-      for (let i = 0; i < COLS; i++) {
-        COL_LABELS.push(i < 26 ? String.fromCharCode(65 + i) : "A" + String.fromCharCode(65 + i - 26));
-      }
-
-      const gridW = COLS * cellSize;
-      const gridH = ROWS * cellSize;
-
-      gridCanvas.width = gridW;
-      gridCanvas.height = gridH;
-      cellOverlay.style.width = gridW + "px";
-      cellOverlay.style.height = gridH + "px";
-
-      // Center the grid on the image if slightly smaller
-      gridCanvas.style.left = "0px";
-      gridCanvas.style.top = "0px";
-      cellOverlay.style.left = "0px";
-      cellOverlay.style.top = "0px";
+      const gw = COLS * cellSize;
+      const gh = ROWS * cellSize;
+      grid.width = gw; grid.height = gh;
+      cellsEl.style.width = gw + "px";
+      cellsEl.style.height = gh + "px";
 
       drawGrid();
-      createCells();
-      fitToView();
-      uploadZone.classList.add("hidden");
-      renderAreaList();
-      updateCellVisuals();
-      setStatus(`GRID ${COLS}×${ROWS} // SQUARE CELLS ${cellSize}px`);
+      buildCells();
+      fit();
+      upload.classList.add("hidden");
+      renderList();
+      updateUI();
+      setStatus(`Grid ${COLS}×${ROWS} • ${cellSize}px`);
     };
-    satelliteImg.src = src;
+    sat.src = src;
   }
 
-  function drawGrid() {
-    const ctx = gridCanvas.getContext("2d");
-    ctx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
-
-    ctx.strokeStyle = "rgba(0, 240, 255, 0.22)";
+  function drawGrid(){
+    const ctx = grid.getContext("2d");
+    ctx.clearRect(0,0,grid.width,grid.height);
+    ctx.strokeStyle = "rgba(0,229,255,0.18)";
     ctx.lineWidth = 1;
-
-    for (let i = 0; i <= COLS; i++) {
-      const x = i * cellSize + 0.5;
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, ROWS * cellSize); ctx.stroke();
+    for(let i=0;i<=COLS;i++){
+      const x = i*cellSize + 0.5;
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,ROWS*cellSize); ctx.stroke();
     }
-    for (let j = 0; j <= ROWS; j++) {
-      const y = j * cellSize + 0.5;
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(COLS * cellSize, y); ctx.stroke();
-    }
-
-    // Labels
-    ctx.fillStyle = "rgba(0, 240, 255, 0.75)";
-    ctx.font = "bold 11px Orbitron, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    for (let i = 0; i < COLS; i++) {
-      ctx.fillText(COL_LABELS[i], i * cellSize + cellSize / 2, 11);
-    }
-    for (let j = 0; j < ROWS; j++) {
-      ctx.fillText(String(j + 1), 11, j * cellSize + cellSize / 2);
+    for(let j=0;j<=ROWS;j++){
+      const y = j*cellSize + 0.5;
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(COLS*cellSize,y); ctx.stroke();
     }
   }
 
-  function createCells() {
-    cellOverlay.innerHTML = "";
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        cell.style.left = (c * cellSize) + "px";
-        cell.style.top = (r * cellSize) + "px";
-        cell.style.width = cellSize + "px";
-        cell.style.height = cellSize + "px";
-        cell.dataset.col = c;
-        cell.dataset.row = r;
-        cell.dataset.coord = COL_LABELS[c] + (r + 1);
-        cellOverlay.appendChild(cell);
+  function buildCells(){
+    cellsEl.innerHTML = "";
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const d = document.createElement("div");
+        d.className = "cell";
+        d.style.left = (c*cellSize)+"px";
+        d.style.top = (r*cellSize)+"px";
+        d.style.width = cellSize+"px";
+        d.style.height = cellSize+"px";
+        d.dataset.coord = labels[c] + (r+1);
+        d.dataset.c = c;
+        d.dataset.r = r;
+        cellsEl.appendChild(d);
       }
     }
   }
 
-  function coordAt(x, y) {
-    const c = Math.floor(x / cellSize);
-    const r = Math.floor(y / cellSize);
-    if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return null;
-    return COL_LABELS[c] + (r + 1);
-  }
+  // ===== TOUCH / CLICK SELECTION (simple & reliable) =====
+  // Single tap on a cell toggles it
+  cellsEl.addEventListener("click", e => {
+    const cell = e.target.closest(".cell");
+    if(!cell) return;
+    const coord = cell.dataset.coord;
 
-  // ---------- Selection ----------
-  function onCellClick(coord) {
-    if (multiMode) {
-      if (selectedCells.has(coord)) selectedCells.delete(coord);
-      else selectedCells.add(coord);
+    if(multi){
+      if(selected.has(coord)) selected.delete(coord);
+      else selected.add(coord);
     } else {
-      selectedCells.clear();
-      selectedCells.add(coord);
+      selected.clear();
+      selected.add(coord);
     }
-    updateCellVisuals();
-    showEditForm();
-  }
-
-  // Drag-to-select rectangle
-  cellOverlay.addEventListener("mousedown", e => {
-    if (e.button !== 0) return;
-    const rect = cellOverlay.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / scale;
-    const y = (e.clientY - rect.top) / scale;
-    isSelecting = true;
-    selectStart = { x, y };
-    selectRect.style.display = "block";
-    selectRect.style.left = x + "px";
-    selectRect.style.top = y + "px";
-    selectRect.style.width = "0px";
-    selectRect.style.height = "0px";
-    e.preventDefault();
+    updateUI();
   });
 
-  window.addEventListener("mousemove", e => {
-    if (!isSelecting || !selectStart) return;
-    const rect = cellOverlay.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / scale;
-    const y = (e.clientY - rect.top) / scale;
-
-    const left = Math.min(selectStart.x, x);
-    const top = Math.min(selectStart.y, y);
-    const w = Math.abs(x - selectStart.x);
-    const h = Math.abs(y - selectStart.y);
-
-    selectRect.style.left = left + "px";
-    selectRect.style.top = top + "px";
-    selectRect.style.width = w + "px";
-    selectRect.style.height = h + "px";
+  // Also support pointer events for better mobile
+  cellsEl.addEventListener("pointerup", e => {
+    // handled by click mostly
   });
 
-  window.addEventListener("mouseup", e => {
-    if (!isSelecting || !selectStart) {
-      isSelecting = false;
-      return;
-    }
-    isSelecting = false;
-    selectRect.style.display = "none";
-
-    const rect = cellOverlay.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / scale;
-    const y = (e.clientY - rect.top) / scale;
-
-    const x1 = Math.min(selectStart.x, x);
-    const y1 = Math.min(selectStart.y, y);
-    const x2 = Math.max(selectStart.x, x);
-    const y2 = Math.max(selectStart.y, y);
-
-    // If the drag was tiny → treat as single click
-    if (Math.abs(x2 - x1) < 8 && Math.abs(y2 - y1) < 8) {
-      const coord = coordAt(selectStart.x, selectStart.y);
-      if (coord) onCellClick(coord);
-      selectStart = null;
-      return;
-    }
-
-    // Rectangle selection
-    if (!multiMode) selectedCells.clear();
-
-    const c1 = Math.floor(x1 / cellSize);
-    const r1 = Math.floor(y1 / cellSize);
-    const c2 = Math.floor(x2 / cellSize);
-    const r2 = Math.floor(y2 / cellSize);
-
-    for (let r = Math.max(0, r1); r <= Math.min(ROWS - 1, r2); r++) {
-      for (let c = Math.max(0, c1); c <= Math.min(COLS - 1, c2); c++) {
-        selectedCells.add(COL_LABELS[c] + (r + 1));
-      }
-    }
-
-    selectStart = null;
-    updateCellVisuals();
-    showEditForm();
-    setStatus(`${selectedCells.size} CELLS SELECTED`);
-  });
-
-  // Touch support for selection
-  cellOverlay.addEventListener("touchstart", e => {
-    if (e.touches.length !== 1) return;
-    const touch = e.touches[0];
-    const rect = cellOverlay.getBoundingClientRect();
-    const x = (touch.clientX - rect.left) / scale;
-    const y = (touch.clientY - rect.top) / scale;
-    isSelecting = true;
-    selectStart = { x, y };
-    selectRect.style.display = "block";
-    selectRect.style.left = x + "px";
-    selectRect.style.top = y + "px";
-    selectRect.style.width = "0px";
-    selectRect.style.height = "0px";
-  }, { passive: true });
-
-  cellOverlay.addEventListener("touchmove", e => {
-    if (!isSelecting || !selectStart || e.touches.length !== 1) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    const rect = cellOverlay.getBoundingClientRect();
-    const x = (touch.clientX - rect.left) / scale;
-    const y = (touch.clientY - rect.top) / scale;
-
-    const left = Math.min(selectStart.x, x);
-    const top = Math.min(selectStart.y, y);
-    selectRect.style.left = left + "px";
-    selectRect.style.top = top + "px";
-    selectRect.style.width = Math.abs(x - selectStart.x) + "px";
-    selectRect.style.height = Math.abs(y - selectStart.y) + "px";
-  }, { passive: false });
-
-  cellOverlay.addEventListener("touchend", e => {
-    if (!isSelecting || !selectStart) return;
-    isSelecting = false;
-    selectRect.style.display = "none";
-
-    // Use last known position roughly
-    const x1 = selectStart.x;
-    const y1 = selectStart.y;
-    // For simplicity on touch we just do single cell if small movement
-    const coord = coordAt(x1, y1);
-    if (coord) onCellClick(coord);
-    selectStart = null;
-  });
-
-  function updateCellVisuals() {
-    document.querySelectorAll(".cell").forEach(cell => {
-      const coord = cell.dataset.coord;
-      cell.classList.toggle("selected", selectedCells.has(coord));
-      cell.classList.toggle("labeled", areas.some(a => a.cells.includes(coord)));
-
-      let labelEl = cell.querySelector(".cell-label");
-      if (!labelEl) {
-        labelEl = document.createElement("div");
-        labelEl.className = "cell-label";
-        cell.appendChild(labelEl);
-      }
-      const area = areas.find(a => a.cells.length === 1 && a.cells[0] === coord);
-      labelEl.textContent = area ? area.name : "";
-    });
-  }
-
-  function showEditForm() {
-    if (selectedCells.size === 0) {
-      editForm.style.display = "none";
-      emptyState.style.display = "block";
-      return;
-    }
-    emptyState.style.display = "none";
-    editForm.style.display = "block";
-
-    const coords = Array.from(selectedCells).sort((a, b) => {
-      const ca = a.match(/([A-Z]+)(\d+)/);
-      const cb = b.match(/([A-Z]+)(\d+)/);
-      if (ca[1] !== cb[1]) return ca[1].localeCompare(cb[1]);
-      return parseInt(ca[2]) - parseInt(cb[2]);
-    });
-
-    if (coords.length === 1) {
-      coordDisplay.textContent = coords[0];
-      selectionHint.textContent = "1 Feld ausgewählt";
-    } else {
-      coordDisplay.textContent = coords[0] + " → " + coords[coords.length - 1];
-      selectionHint.textContent = coords.length + " Felder ausgewählt – wird als ein Bereich gespeichert";
-    }
-
-    const existing = areas.find(a => 
-      a.cells.length === selectedCells.size && 
-      a.cells.every(c => selectedCells.has(c))
-    );
-    if (existing) {
-      inputName.value = existing.name || "";
-      inputCategory.value = existing.category || "sonstiges";
-      inputDesc.value = existing.description || "";
-    } else {
-      inputName.value = "";
-      inputCategory.value = "gebaeude";
-      inputDesc.value = "";
-    }
-  }
-
-  document.getElementById("btnSave").addEventListener("click", () => {
-    if (selectedCells.size === 0) return;
-    const name = inputName.value.trim() || "UNNAMED";
-    const cells = Array.from(selectedCells).sort();
-    areas = areas.filter(a => !a.cells.some(c => selectedCells.has(c)));
-    areas.push({
-      id: Date.now().toString(36),
-      cells, name,
-      category: inputCategory.value,
-      description: inputDesc.value.trim(),
-      created: new Date().toISOString()
-    });
-    save();
-    updateCellVisuals();
-    renderAreaList();
-    setStatus("SECTOR SAVED // " + name.toUpperCase());
-  });
-
-  document.getElementById("btnDelete").addEventListener("click", () => {
-    if (selectedCells.size === 0) return;
-    areas = areas.filter(a => !a.cells.some(c => selectedCells.has(c)));
-    selectedCells.clear();
-    save();
-    updateCellVisuals();
-    showEditForm();
-    renderAreaList();
-    setStatus("SECTOR PURGED");
-  });
-
-  document.getElementById("btnClearSel").addEventListener("click", () => {
-    selectedCells.clear();
-    updateCellVisuals();
-    showEditForm();
-    setStatus("SELECTION CLEARED");
-  });
-
-  function renderAreaList() {
-    areaList.innerHTML = "";
-    if (areas.length === 0) {
-      areaList.innerHTML = '<li class="empty-state">NO SECTORS CAPTURED</li>';
-      return;
-    }
-    areas.slice().reverse().forEach(area => {
-      const li = document.createElement("li");
-      li.className = "area-item";
-      const coordStr = area.cells.length === 1 
-        ? area.cells[0] 
-        : area.cells[0] + "→" + area.cells[area.cells.length - 1] + ` (${area.cells.length})`;
-      li.innerHTML = `<div class="coords">${coordStr}</div><div class="name">${escapeHtml(area.name)}</div><div class="cat">${categoryLabel(area.category)}</div>`;
-      li.addEventListener("click", () => {
-        selectedCells = new Set(area.cells);
-        updateCellVisuals();
-        showEditForm();
-      });
-      areaList.appendChild(li);
-    });
-  }
-
-  function categoryLabel(cat) {
-    return {
-      wiese: "Wiese", sportflaeche: "Sportfläche", gebaeude: "Gebäude",
-      strasse: "Straße", weg: "Weg", wald: "Wald / Bäume",
-      hof: "Hof / Asphalt", sonstiges: "Sonstiges"
-    }[cat] || cat;
-  }
-
-  function escapeHtml(str) {
-    return str.replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
-  }
-
-  function save() {
-    localStorage.setItem("bruchwiesen_areas_v2", JSON.stringify(areas));
-  }
-
-  document.getElementById("btnMulti").addEventListener("click", function() {
-    multiMode = !multiMode;
-    this.classList.toggle("active", multiMode);
-    modeIndicator.textContent = multiMode ? "MULTI SELECT" : "SINGLE SELECT";
-  });
-
-  document.getElementById("btnExport").addEventListener("click", () => {
-    const data = {
-      version: 2,
-      project: "BRUCHWIESEN Level 001",
-      location: "Grundschule in den Bruchwiesen, Saarlouis-Beaumarais",
-      coordinates: "49.31309 N, 6.72453 E",
-      grid: { cols: COLS, rows: ROWS, cellSize, labels: COL_LABELS },
-      areas,
-      exportedAt: new Date().toISOString()
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "bruchwiesen_level001_sectors.json";
-    a.click();
-    setStatus("DATA EXPORTED");
-  });
-
-  document.getElementById("btnImport").addEventListener("click", () => {
-    const input = document.createElement("input");
-    input.type = "file"; input.accept = "application/json";
-    input.onchange = e => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const data = JSON.parse(reader.result);
-          if (data.areas) {
-            areas = data.areas;
-            save(); updateCellVisuals(); renderAreaList();
-            setStatus("DATA IMPORTED");
-          }
-        } catch { setStatus("IMPORT FAILED"); }
-      };
-      reader.readAsText(e.target.files[0]);
-    };
-    input.click();
-  });
-
-  document.getElementById("btnClear").addEventListener("click", () => {
-    if (confirm("ALLE SEKTOREN UNWIDERRUFLICH LÖSCHEN?")) {
-      areas = []; selectedCells.clear();
-      save(); updateCellVisuals(); showEditForm(); renderAreaList();
-      setStatus("ALL DATA PURGED");
-    }
-  });
-
-  // ---------- Zoom & Pan ----------
-  function fitToView() {
-    const cw = mapContainer.clientWidth, ch = mapContainer.clientHeight;
-    scale = Math.min(cw / imgNaturalWidth, ch / imgNaturalHeight) * 0.93;
-    offsetX = (cw - imgNaturalWidth * scale) / 2;
-    offsetY = (ch - imgNaturalHeight * scale) / 2;
-    applyTransform();
-  }
-
-  function applyTransform() {
-    mapWrapper.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-    zoomText.textContent = "ZOOM " + Math.round(scale * 100) + "%";
-  }
-
-  mapContainer.addEventListener("wheel", e => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    const newScale = Math.min(Math.max(scale * delta, 0.12), 7);
-    const rect = mapContainer.getBoundingClientRect();
-    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    offsetX = mx - (mx - offsetX) * (newScale / scale);
-    offsetY = my - (my - offsetY) * (newScale / scale);
-    scale = newScale;
-    applyTransform();
-  }, { passive: false });
-
-  // Pan with middle mouse or space+drag / two-finger is handled separately
-  mapContainer.addEventListener("mousedown", e => {
-    if (e.button === 1 || (e.button === 0 && e.altKey)) {
-      isPanning = true;
-      startPanX = e.clientX - offsetX;
-      startPanY = e.clientY - offsetY;
-      e.preventDefault();
-    }
-  });
-
-  window.addEventListener("mousemove", e => {
-    if (!isPanning) return;
-    offsetX = e.clientX - startPanX;
-    offsetY = e.clientY - startPanY;
-    applyTransform();
-  });
-
-  window.addEventListener("mouseup", () => { isPanning = false; });
-
-  // Touch pan (two fingers) + pinch
-  let lastTouchDist = 0;
-  let lastTouchMid = null;
-
-  mapContainer.addEventListener("touchstart", e => {
-    if (e.touches.length === 2) {
-      isPanning = false;
-      isSelecting = false;
-      selectRect.style.display = "none";
+  // ===== TWO-FINGER PAN + ZOOM =====
+  mapArea.addEventListener("touchstart", e => {
+    if(e.touches.length === 2){
+      panning = true;
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
-      lastTouchDist = Math.hypot(dx, dy);
-      lastTouchMid = {
-        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
-        y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+      lastDist = Math.hypot(dx, dy);
+      lastMid = {
+        x: (e.touches[0].clientX + e.touches[1].clientX)/2,
+        y: (e.touches[0].clientY + e.touches[1].clientY)/2
       };
     }
-  }, { passive: true });
+  }, {passive:true});
 
-  mapContainer.addEventListener("touchmove", e => {
-    if (e.touches.length === 2) {
+  mapArea.addEventListener("touchmove", e => {
+    if(e.touches.length === 2 && panning){
       e.preventDefault();
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const dist = Math.hypot(dx, dy);
       const mid = {
-        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
-        y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+        x: (e.touches[0].clientX + e.touches[1].clientX)/2,
+        y: (e.touches[0].clientY + e.touches[1].clientY)/2
       };
 
-      // Pinch zoom
-      const newScale = Math.min(Math.max(scale * (dist / lastTouchDist), 0.12), 7);
-      const rect = mapContainer.getBoundingClientRect();
-      const mx = mid.x - rect.left, my = mid.y - rect.top;
-      offsetX = mx - (mx - offsetX) * (newScale / scale);
-      offsetY = my - (my - offsetY) * (newScale / scale);
-      scale = newScale;
-      lastTouchDist = dist;
+      // zoom
+      const ns = Math.min(Math.max(scale * (dist / lastDist), 0.15), 6);
+      const rect = mapArea.getBoundingClientRect();
+      const mx = mid.x - rect.left;
+      const my = mid.y - rect.top;
+      ox = mx - (mx - ox) * (ns / scale);
+      oy = my - (my - oy) * (ns / scale);
+      scale = ns;
+      lastDist = dist;
 
-      // Pan
-      if (lastTouchMid) {
-        offsetX += mid.x - lastTouchMid.x;
-        offsetY += mid.y - lastTouchMid.y;
+      // pan
+      if(lastMid){
+        ox += mid.x - lastMid.x;
+        oy += mid.y - lastMid.y;
       }
-      lastTouchMid = mid;
-      applyTransform();
+      lastMid = mid;
+      apply();
     }
-  }, { passive: false });
+  }, {passive:false});
 
-  function setStatus(msg) { statusText.textContent = msg; }
+  mapArea.addEventListener("touchend", () => { panning = false; });
 
-  renderAreaList();
-  setStatus("SYSTEM READY // AWAITING UPLINK");
+  // Desktop wheel zoom
+  mapArea.addEventListener("wheel", e => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const ns = Math.min(Math.max(scale * delta, 0.15), 6);
+    const rect = mapArea.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    ox = mx - (mx - ox)*(ns/scale);
+    oy = my - (my - oy)*(ns/scale);
+    scale = ns;
+    apply();
+  }, {passive:false});
+
+  function fit(){
+    const cw = mapArea.clientWidth, ch = mapArea.clientHeight;
+    scale = Math.min(cw/imgW, ch/imgH) * 0.95;
+    ox = (cw - imgW*scale)/2;
+    oy = (ch - imgH*scale)/2;
+    apply();
+  }
+
+  function apply(){
+    mapWrap.style.transform = `translate(${ox}px,${oy}px) scale(${scale})`;
+    zoomEl.textContent = Math.round(scale*100) + "%";
+  }
+
+  // ===== UI UPDATE =====
+  function updateUI(){
+    // visual cells
+    document.querySelectorAll(".cell").forEach(cell => {
+      const c = cell.dataset.coord;
+      cell.classList.toggle("sel", selected.has(c));
+      cell.classList.toggle("marked", areas.some(a => a.cells.includes(c)));
+    });
+
+    // badge
+    if(selected.size > 0){
+      badge.style.display = "block";
+      badge.textContent = selected.size;
+    } else {
+      badge.style.display = "none";
+    }
+
+    // form
+    if(selected.size === 0){
+      form.style.display = "none";
+      emptyMsg.style.display = "block";
+    } else {
+      emptyMsg.style.display = "none";
+      form.style.display = "block";
+      const arr = [...selected].sort();
+      coordEl.textContent = arr.length === 1 ? arr[0] : arr[0] + " → " + arr[arr.length-1];
+      countEl.textContent = arr.length + " Feld" + (arr.length>1?"er":"");
+
+      // prefill if exact match
+      const exist = areas.find(a => a.cells.length === selected.size && a.cells.every(c => selected.has(c)));
+      if(exist){
+        nameEl.value = exist.name;
+        typeEl.value = exist.type;
+      } else {
+        nameEl.value = "";
+        typeEl.value = "building";
+      }
+    }
+  }
+
+  // ===== SAVE / DELETE =====
+  document.getElementById("btnSave").onclick = () => {
+    if(selected.size === 0) return;
+    const name = nameEl.value.trim() || "Unbenannt";
+    const type = typeEl.value;
+    const cells = [...selected].sort();
+
+    // remove overlapping
+    areas = areas.filter(a => !a.cells.some(c => selected.has(c)));
+    areas.push({ id: Date.now().toString(36), cells, name, type });
+    localStorage.setItem("bw_v4", JSON.stringify(areas));
+    selected.clear();
+    updateUI();
+    renderList();
+    setStatus("Gespeichert: " + name);
+  };
+
+  document.getElementById("btnDel").onclick = () => {
+    areas = areas.filter(a => !a.cells.some(c => selected.has(c)));
+    localStorage.setItem("bw_v4", JSON.stringify(areas));
+    selected.clear();
+    updateUI();
+    renderList();
+    setStatus("Gelöscht");
+  };
+
+  document.getElementById("btnClearSel").onclick = () => {
+    selected.clear();
+    updateUI();
+  };
+
+  // ===== MODE =====
+  btnMode.onclick = () => {
+    multi = !multi;
+    btnMode.textContent = multi ? "MULTI" : "SELECT";
+    btnMode.classList.toggle("on", multi);
+    setStatus(multi ? "MULTI-Modus: tippe mehrere Felder an" : "Einzel-Modus");
+  };
+
+  // ===== LIST =====
+  function renderList(){
+    listEl.innerHTML = "";
+    if(areas.length === 0){
+      listEl.innerHTML = '<div class="sub" style="text-align:center;padding:20px">Noch keine Sektoren</div>';
+      return;
+    }
+    areas.slice().reverse().forEach(a => {
+      const d = document.createElement("div");
+      d.className = "sector";
+      const range = a.cells.length === 1 ? a.cells[0] : a.cells[0] + "→" + a.cells[a.cells.length-1] + " (" + a.cells.length + ")";
+      d.innerHTML = `<div class="c">${range}</div><div class="n">${a.name}</div><div class="t">${a.type}</div>`;
+      d.onclick = () => {
+        selected = new Set(a.cells);
+        updateUI();
+        // switch to edit tab
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("on"));
+        document.querySelector('[data-tab="edit"]').classList.add("on");
+        document.querySelectorAll(".panel").forEach(p => p.classList.add("hidden"));
+        document.getElementById("tab-edit").classList.remove("hidden");
+      };
+      listEl.appendChild(d);
+    });
+  }
+
+  // ===== TABS =====
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("on"));
+      tab.classList.add("on");
+      document.querySelectorAll(".panel").forEach(p => p.classList.add("hidden"));
+      document.getElementById("tab-" + tab.dataset.tab).classList.remove("hidden");
+    };
+  });
+
+  // ===== EXPORT + GAME =====
+  function buildData(){
+    const tilemap = Array.from({length:ROWS}, () => Array(COLS).fill("empty"));
+    areas.forEach(a => {
+      a.cells.forEach(coord => {
+        const m = coord.match(/([A-Z]+)(\d+)/);
+        if(!m) return;
+        const c = labels.indexOf(m[1]);
+        const r = parseInt(m[2])-1;
+        if(c>=0 && r>=0 && c<COLS && r<ROWS) tilemap[r][c] = a.type;
+      });
+    });
+    return {
+      version: 4,
+      project: "BRUCHWIESEN",
+      level: "001",
+      location: { name: "Grundschule in den Bruchwiesen", coords: "49.31309N 6.72453E" },
+      grid: { cols: COLS, rows: ROWS, cellSize, labels },
+      tilemap,
+      sectors: areas,
+      tileTypes: {
+        empty:    { walkable:true,  color:"#2d5a27" },
+        grass:    { walkable:true,  color:"#3d7a37" },
+        path:     { walkable:true,  color:"#6b6b6b" },
+        street:   { walkable:true,  color:"#444444" },
+        court:    { walkable:true,  color:"#c4a35a" },
+        tennis:   { walkable:true,  color:"#c4783a" },
+        building: { walkable:false, color:"#5a5a6e" },
+        trees:    { walkable:false, color:"#1e3d1a" },
+        other:    { walkable:true,  color:"#555555" }
+      },
+      playerStart: { col: Math.floor(COLS/2), row: Math.floor(ROWS/2) }
+    };
+  }
+
+  document.getElementById("btnExport").onclick = () => {
+    const data = buildData();
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "bruchwiesen_gamedata.json";
+    a.click();
+    setStatus("JSON exportiert");
+  };
+
+  document.getElementById("btnGame").onclick = () => {
+    const data = buildData();
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>BRUCHWIESEN</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#111;color:#eee;font-family:monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+canvas{background:#1a1a1a;margin:auto;image-rendering:pixelated;touch-action:none}
+.bar{padding:8px 12px;background:#0a0a0a;font-size:12px;display:flex;justify-content:space-between}
+.hint{text-align:center;padding:6px;font-size:11px;color:#888}</style></head><body>
+<div class="bar"><span>BRUCHWIESEN</span><span id="p">—</span></div>
+<canvas id="c"></canvas>
+<div class="hint">WASD / Pfeile • Tippen zum Laufen</div>
+<script>
+const D=${JSON.stringify(data)};
+const T=16,C=D.grid.cols,R=D.grid.rows;
+const cv=document.getElementById("c"),x=cv.getContext("2d");
+cv.width=C*T;cv.height=R*T;
+let p={...D.playerStart};
+function walk(c,r){if(c<0||r<0||c>=C||r>=R)return false;const t=D.tilemap[r][c];return D.tileTypes[t]?D.tileTypes[t].walkable:true}
+function draw(){
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++){
+    const t=D.tilemap[r][c],i=D.tileTypes[t]||D.tileTypes.empty;
+    x.fillStyle=i.color;x.fillRect(c*T,r*T,T,T);
+  }
+  x.fillStyle="#00ff9d";x.fillRect(p.col*T+2,p.row*T+2,T-4,T-4);
+  document.getElementById("p").textContent=(p.col<26?String.fromCharCode(65+p.col):"?")+(p.row+1);
+}
+function mv(dc,dr){const nc=p.col+dc,nr=p.row+dr;if(walk(nc,nr)){p.col=nc;p.row=nr;draw()}}
+window.onkeydown=e=>{
+  if(e.key==="ArrowUp"||e.key==="w")mv(0,-1);
+  if(e.key==="ArrowDown"||e.key==="s")mv(0,1);
+  if(e.key==="ArrowLeft"||e.key==="a")mv(-1,0);
+  if(e.key==="ArrowRight"||e.key==="d")mv(1,0);
+};
+cv.onclick=e=>{
+  const r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height;
+  const c=Math.floor((e.clientX-r.left)*sx/T),rw=Math.floor((e.clientY-r.top)*sy/T);
+  const dc=Math.sign(c-p.col),dr=Math.sign(rw-p.row);
+  if(Math.abs(c-p.col)>Math.abs(rw-p.row))mv(dc,0);else mv(0,dr);
+};
+draw();
+<\/script></body></html>`;
+    const blob = new Blob([html], {type:"text/html"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "bruchwiesen_game.html";
+    a.click();
+    setStatus("Spiel-Datei erzeugt");
+  };
+
+  function setStatus(m){ statusEl.textContent = m; }
+
+  renderList();
+  setStatus("Bild laden");
 })();
 </script>
 </body>
