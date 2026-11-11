@@ -3,809 +3,710 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>BRUCHWIESEN Editor</title>
+<title>BRUCHWIESEN WORLD ENGINE 3.1</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&display=swap');
-
   :root {
-    --bg: #07090f;
-    --panel: #0d111a;
-    --cyan: #00e5ff;
-    --green: #00ff9d;
-    --red: #ff3b5c;
-    --text: #e8f4ff;
-    --dim: #6b7a8f;
-    --border: #1c2535;
+    --bg:#0a0c12; --panel:#10141e; --cyan:#00e5ff; --green:#00ff9d;
+    --magenta:#ff2d78; --yellow:#ffc107; --red:#ff3b5c;
+    --text:#e8f0ff; --dim:#5a6a80; --border:#1c2535;
   }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-  html, body {
-    height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Share Tech Mono', monospace;
-    overflow: hidden;
-    touch-action: none;
-  }
-
-  /* ===== LAYOUT ===== */
-  .app {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    height: 100dvh;
-  }
-
-  /* Top bar */
-  .topbar {
-    flex-shrink: 0;
-    height: 48px;
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 10px;
-    gap: 8px;
-  }
-
-  .title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    color: var(--cyan);
-    white-space: nowrap;
-  }
-
-  .top-btns {
-    display: flex;
-    gap: 6px;
-  }
-
-  /* Map area */
-  .map-area {
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-    background: #05070c;
-  }
-
-  #mapWrap {
-    position: absolute;
-    transform-origin: 0 0;
-    will-change: transform;
-  }
-
-  #sat {
-    display: block;
-    max-width: none;
-    pointer-events: none;
-    user-select: none;
-  }
-
-  #grid {
-    position: absolute;
-    top: 0; left: 0;
-    pointer-events: none;
-  }
-
-  .cells {
-    position: absolute;
-    top: 0; left: 0;
-  }
-
-  .cell {
-    position: absolute;
-    border: 1px solid rgba(0,229,255,0.12);
-  }
-
-  .cell.sel {
-    background: rgba(0,229,255,0.35);
-    border-color: var(--cyan);
-  }
-
-  .cell.marked {
-    background: rgba(0,255,157,0.22);
-  }
-
-  .cell.sel.marked {
-    background: rgba(0,229,255,0.45);
-  }
-
-  /* Bottom panel */
-  .bottom {
-    flex-shrink: 0;
-    background: var(--panel);
-    border-top: 1px solid var(--border);
-    max-height: 42%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .tabs {
-    display: flex;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .tab {
-    flex: 1;
-    padding: 10px 4px;
-    text-align: center;
-    font-size: 11px;
-    color: var(--dim);
-    border: none;
-    background: none;
-    font-family: inherit;
-  }
-
-  .tab.on {
-    color: var(--cyan);
-    border-bottom: 2px solid var(--cyan);
-  }
-
-  .panel {
-    flex: 1;
-    overflow-y: auto;
-    padding: 12px;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .panel.hidden { display: none; }
-
-  /* Buttons */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 36px;
-    padding: 0 12px;
-    border-radius: 6px;
-    border: 1px solid #1e3a5f;
-    background: #0f1c2e;
-    color: var(--cyan);
-    font-size: 11px;
-    font-family: inherit;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-
-  .btn:active { opacity: 0.7; }
-  .btn.on { border-color: var(--green); color: var(--green); background: #0a2218; }
-  .btn.red { border-color: #5a1a2a; color: var(--red); }
-  .btn.big {
-    width: 100%;
-    height: 44px;
-    font-size: 13px;
-    margin-top: 8px;
-  }
-
-  .btn-row {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
-
-  .btn-row .btn { flex: 1; }
-
-  /* Form */
-  label {
-    display: block;
-    font-size: 10px;
-    color: var(--dim);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
-  }
-
-  input, select, textarea {
-    width: 100%;
-    background: #080c14;
-    border: 1px solid #1a2a40;
-    border-radius: 6px;
-    color: var(--text);
-    padding: 10px 12px;
-    font-size: 15px;
-    font-family: inherit;
-    margin-bottom: 10px;
-  }
-
-  textarea { min-height: 60px; resize: none; }
-
-  .coord {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--cyan);
-    margin-bottom: 4px;
-  }
-
-  .sub {
-    font-size: 11px;
-    color: var(--dim);
-    margin-bottom: 12px;
-  }
-
-  /* Sector list */
-  .sector {
-    background: #0c1220;
-    border: 1px solid #1a2a40;
-    border-radius: 6px;
-    padding: 10px 12px;
-    margin-bottom: 6px;
-  }
-
-  .sector .c { font-size: 11px; color: var(--cyan); }
-  .sector .n { font-size: 14px; font-weight: 600; margin: 2px 0; }
-  .sector .t { font-size: 10px; color: var(--dim); text-transform: uppercase; }
-
-  /* Status */
-  .status {
-    flex-shrink: 0;
-    height: 28px;
-    background: #080c14;
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 12px;
-    font-size: 10px;
-    color: var(--dim);
-  }
-
-  /* Upload overlay */
-  .upload {
-    position: absolute;
-    inset: 0;
-    background: var(--bg);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    z-index: 50;
-    padding: 20px;
-    text-align: center;
-  }
-
-  .upload.hidden { display: none; }
-  .upload h2 {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 14px;
-    letter-spacing: 2px;
-    color: var(--cyan);
-  }
-  .upload p { font-size: 13px; color: var(--dim); max-width: 260px; line-height: 1.4; }
-
-  /* Selection count badge */
-  .badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0,0,0,0.75);
-    border: 1px solid var(--cyan);
-    color: var(--cyan);
-    font-size: 12px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    z-index: 10;
-    font-family: 'Orbitron', sans-serif;
-  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;overflow:hidden;touch-action:none}
+  .app{display:flex;flex-direction:column;height:100%;height:100dvh}
+  .top{height:46px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 10px;flex-shrink:0;gap:6px}
+  .logo{font-family:Orbitron,sans-serif;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--cyan);white-space:nowrap}
+  .top-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+  .btn{height:30px;padding:0 9px;border-radius:5px;border:1px solid #1e3a5f;background:#0f1c2e;color:var(--cyan);font-size:10px;font-family:inherit;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+  .btn:active{opacity:.7}
+  .btn.play{border-color:var(--magenta);color:var(--magenta)}
+  .btn.ok{border-color:var(--green);color:var(--green)}
+  .main{flex:1;display:flex;overflow:hidden}
+  .view{flex:1;position:relative;overflow:hidden;background:#07090f}
+  canvas{position:absolute;transform-origin:0 0;image-rendering:pixelated}
+  .side{width:160px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;font-size:11px;overflow:hidden}
+  .side-sec{padding:8px 10px;border-bottom:1px solid var(--border)}
+  .side-title{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+  .status{height:26px;background:#080c14;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:10px;color:var(--dim);flex-shrink:0}
+  .info{font-size:11px;color:var(--dim);line-height:1.4}
+  .feature{padding:5px 0;border-bottom:1px solid #1a2230;font-size:10px;cursor:pointer}
+  .feature:active,.feature.sel{background:#0c1a28}
+  .feature .n{color:var(--text)}
+  .feature .t{color:var(--dim);font-size:9px}
+  .feature.uncertain .n{color:var(--yellow)}
+  #fileJson{display:none}
+  .drop{border:1px dashed #1e3a5f;border-radius:6px;padding:10px 6px;text-align:center;color:var(--dim);font-size:10px;margin-bottom:6px}
+  .drop.active{border-color:var(--cyan);color:var(--cyan)}
+  .err{color:var(--red);font-size:10px;margin-top:4px;line-height:1.3}
+  .okmsg{color:var(--green);font-size:10px;margin-top:4px}
+  /* JSON paste modal */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+  .modal.show{display:flex}
+  .modal-box{background:var(--panel);border:1px solid var(--border);border-radius:10px;width:100%;max-width:420px;max-height:80vh;display:flex;flex-direction:column}
+  .modal-head{padding:12px 14px;border-bottom:1px solid var(--border);font-family:Orbitron,sans-serif;font-size:12px;color:var(--cyan)}
+  .modal-body{padding:12px 14px;flex:1;overflow:auto}
+  .modal-body textarea{width:100%;height:180px;background:#080c14;border:1px solid #1a2a40;border-radius:6px;color:var(--text);padding:10px;font-size:12px;font-family:inherit;resize:vertical}
+  .modal-foot{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+  @media(max-width:480px){.side{width:130px}}
 </style>
 </head>
 <body>
 <div class="app">
-
-  <!-- TOP -->
-  <div class="topbar">
-    <div class="title">BRUCHWIESEN</div>
-    <div class="top-btns">
-      <button class="btn" id="btnMode">SELECT</button>
-      <button class="btn" id="btnExport">JSON</button>
-      <button class="btn" id="btnGame">GAME</button>
+  <div class="top">
+    <div class="logo">WORLD ENGINE 3.1</div>
+    <div class="top-actions">
+      <button class="btn" id="btnJson">JSON</button>
+      <button class="btn" id="btnPaste">PASTE</button>
+      <button class="btn" id="btnExample">EXAMPLE</button>
+      <button class="btn" id="btnExport">EXPORT</button>
+      <button class="btn play" id="btnPlay">▶ PLAY</button>
     </div>
   </div>
 
-  <!-- MAP -->
-  <div class="map-area" id="mapArea">
-    <div class="upload" id="upload">
-      <h2>BILD LADEN</h2>
-      <p>Satellitenbild der Grundschule hier auswählen</p>
-      <button class="btn big" id="btnLoad" style="max-width:220px">BILD AUSWÄHLEN</button>
-      <input type="file" id="file" accept="image/*" style="display:none">
+  <div class="main">
+    <div class="view" id="view">
+      <canvas id="c"></canvas>
     </div>
-
-    <div id="mapWrap">
-      <img id="sat" alt="">
-      <canvas id="grid"></canvas>
-      <div class="cells" id="cells"></div>
-    </div>
-
-    <div class="badge" id="badge" style="display:none">0</div>
-  </div>
-
-  <!-- BOTTOM -->
-  <div class="bottom">
-    <div class="tabs">
-      <button class="tab on" data-tab="edit">EDIT</button>
-      <button class="tab" data-tab="list">LISTE</button>
-      <button class="tab" data-tab="help">HILFE</button>
-    </div>
-
-    <!-- EDIT TAB -->
-    <div class="panel" id="tab-edit">
-      <div id="emptyMsg" class="sub" style="text-align:center;padding:16px 0">
-        Tippe auf Felder um sie auszuwählen.<br>
-        Im MULTI-Modus kannst du mehrere sammeln.
+    <div class="side">
+      <div class="side-sec">
+        <div class="side-title">Import</div>
+        <div class="drop" id="drop">BW_WORLD.json<br>ablegen / tippen</div>
+        <button class="btn" id="btnLoad" style="width:100%;margin-bottom:4px">DATEI</button>
+        <div id="importMsg"></div>
       </div>
-
-      <div id="form" style="display:none">
-        <div class="coord" id="coord">—</div>
-        <div class="sub" id="count">0 Felder</div>
-
-        <label>Name</label>
-        <input type="text" id="name" placeholder="z.B. Schulgebäude">
-
-        <label>Typ</label>
-        <select id="type">
-          <option value="building">Gebäude</option>
-          <option value="tennis">Tennisplatz</option>
-          <option value="court">Sportfläche</option>
-          <option value="path">Weg / Hof</option>
-          <option value="street">Straße</option>
-          <option value="grass">Wiese</option>
-          <option value="trees">Bäume</option>
-          <option value="other">Sonstiges</option>
-        </select>
-
-        <div class="btn-row">
-          <button class="btn" id="btnSave" style="flex:2;border-color:var(--green);color:var(--green)">SPEICHERN</button>
-          <button class="btn red" id="btnDel">LÖSCHEN</button>
-        </div>
-        <button class="btn big" id="btnClearSel" style="margin-top:8px">AUSWAHL LEEREN</button>
+      <div class="side-sec">
+        <div class="side-title">Welt</div>
+        <div class="info" id="worldInfo">Kein JSON geladen</div>
       </div>
-    </div>
-
-    <!-- LIST TAB -->
-    <div class="panel hidden" id="tab-list">
-      <div id="list"></div>
-    </div>
-
-    <!-- HELP TAB -->
-    <div class="panel hidden" id="tab-help">
-      <div class="sub" style="line-height:1.6">
-        <b style="color:var(--cyan)">Bedienung (iPhone)</b><br><br>
-        • <b>Tippen</b> = Feld auswählen / abwählen<br>
-        • <b>SELECT</b> oben = Einzel-Modus<br>
-        • <b>MULTI</b> oben = mehrere Felder sammeln<br>
-        • Zwei Finger = zoomen & verschieben<br>
-        • Nach dem Markieren → Name + Typ → SPEICHERN<br><br>
-        <b style="color:var(--cyan)">Workflow</b><br>
-        1. Bild laden<br>
-        2. Gebäude / Tennisplätze etc. antippen<br>
-        3. Speichern<br>
-        4. GAME drücken → spielbare Datei
+      <div class="side-sec" style="flex:1;overflow:auto">
+        <div class="side-title">Features</div>
+        <div id="featureList"></div>
       </div>
     </div>
   </div>
 
   <div class="status">
-    <span id="status">Bereit</span>
+    <span id="status">Warte auf BW_WORLD.json v1.0</span>
     <span id="zoom">100%</span>
   </div>
 </div>
 
+<!-- Paste Modal -->
+<div class="modal" id="pasteModal">
+  <div class="modal-box">
+    <div class="modal-head">JSON EINFÜGEN</div>
+    <div class="modal-body">
+      <textarea id="pasteArea" placeholder="BW_WORLD.json hier einfügen…"></textarea>
+      <div id="pasteErr" class="err"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="btnPasteCancel">ABBRECHEN</button>
+      <button class="btn ok" id="btnPasteOk">LADEN</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileJson" accept="application/json,.json">
+
 <script>
 (function(){
-  // ===== STATE =====
-  let COLS=10, ROWS=10, cellSize=40, labels=[];
-  let areas = JSON.parse(localStorage.getItem("bw_v4") || "[]");
-  let selected = new Set();
-  let multi = false;
-  let scale=1, ox=0, oy=0;
-  let imgW=0, imgH=0;
-  let panning=false, lastDist=0, lastMid=null;
+  "use strict";
 
-  // ===== DOM =====
-  const mapArea = document.getElementById("mapArea");
-  const mapWrap = document.getElementById("mapWrap");
-  const sat = document.getElementById("sat");
-  const grid = document.getElementById("grid");
-  const cellsEl = document.getElementById("cells");
-  const upload = document.getElementById("upload");
-  const file = document.getElementById("file");
-  const badge = document.getElementById("badge");
-  const form = document.getElementById("form");
-  const emptyMsg = document.getElementById("emptyMsg");
-  const coordEl = document.getElementById("coord");
-  const countEl = document.getElementById("count");
-  const nameEl = document.getElementById("name");
-  const typeEl = document.getElementById("type");
-  const listEl = document.getElementById("list");
+  const SCHEMA_VERSION = "1.0";
+
+  let world = null;
+  let selectedId = null;
+  let scale = 1, ox = 0, oy = 0;
+  let canvasW = 1000, canvasH = 800;
+  let boundsW = 10000, boundsH = 10000;
+
+  // pan state
+  let panning = false;
+  let panStartX = 0, panStartY = 0, panOrigX = 0, panOrigY = 0;
+  let lastTap = 0;
+
+  const canvas = document.getElementById("c");
+  const ctx = canvas.getContext("2d");
+  const view = document.getElementById("view");
   const statusEl = document.getElementById("status");
   const zoomEl = document.getElementById("zoom");
-  const btnMode = document.getElementById("btnMode");
+  const worldInfo = document.getElementById("worldInfo");
+  const featureList = document.getElementById("featureList");
+  const drop = document.getElementById("drop");
+  const fileJson = document.getElementById("fileJson");
+  const importMsg = document.getElementById("importMsg");
+  const pasteModal = document.getElementById("pasteModal");
+  const pasteArea = document.getElementById("pasteArea");
+  const pasteErr = document.getElementById("pasteErr");
 
-  // ===== LOAD IMAGE =====
-  document.getElementById("btnLoad").onclick = () => file.click();
-  file.onchange = e => { if(e.target.files[0]) load(URL.createObjectURL(e.target.files[0])); };
-
-  function load(src){
-    sat.onload = () => {
-      imgW = sat.naturalWidth;
-      imgH = sat.naturalHeight;
-      sat.style.width = imgW + "px";
-      sat.style.height = imgH + "px";
-
-      // square cells
-      const target = 12;
-      cellSize = Math.max(16, Math.floor(Math.min(imgW, imgH) / target));
-      COLS = Math.floor(imgW / cellSize);
-      ROWS = Math.floor(imgH / cellSize);
-      cellSize = Math.floor(Math.min(imgW / COLS, imgH / ROWS));
-      COLS = Math.floor(imgW / cellSize);
-      ROWS = Math.floor(imgH / cellSize);
-
-      labels = Array.from({length:COLS}, (_,i) => i<26 ? String.fromCharCode(65+i) : "A"+String.fromCharCode(65+i-26));
-
-      const gw = COLS * cellSize;
-      const gh = ROWS * cellSize;
-      grid.width = gw; grid.height = gh;
-      cellsEl.style.width = gw + "px";
-      cellsEl.style.height = gh + "px";
-
-      drawGrid();
-      buildCells();
-      fit();
-      upload.classList.add("hidden");
-      renderList();
-      updateUI();
-      setStatus(`Grid ${COLS}×${ROWS} • ${cellSize}px`);
-    };
-    sat.src = src;
+  // ===== COORDINATES (fixed: uses bounds) =====
+  function toCanvasX(x) {
+    return ((x - (world?.world?.bounds?.x || 0)) / boundsW) * canvasW;
+  }
+  function toCanvasY(y) {
+    return ((y - (world?.world?.bounds?.y || 0)) / boundsH) * canvasH;
   }
 
-  function drawGrid(){
-    const ctx = grid.getContext("2d");
-    ctx.clearRect(0,0,grid.width,grid.height);
-    ctx.strokeStyle = "rgba(0,229,255,0.18)";
-    ctx.lineWidth = 1;
-    for(let i=0;i<=COLS;i++){
-      const x = i*cellSize + 0.5;
-      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,ROWS*cellSize); ctx.stroke();
+  // ===== POINT IN POLYGON (ray casting) =====
+  function pointInPoly(x, y, points) {
+    let inside = false;
+    for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+      const xi = points[i][0], yi = points[i][1];
+      const xj = points[j][0], yj = points[j][1];
+      const intersect = ((yi > y) !== (yj > y)) &&
+        (x < (xj - xi) * (y - yi) / (yj - yi + 0.0000001) + xi);
+      if (intersect) inside = !inside;
     }
-    for(let j=0;j<=ROWS;j++){
-      const y = j*cellSize + 0.5;
-      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(COLS*cellSize,y); ctx.stroke();
-    }
+    return inside;
   }
 
-  function buildCells(){
-    cellsEl.innerHTML = "";
-    for(let r=0;r<ROWS;r++){
-      for(let c=0;c<COLS;c++){
-        const d = document.createElement("div");
-        d.className = "cell";
-        d.style.left = (c*cellSize)+"px";
-        d.style.top = (r*cellSize)+"px";
-        d.style.width = cellSize+"px";
-        d.style.height = cellSize+"px";
-        d.dataset.coord = labels[c] + (r+1);
-        d.dataset.c = c;
-        d.dataset.r = r;
-        cellsEl.appendChild(d);
+  // ===== VALIDATION (stricter) =====
+  function validate(data) {
+    const errors = [];
+    if (!data || typeof data !== "object") {
+      errors.push("Root muss ein Objekt sein");
+      return errors;
+    }
+    if (data.schemaVersion !== SCHEMA_VERSION) {
+      errors.push(`schemaVersion muss "${SCHEMA_VERSION}" sein (gefunden: ${data.schemaVersion})`);
+    }
+    if (!data.meta || typeof data.meta !== "object") {
+      errors.push("meta fehlt");
+    } else if (typeof data.meta.imageAspect !== "number" || data.meta.imageAspect <= 0) {
+      errors.push("meta.imageAspect muss eine positive Zahl sein");
+    }
+    if (!data.world || !data.world.bounds) {
+      errors.push("world.bounds fehlt");
+    } else {
+      const b = data.world.bounds;
+      if (typeof b.w !== "number" || typeof b.h !== "number" || b.w <= 0 || b.h <= 0) {
+        errors.push("world.bounds.w/h müssen positive Zahlen sein");
       }
     }
+    if (!data.materials || typeof data.materials !== "object") {
+      errors.push("materials fehlt");
+    }
+    if (!Array.isArray(data.features)) {
+      errors.push("features muss ein Array sein");
+    } else {
+      const ids = new Set();
+      data.features.forEach((f, i) => {
+        if (!f.id || typeof f.id !== "string") {
+          errors.push(`features[${i}]: id fehlt oder ist kein String`);
+        } else if (ids.has(f.id)) {
+          errors.push(`features[${i}]: doppelte id "${f.id}"`);
+        } else {
+          ids.add(f.id);
+        }
+        if (!f.geometry || !f.geometry.kind) {
+          errors.push(`features[${i}]: geometry.kind fehlt`);
+        } else {
+          const g = f.geometry;
+          if (!["polygon", "linestring", "point"].includes(g.kind)) {
+            errors.push(`features[${i}]: unbekannte geometry.kind "${g.kind}"`);
+          }
+          if (!Array.isArray(g.points) || g.points.length === 0) {
+            errors.push(`features[${i}]: geometry.points fehlt oder leer`);
+          } else {
+            if (g.kind === "polygon" && g.points.length < 3) {
+              errors.push(`features[${i}]: polygon braucht ≥ 3 Punkte`);
+            }
+            if (g.kind === "linestring" && g.points.length < 2) {
+              errors.push(`features[${i}]: linestring braucht ≥ 2 Punkte`);
+            }
+            g.points.forEach((p, pi) => {
+              if (!Array.isArray(p) || p.length < 2 || typeof p[0] !== "number" || typeof p[1] !== "number") {
+                errors.push(`features[${i}].points[${pi}] ungültig`);
+              } else if (p[0] < 0 || p[0] > 10000 || p[1] < 0 || p[1] > 10000) {
+                errors.push(`features[${i}].points[${pi}] außerhalb 0–10000`);
+              }
+            });
+          }
+        }
+      });
+    }
+    if (data.playerStart) {
+      if (typeof data.playerStart.x !== "number" || typeof data.playerStart.y !== "number") {
+        errors.push("playerStart.x/y müssen Zahlen sein");
+      }
+    }
+    return errors;
   }
 
-  // ===== TOUCH / CLICK SELECTION (simple & reliable) =====
-  // Single tap on a cell toggles it
-  cellsEl.addEventListener("click", e => {
-    const cell = e.target.closest(".cell");
-    if(!cell) return;
-    const coord = cell.dataset.coord;
+  // ===== RENDER =====
+  function render() {
+    if (!world) return;
 
-    if(multi){
-      if(selected.has(coord)) selected.delete(coord);
-      else selected.add(coord);
+    const b = world.world.bounds;
+    boundsW = b.w || 10000;
+    boundsH = b.h || 10000;
+
+    const aspect = world.meta.imageAspect || (boundsW / boundsH);
+    const maxDim = 1100;
+    if (aspect >= 1) {
+      canvasW = maxDim;
+      canvasH = Math.round(maxDim / aspect);
     } else {
-      selected.clear();
-      selected.add(coord);
+      canvasH = maxDim;
+      canvasW = Math.round(maxDim * aspect);
     }
+
+    canvas.width = canvasW;
+    canvas.height = canvasH;
+
+    ctx.fillStyle = "#1a2f1a";
+    ctx.fillRect(0, 0, canvasW, canvasH);
+
+    const typeOrder = ["terrain", "street", "path", "sport", "building", "vegetation", "object", "unknown"];
+    const sorted = [...world.features].sort((a, b) => {
+      const ta = typeOrder.indexOf(a.type || "unknown");
+      const tb = typeOrder.indexOf(b.type || "unknown");
+      return (ta < 0 ? 99 : ta) - (tb < 0 ? 99 : tb);
+    });
+
+    sorted.forEach(f => {
+      const mat = world.materials[f.material] || { color: "#666" };
+      const g = f.geometry;
+      if (!g || !g.points) return;
+      const uncertain = f.properties && f.properties.uncertain;
+      const selected = f.id === selectedId;
+
+      if (g.kind === "polygon" && g.points.length >= 3) {
+        ctx.beginPath();
+        g.points.forEach((p, i) => {
+          const x = toCanvasX(p[0]), y = toCanvasY(p[1]);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.closePath();
+        ctx.fillStyle = mat.color;
+        ctx.fill();
+        ctx.strokeStyle = selected ? "#00e5ff" : (uncertain ? "rgba(255,193,7,0.9)" : "rgba(0,0,0,0.3)");
+        ctx.lineWidth = selected ? 2.5 : (uncertain ? 2 : 1);
+        ctx.stroke();
+      }
+
+      if (g.kind === "linestring" && g.points.length >= 2) {
+        const widthPx = Math.max(2, ((g.width || 120) / boundsW) * canvasW);
+        ctx.beginPath();
+        g.points.forEach((p, i) => {
+          const x = toCanvasX(p[0]), y = toCanvasY(p[1]);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = selected ? "#00e5ff" : mat.color;
+        ctx.lineWidth = widthPx;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.stroke();
+      }
+
+      if (g.kind === "point" && g.points[0]) {
+        const x = toCanvasX(g.points[0][0]);
+        const y = toCanvasY(g.points[0][1]);
+        const r = Math.max(3, ((g.radius || 80) / boundsW) * canvasW);
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = mat.color;
+        ctx.fill();
+        if (selected) {
+          ctx.strokeStyle = "#00e5ff";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+      }
+    });
+
+    // player
+    if (world.playerStart) {
+      const px = toCanvasX(world.playerStart.x);
+      const py = toCanvasY(world.playerStart.y);
+      ctx.fillStyle = "#00ff9d";
+      ctx.beginPath();
+      ctx.arc(px, py, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    fit();
+  }
+
+  function fit() {
+    const vw = view.clientWidth, vh = view.clientHeight;
+    scale = Math.min(vw / canvasW, vh / canvasH) * 0.95;
+    ox = (vw - canvasW * scale) / 2;
+    oy = (vh - canvasH * scale) / 2;
+    applyTransform();
+  }
+
+  function applyTransform() {
+    canvas.style.transform = `translate(${ox}px,${oy}px) scale(${scale})`;
+    zoomEl.textContent = Math.round(scale * 100) + "%";
+  }
+
+  // ===== LOAD / VALIDATE =====
+  function loadWorld(data) {
+    const errors = validate(data);
+    importMsg.innerHTML = "";
+    if (errors.length) {
+      importMsg.innerHTML = `<div class="err">${errors.slice(0, 5).join("<br>")}</div>`;
+      setStatus("Validierung fehlgeschlagen");
+      return false;
+    }
+
+    // keep unknown materials, mark uncertain
+    data.features.forEach(f => {
+      if (!data.materials[f.material]) {
+        f.properties = f.properties || {};
+        f.properties.uncertain = true;           // FIXED typo
+        data.materials[f.material] = { color: "#888800", walkable: true };
+      }
+      if (!f.type) f.type = "unknown";
+    });
+
+    world = data;
+    selectedId = null;
+    render();
     updateUI();
+    importMsg.innerHTML = `<div class="okmsg">OK – ${data.features.length} Features</div>`;
+    setStatus("Welt geladen: " + (data.meta?.name || "Unbenannt"));
+    try { localStorage.setItem("bw_world_v31", JSON.stringify(data)); } catch(e) {}
+    return true;
+  }
+
+  function updateUI() {
+    if (!world) return;
+    worldInfo.innerHTML = `<b style="color:var(--cyan)">${esc(world.meta?.name||"—")}</b><br>
+      ${world.features.length} Features<br>Aspect ${world.meta?.imageAspect}<br>Schema ${world.schemaVersion}`;
+    featureList.innerHTML = "";
+    world.features.forEach(f => {
+      if (f.type === "terrain") return;
+      const d = document.createElement("div");
+      d.className = "feature" + (f.properties?.uncertain ? " uncertain" : "") + (f.id === selectedId ? " sel" : "");
+      d.innerHTML = `<div class="n">${esc(f.name||f.id)}</div><div class="t">${f.type} · ${f.material}</div>`;
+      d.onclick = () => {
+        selectedId = f.id;
+        updateUI();
+        render();
+        setStatus("Ausgewählt: " + (f.name || f.id));
+      };
+      featureList.appendChild(d);
+    });
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+  }
+
+  // ===== FILE / DROP / PASTE =====
+  document.getElementById("btnJson").onclick = () => fileJson.click();
+  document.getElementById("btnLoad").onclick = () => fileJson.click();
+  drop.onclick = () => fileJson.click();
+
+  fileJson.onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try { loadWorld(JSON.parse(r.result)); }
+      catch (err) { importMsg.innerHTML = `<div class="err">Parse: ${err.message}</div>`; }
+    };
+    r.readAsText(f);
+  };
+
+  drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("active"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("active"));
+  drop.addEventListener("drop", e => {
+    e.preventDefault(); drop.classList.remove("active");
+    const f = e.dataTransfer.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try { loadWorld(JSON.parse(r.result)); }
+      catch (err) { importMsg.innerHTML = `<div class="err">Parse Fehler</div>`; }
+    };
+    r.readAsText(f);
   });
 
-  // Also support pointer events for better mobile
-  cellsEl.addEventListener("pointerup", e => {
-    // handled by click mostly
-  });
+  // Paste dialog
+  document.getElementById("btnPaste").onclick = () => {
+    pasteArea.value = "";
+    pasteErr.textContent = "";
+    pasteModal.classList.add("show");
+  };
+  document.getElementById("btnPasteCancel").onclick = () => pasteModal.classList.remove("show");
+  document.getElementById("btnPasteOk").onclick = () => {
+    try {
+      const data = JSON.parse(pasteArea.value);
+      if (loadWorld(data)) pasteModal.classList.remove("show");
+      else pasteErr.textContent = "Validierung fehlgeschlagen – siehe Meldung";
+    } catch (err) {
+      pasteErr.textContent = "JSON Parse Fehler: " + err.message;
+    }
+  };
 
-  // ===== TWO-FINGER PAN + ZOOM =====
-  mapArea.addEventListener("touchstart", e => {
-    if(e.touches.length === 2){
+  document.getElementById("btnExample").onclick = () => loadWorld(MINIMAL_VALID_WORLD);
+
+  document.getElementById("btnExport").onclick = () => {
+    if (!world) { setStatus("Keine Welt"); return; }
+    const blob = new Blob([JSON.stringify(world, null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "BW_WORLD_export.json";
+    a.click();
+    setStatus("Exportiert");
+  };
+
+  // ===== PLAY with proper polygon collision =====
+  document.getElementById("btnPlay").onclick = () => {
+    if (!world) { setStatus("Zuerst JSON laden"); return; }
+
+    const aspect = world.meta.imageAspect || 1.25;
+    const GRID_W = 64;
+    const GRID_H = Math.max(8, Math.round(GRID_W / aspect));
+    const walk = Array.from({length: GRID_H}, () => Array(GRID_W).fill(true));
+
+    // rasterize using point-in-polygon (deterministic)
+    world.features.forEach(f => {
+      const mat = world.materials[f.material];
+      const coll = (f.properties && f.properties.collision === true) || (mat && mat.walkable === false);
+      if (!coll) return;
+      const g = f.geometry;
+      if (!g || g.kind !== "polygon" || !g.points || g.points.length < 3) return;
+
+      // bounding box for speed, then precise test
+      let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+      g.points.forEach(p => {
+        minX=Math.min(minX,p[0]); maxX=Math.max(maxX,p[0]);
+        minY=Math.min(minY,p[1]); maxY=Math.max(maxY,p[1]);
+      });
+      const c1 = Math.max(0, Math.floor(minX/10000*GRID_W));
+      const r1 = Math.max(0, Math.floor(minY/10000*GRID_H));
+      const c2 = Math.min(GRID_W-1, Math.floor(maxX/10000*GRID_W));
+      const r2 = Math.min(GRID_H-1, Math.floor(maxY/10000*GRID_H));
+
+      for (let r = r1; r <= r2; r++) {
+        for (let c = c1; c <= c2; c++) {
+          const wx = ((c + 0.5) / GRID_W) * 10000;
+          const wy = ((r + 0.5) / GRID_H) * 10000;
+          if (pointInPoly(wx, wy, g.points)) walk[r][c] = false;
+        }
+      }
+    });
+
+    const sc = Math.floor(((world.playerStart && world.playerStart.x) || 5000) / 10000 * GRID_W);
+    const sr = Math.floor(((world.playerStart && world.playerStart.y) || 5000) / 10000 * GRID_H);
+
+    const playData = {
+      name: world.meta?.name || "BRUCHWIESEN",
+      gridW: GRID_W, gridH: GRID_H,
+      walk, startC: Math.max(0, Math.min(GRID_W-1, sc)),
+      startR: Math.max(0, Math.min(GRID_H-1, sr))
+    };
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>${playData.name}</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0c12;color:#eee;font-family:monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;touch-action:none}
+.bar{height:36px;background:#10141e;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:12px}
+.view{flex:1;position:relative;overflow:hidden;background:#07090f}
+canvas{position:absolute;image-rendering:pixelated}
+.hint{text-align:center;padding:5px;font-size:11px;color:#666}</style></head><body>
+<div class="bar"><span>${playData.name}</span><span id="p">—</span></div>
+<div class="view" id="v"><canvas id="c"></canvas></div>
+<div class="hint">Touch = Richtung • WASD / Pfeile</div>
+<script>
+const D=${JSON.stringify(playData)};
+const T=14;const cv=document.getElementById("c"),x=cv.getContext("2d"),v=document.getElementById("v");
+cv.width=D.gridW*T;cv.height=D.gridH*T;
+let p={c:D.startC,r:D.startR};let sc=1,ox=0,oy=0;
+function draw(){
+  for(let r=0;r<D.gridH;r++)for(let c=0;c<D.gridW;c++){
+    x.fillStyle=D.walk[r][c]?"#3d7a37":"#5a5a6e";x.fillRect(c*T,r*T,T,T);
+  }
+  x.fillStyle="#00ff9d";x.beginPath();x.arc(p.c*T+T/2,p.r*T+T/2,T/2-1,0,Math.PI*2);x.fill();
+  x.strokeStyle="#fff";x.lineWidth=1.5;x.stroke();
+  document.getElementById("p").textContent=p.c+","+p.r;
+  const vw=v.clientWidth,vh=v.clientHeight;
+  sc=Math.max(1.2,Math.min(vw/(D.gridW*T),vh/(D.gridH*T))*1.6);
+  ox=vw/2-(p.c*T+T/2)*sc;oy=vh/2-(p.r*T+T/2)*sc;
+  cv.style.transform="translate("+ox+"px,"+oy+"px) scale("+sc+")";
+}
+function mv(dc,dr){const nc=p.c+dc,nr=p.r+dr;if(nc>=0&&nr>=0&&nc<D.gridW&&nr<D.gridH&&D.walk[nr][nc]){p.c=nc;p.r=nr;draw()}}
+window.onkeydown=e=>{if(e.key==="ArrowUp"||e.key==="w")mv(0,-1);if(e.key==="ArrowDown"||e.key==="s")mv(0,1);if(e.key==="ArrowLeft"||e.key==="a")mv(-1,0);if(e.key==="ArrowRight"||e.key==="d")mv(1,0)};
+v.onclick=e=>{const r=v.getBoundingClientRect();const x0=(e.clientX-r.left-ox)/sc,y0=(e.clientY-r.top-oy)/sc;
+const pc=p.c*T+T/2,pr=p.r*T+T/2;const dx=x0-pc,dy=y0-pr;if(Math.abs(dx)>Math.abs(dy))mv(Math.sign(dx),0);else mv(0,Math.sign(dy))};
+draw();
+<\/script></body></html>`;
+
+    const blob = new Blob([html], {type:"text/html"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "bruchwiesen_play.html";
+    a.click();
+    setStatus("Spiel generiert (Polygon-Kollision)");
+  };
+
+  // ===== TOUCH: one-finger pan + pinch zoom =====
+  let lastDist = 0, lastMid = null;
+  let touches = 0;
+
+  view.addEventListener("touchstart", e => {
+    touches = e.touches.length;
+    if (e.touches.length === 1) {
       panning = true;
+      panStartX = e.touches[0].clientX;
+      panStartY = e.touches[0].clientY;
+      panOrigX = ox;
+      panOrigY = oy;
+    } else if (e.touches.length === 2) {
+      panning = false;
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       lastDist = Math.hypot(dx, dy);
       lastMid = {
-        x: (e.touches[0].clientX + e.touches[1].clientX)/2,
-        y: (e.touches[0].clientY + e.touches[1].clientY)/2
+        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+        y: (e.touches[0].clientY + e.touches[1].clientY) / 2
       };
     }
-  }, {passive:true});
+  }, {passive: true});
 
-  mapArea.addEventListener("touchmove", e => {
-    if(e.touches.length === 2 && panning){
+  view.addEventListener("touchmove", e => {
+    if (e.touches.length === 1 && panning) {
+      e.preventDefault();
+      ox = panOrigX + (e.touches[0].clientX - panStartX);
+      oy = panOrigY + (e.touches[0].clientY - panStartY);
+      applyTransform();
+    } else if (e.touches.length === 2) {
       e.preventDefault();
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const dist = Math.hypot(dx, dy);
       const mid = {
-        x: (e.touches[0].clientX + e.touches[1].clientX)/2,
-        y: (e.touches[0].clientY + e.touches[1].clientY)/2
+        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+        y: (e.touches[0].clientY + e.touches[1].clientY) / 2
       };
-
-      // zoom
-      const ns = Math.min(Math.max(scale * (dist / lastDist), 0.15), 6);
-      const rect = mapArea.getBoundingClientRect();
-      const mx = mid.x - rect.left;
-      const my = mid.y - rect.top;
+      const ns = Math.min(Math.max(scale * (dist / lastDist), 0.25), 6);
+      const rect = view.getBoundingClientRect();
+      const mx = mid.x - rect.left, my = mid.y - rect.top;
       ox = mx - (mx - ox) * (ns / scale);
       oy = my - (my - oy) * (ns / scale);
       scale = ns;
       lastDist = dist;
-
-      // pan
-      if(lastMid){
+      if (lastMid) {
         ox += mid.x - lastMid.x;
         oy += mid.y - lastMid.y;
       }
       lastMid = mid;
-      apply();
+      applyTransform();
     }
-  }, {passive:false});
+  }, {passive: false});
 
-  mapArea.addEventListener("touchend", () => { panning = false; });
-
-  // Desktop wheel zoom
-  mapArea.addEventListener("wheel", e => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    const ns = Math.min(Math.max(scale * delta, 0.15), 6);
-    const rect = mapArea.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    ox = mx - (mx - ox)*(ns/scale);
-    oy = my - (my - oy)*(ns/scale);
-    scale = ns;
-    apply();
-  }, {passive:false});
-
-  function fit(){
-    const cw = mapArea.clientWidth, ch = mapArea.clientHeight;
-    scale = Math.min(cw/imgW, ch/imgH) * 0.95;
-    ox = (cw - imgW*scale)/2;
-    oy = (ch - imgH*scale)/2;
-    apply();
-  }
-
-  function apply(){
-    mapWrap.style.transform = `translate(${ox}px,${oy}px) scale(${scale})`;
-    zoomEl.textContent = Math.round(scale*100) + "%";
-  }
-
-  // ===== UI UPDATE =====
-  function updateUI(){
-    // visual cells
-    document.querySelectorAll(".cell").forEach(cell => {
-      const c = cell.dataset.coord;
-      cell.classList.toggle("sel", selected.has(c));
-      cell.classList.toggle("marked", areas.some(a => a.cells.includes(c)));
-    });
-
-    // badge
-    if(selected.size > 0){
-      badge.style.display = "block";
-      badge.textContent = selected.size;
-    } else {
-      badge.style.display = "none";
-    }
-
-    // form
-    if(selected.size === 0){
-      form.style.display = "none";
-      emptyMsg.style.display = "block";
-    } else {
-      emptyMsg.style.display = "none";
-      form.style.display = "block";
-      const arr = [...selected].sort();
-      coordEl.textContent = arr.length === 1 ? arr[0] : arr[0] + " → " + arr[arr.length-1];
-      countEl.textContent = arr.length + " Feld" + (arr.length>1?"er":"");
-
-      // prefill if exact match
-      const exist = areas.find(a => a.cells.length === selected.size && a.cells.every(c => selected.has(c)));
-      if(exist){
-        nameEl.value = exist.name;
-        typeEl.value = exist.type;
-      } else {
-        nameEl.value = "";
-        typeEl.value = "building";
-      }
-    }
-  }
-
-  // ===== SAVE / DELETE =====
-  document.getElementById("btnSave").onclick = () => {
-    if(selected.size === 0) return;
-    const name = nameEl.value.trim() || "Unbenannt";
-    const type = typeEl.value;
-    const cells = [...selected].sort();
-
-    // remove overlapping
-    areas = areas.filter(a => !a.cells.some(c => selected.has(c)));
-    areas.push({ id: Date.now().toString(36), cells, name, type });
-    localStorage.setItem("bw_v4", JSON.stringify(areas));
-    selected.clear();
-    updateUI();
-    renderList();
-    setStatus("Gespeichert: " + name);
-  };
-
-  document.getElementById("btnDel").onclick = () => {
-    areas = areas.filter(a => !a.cells.some(c => selected.has(c)));
-    localStorage.setItem("bw_v4", JSON.stringify(areas));
-    selected.clear();
-    updateUI();
-    renderList();
-    setStatus("Gelöscht");
-  };
-
-  document.getElementById("btnClearSel").onclick = () => {
-    selected.clear();
-    updateUI();
-  };
-
-  // ===== MODE =====
-  btnMode.onclick = () => {
-    multi = !multi;
-    btnMode.textContent = multi ? "MULTI" : "SELECT";
-    btnMode.classList.toggle("on", multi);
-    setStatus(multi ? "MULTI-Modus: tippe mehrere Felder an" : "Einzel-Modus");
-  };
-
-  // ===== LIST =====
-  function renderList(){
-    listEl.innerHTML = "";
-    if(areas.length === 0){
-      listEl.innerHTML = '<div class="sub" style="text-align:center;padding:20px">Noch keine Sektoren</div>';
-      return;
-    }
-    areas.slice().reverse().forEach(a => {
-      const d = document.createElement("div");
-      d.className = "sector";
-      const range = a.cells.length === 1 ? a.cells[0] : a.cells[0] + "→" + a.cells[a.cells.length-1] + " (" + a.cells.length + ")";
-      d.innerHTML = `<div class="c">${range}</div><div class="n">${a.name}</div><div class="t">${a.type}</div>`;
-      d.onclick = () => {
-        selected = new Set(a.cells);
-        updateUI();
-        // switch to edit tab
-        document.querySelectorAll(".tab").forEach(t => t.classList.remove("on"));
-        document.querySelector('[data-tab="edit"]').classList.add("on");
-        document.querySelectorAll(".panel").forEach(p => p.classList.add("hidden"));
-        document.getElementById("tab-edit").classList.remove("hidden");
-      };
-      listEl.appendChild(d);
-    });
-  }
-
-  // ===== TABS =====
-  document.querySelectorAll(".tab").forEach(tab => {
-    tab.onclick = () => {
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("on"));
-      tab.classList.add("on");
-      document.querySelectorAll(".panel").forEach(p => p.classList.add("hidden"));
-      document.getElementById("tab-" + tab.dataset.tab).classList.remove("hidden");
-    };
+  view.addEventListener("touchend", () => {
+    panning = false;
+    touches = 0;
   });
 
-  // ===== EXPORT + GAME =====
-  function buildData(){
-    const tilemap = Array.from({length:ROWS}, () => Array(COLS).fill("empty"));
-    areas.forEach(a => {
-      a.cells.forEach(coord => {
-        const m = coord.match(/([A-Z]+)(\d+)/);
-        if(!m) return;
-        const c = labels.indexOf(m[1]);
-        const r = parseInt(m[2])-1;
-        if(c>=0 && r>=0 && c<COLS && r<ROWS) tilemap[r][c] = a.type;
-      });
-    });
-    return {
-      version: 4,
-      project: "BRUCHWIESEN",
-      level: "001",
-      location: { name: "Grundschule in den Bruchwiesen", coords: "49.31309N 6.72453E" },
-      grid: { cols: COLS, rows: ROWS, cellSize, labels },
-      tilemap,
-      sectors: areas,
-      tileTypes: {
-        empty:    { walkable:true,  color:"#2d5a27" },
-        grass:    { walkable:true,  color:"#3d7a37" },
-        path:     { walkable:true,  color:"#6b6b6b" },
-        street:   { walkable:true,  color:"#444444" },
-        court:    { walkable:true,  color:"#c4a35a" },
-        tennis:   { walkable:true,  color:"#c4783a" },
-        building: { walkable:false, color:"#5a5a6e" },
-        trees:    { walkable:false, color:"#1e3d1a" },
-        other:    { walkable:true,  color:"#555555" }
+  // desktop wheel + drag pan
+  view.addEventListener("wheel", e => {
+    e.preventDefault();
+    const d = e.deltaY > 0 ? 0.9 : 1.1;
+    const ns = Math.min(Math.max(scale * d, 0.25), 6);
+    const rect = view.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    ox = mx - (mx - ox) * (ns / scale);
+    oy = my - (my - oy) * (ns / scale);
+    scale = ns;
+    applyTransform();
+  }, {passive: false});
+
+  let mousePan = false;
+  view.addEventListener("mousedown", e => {
+    if (e.button === 0) {
+      mousePan = true;
+      panStartX = e.clientX;
+      panStartY = e.clientY;
+      panOrigX = ox;
+      panOrigY = oy;
+    }
+  });
+  window.addEventListener("mousemove", e => {
+    if (mousePan) {
+      ox = panOrigX + (e.clientX - panStartX);
+      oy = panOrigY + (e.clientY - panStartY);
+      applyTransform();
+    }
+  });
+  window.addEventListener("mouseup", () => { mousePan = false; });
+
+  function setStatus(m) { statusEl.textContent = m; }
+
+  // ===== MINIMAL VALID WORLD =====
+  const MINIMAL_VALID_WORLD = {
+    schemaVersion: "1.0",
+    editorVersion: "3.1",
+    meta: {
+      name: "Minimal Test World",
+      location: "Test",
+      coords: "0,0",
+      imageAspect: 1.25,
+      createdAt: "2026-11-11T00:00:00Z",
+      source: "test"
+    },
+    world: {
+      bounds: { x: 0, y: 0, w: 10000, h: 8000 },
+      layers: ["terrain", "paths", "buildings"]
+    },
+    materials: {
+      grass:    { color: "#3d7a37", walkable: true },
+      path:     { color: "#7a7a7a", walkable: true },
+      building: { color: "#5a5a6e", walkable: false },
+      tennis:   { color: "#c4783a", walkable: true },
+      trees:    { color: "#1e3d1a", walkable: false }
+    },
+    features: [
+      {
+        id: "terrain_base",
+        type: "terrain",
+        material: "grass",
+        name: "Gras",
+        geometry: { kind: "polygon", points: [[0,0],[10000,0],[10000,8000],[0,8000]] },
+        properties: { collision: false }
       },
-      playerStart: { col: Math.floor(COLS/2), row: Math.floor(ROWS/2) }
-    };
-  }
-
-  document.getElementById("btnExport").onclick = () => {
-    const data = buildData();
-    const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "bruchwiesen_gamedata.json";
-    a.click();
-    setStatus("JSON exportiert");
+      {
+        id: "building_1",
+        type: "building",
+        material: "building",
+        name: "Testgebäude",
+        geometry: { kind: "polygon", points: [[2000,2000],[5000,2000],[5000,4000],[2000,4000]] },
+        properties: { collision: true }
+      },
+      {
+        id: "path_1",
+        type: "path",
+        material: "path",
+        name: "Weg",
+        geometry: { kind: "linestring", points: [[3500,1000],[3500,7000]], width: 200 },
+        properties: { collision: false }
+      },
+      {
+        id: "tennis_1",
+        type: "sport",
+        material: "tennis",
+        name: "Tennis",
+        geometry: { kind: "polygon", points: [[5500,4500],[8500,4500],[8500,7000],[5500,7000]] },
+        properties: { collision: false }
+      }
+    ],
+    playerStart: { x: 3500, y: 5000 },
+    collision: { mode: "fromGeometry", gridSize: 64 }
   };
 
-  document.getElementById("btnGame").onclick = () => {
-    const data = buildData();
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>BRUCHWIESEN</title>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#111;color:#eee;font-family:monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden}
-canvas{background:#1a1a1a;margin:auto;image-rendering:pixelated;touch-action:none}
-.bar{padding:8px 12px;background:#0a0a0a;font-size:12px;display:flex;justify-content:space-between}
-.hint{text-align:center;padding:6px;font-size:11px;color:#888}</style></head><body>
-<div class="bar"><span>BRUCHWIESEN</span><span id="p">—</span></div>
-<canvas id="c"></canvas>
-<div class="hint">WASD / Pfeile • Tippen zum Laufen</div>
-<script>
-const D=${JSON.stringify(data)};
-const T=16,C=D.grid.cols,R=D.grid.rows;
-const cv=document.getElementById("c"),x=cv.getContext("2d");
-cv.width=C*T;cv.height=R*T;
-let p={...D.playerStart};
-function walk(c,r){if(c<0||r<0||c>=C||r>=R)return false;const t=D.tilemap[r][c];return D.tileTypes[t]?D.tileTypes[t].walkable:true}
-function draw(){
-  for(let r=0;r<R;r++)for(let c=0;c<C;c++){
-    const t=D.tilemap[r][c],i=D.tileTypes[t]||D.tileTypes.empty;
-    x.fillStyle=i.color;x.fillRect(c*T,r*T,T,T);
-  }
-  x.fillStyle="#00ff9d";x.fillRect(p.col*T+2,p.row*T+2,T-4,T-4);
-  document.getElementById("p").textContent=(p.col<26?String.fromCharCode(65+p.col):"?")+(p.row+1);
-}
-function mv(dc,dr){const nc=p.col+dc,nr=p.row+dr;if(walk(nc,nr)){p.col=nc;p.row=nr;draw()}}
-window.onkeydown=e=>{
-  if(e.key==="ArrowUp"||e.key==="w")mv(0,-1);
-  if(e.key==="ArrowDown"||e.key==="s")mv(0,1);
-  if(e.key==="ArrowLeft"||e.key==="a")mv(-1,0);
-  if(e.key==="ArrowRight"||e.key==="d")mv(1,0);
-};
-cv.onclick=e=>{
-  const r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height;
-  const c=Math.floor((e.clientX-r.left)*sx/T),rw=Math.floor((e.clientY-r.top)*sy/T);
-  const dc=Math.sign(c-p.col),dr=Math.sign(rw-p.row);
-  if(Math.abs(c-p.col)>Math.abs(rw-p.row))mv(dc,0);else mv(0,dr);
-};
-draw();
-<\/script></body></html>`;
-    const blob = new Blob([html], {type:"text/html"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "bruchwiesen_game.html";
-    a.click();
-    setStatus("Spiel-Datei erzeugt");
-  };
+  // restore
+  try {
+    const s = localStorage.getItem("bw_world_v31");
+    if (s) loadWorld(JSON.parse(s));
+  } catch(e) {}
 
-  function setStatus(m){ statusEl.textContent = m; }
-
-  renderList();
-  setStatus("Bild laden");
+  setStatus("JSON laden, PASTE oder EXAMPLE");
 })();
 </script>
 </body>
