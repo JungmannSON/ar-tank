@@ -3,883 +3,357 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>BRUCHWIESEN DETAIL EXTRACTOR 2.2</title>
+<title>BRUCHWIESEN · GBA MAP RENDER</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&display=swap');
-  :root{--bg:#0a0c12;--panel:#10141e;--cyan:#00e5ff;--green:#00ff9d;--magenta:#ff2d78;--yellow:#ffc107;--red:#ff3b5c;--text:#e8f0ff;--dim:#5a6a80;--border:#1c2535}
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;overflow:hidden}
+  html,body{height:100%;background:#0f380f;color:#9bbc0f;font-family:'Share Tech Mono',monospace;overflow:hidden}
   .app{display:flex;flex-direction:column;height:100%;height:100dvh}
-  .top{height:48px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 12px;flex-shrink:0}
-  .logo{font-family:Orbitron,sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;color:var(--cyan)}
-  .top-actions{display:flex;gap:6px;flex-wrap:wrap}
-  .btn{height:30px;padding:0 10px;border-radius:5px;border:1px solid #1e3a5f;background:#0f1c2e;color:var(--cyan);font-size:10px;font-family:inherit;text-transform:uppercase;cursor:pointer;white-space:nowrap}
-  .btn:active{opacity:.7}.btn.ok{border-color:var(--green);color:var(--green)}.btn.warn{border-color:var(--yellow);color:var(--yellow)}
-  .btn:disabled{opacity:.35;cursor:not-allowed}
-  .main{flex:1;display:flex;overflow:hidden}
-  .side{width:270px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
-  .side-r{width:290px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
-  .center{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#07090f}
-  .sec{padding:10px 12px;border-bottom:1px solid var(--border)}
-  .sec-title{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-  .scroll{flex:1;overflow:auto}
-  .status-bar{height:26px;background:#080c14;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:10px;color:var(--dim);flex-shrink:0}
-  input,select,textarea{width:100%;background:#080c14;border:1px solid #1a2a40;border-radius:5px;color:var(--text);padding:7px 9px;font-size:11px;font-family:inherit}
-  textarea{min-height:90px;resize:vertical}
-  label{font-size:9px;color:var(--dim);display:block;margin:6px 0 3px}
-  .row{display:flex;gap:6px}.row>*{flex:1}
-  .stage{padding:7px 10px;border-bottom:1px solid #1a2230;cursor:pointer;font-size:11px;display:flex;align-items:center;gap:8px}
-  .stage:hover,.stage.sel{background:#0c1a28}
-  .stage .num{color:var(--cyan);font-size:10px;min-width:22px}.stage.done .num{color:var(--green)}
-  .stage .lab{flex:1}.stage .cnt{color:var(--dim);font-size:9px}
-  .feat{padding:6px 10px;border-bottom:1px solid #1a2230;font-size:10px;cursor:pointer}
-  .feat:hover,.feat.sel{background:#0c1a28}.feat .n{color:var(--text)}.feat .t{color:var(--dim);font-size:9px}
-  .img-card{padding:8px;border:1px solid #1a2a40;border-radius:6px;margin-bottom:8px;font-size:10px}
-  .img-card .id{color:var(--cyan);font-weight:bold}
-  .okmsg{color:var(--green);font-size:10px}.err{color:var(--red);font-size:10px}
-  .hint{font-size:9px;color:var(--dim);line-height:1.35;margin-top:4px}
-  .prompt-box{flex:1;display:flex;flex-direction:column;padding:12px;overflow:hidden}
-  .prompt-box textarea{flex:1;min-height:180px;font-size:11px;line-height:1.4}
-  .tabs{display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
-  .tab{padding:5px 10px;border-radius:4px;border:1px solid #1e3a5f;background:#0c1520;color:var(--dim);font-size:10px;cursor:pointer;font-family:inherit}
-  .tab.active{border-color:var(--cyan);color:var(--cyan)}
-  .panel{display:none;flex:1;overflow:auto;flex-direction:column}.panel.show{display:flex}
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
-  .modal.show{display:flex}
-  .modal-box{background:var(--panel);border:1px solid var(--border);border-radius:10px;width:100%;max-width:480px;max-height:85vh;display:flex;flex-direction:column}
-  .modal-head{padding:12px 14px;border-bottom:1px solid var(--border);font-family:Orbitron,sans-serif;font-size:12px;color:var(--cyan)}
-  .modal-body{padding:12px 14px;overflow:auto;flex:1}
-  .modal-foot{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
-  pre{background:#080c14;padding:10px;border-radius:6px;font-size:10px;overflow:auto;max-height:260px;white-space:pre-wrap}
-  .badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:8px;background:#0a2a3a;color:var(--cyan)}
-  .badge.warn{background:#2a2000;color:var(--yellow)}.badge.err{background:#2a0a10;color:var(--red)}
+  .top{height:44px;background:#0a1f0a;border-bottom:3px solid #306230;display:flex;align-items:center;justify-content:space-between;padding:0 10px;gap:8px}
+  .logo{font-size:12px;font-weight:bold;letter-spacing:1px;color:#9bbc0f}
+  .btn{height:28px;padding:0 10px;border:2px solid #306230;background:#0f380f;color:#9bbc0f;font-size:11px;font-family:inherit;cursor:pointer;text-transform:uppercase}
+  .btn.ok{border-color:#9bbc0f}
+  .btn:disabled{opacity:.4}
+  .main{flex:1;display:flex;min-height:0}
+  .side{width:200px;background:#0a1f0a;border-right:3px solid #306230;padding:10px;overflow:auto;font-size:11px;line-height:1.4}
+  .game-wrap{flex:1;position:relative;background:#9bbc0f;min-width:0}
+  #game{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+  .status{height:24px;background:#0a1f0a;border-top:3px solid #306230;display:flex;justify-content:space-between;align-items:center;padding:0 10px;font-size:10px}
+  input[type=file]{display:none}
+  .pad{display:grid;grid-template-columns:repeat(3,40px);gap:3px;margin-top:8px}
+  .pad button{height:40px;border:2px solid #306230;background:#0f380f;color:#9bbc0f;font-size:14px;cursor:pointer}
+  .pad .e{visibility:hidden}
+  b{color:#c4d6a0}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="top">
-    <div class="logo">EXTRACTOR 2.2</div>
-    <div class="top-actions">
-      <button class="btn" id="btnInit">INIT</button>
-      <button class="btn" id="btnAddImg">+ BILD</button>
-      <button class="btn" id="btnAddGcp">+ GCP</button>
-      <button class="btn warn" id="btnFit">FIT QR</button>
-      <button class="btn ok" id="btnExport">EXPORT JSON</button>
+    <div class="logo">BRUCHWIESEN · GBA-ZIELGRAFIK</div>
+    <div style="display:flex;gap:6px">
+      <button class="btn" id="btnLoad">WELT</button>
+      <button class="btn" id="btnSprite">SPRITE</button>
+      <button class="btn ok" id="btnPlay" disabled>PLAY</button>
     </div>
   </div>
   <div class="main">
     <div class="side">
-      <div class="sec"><div class="sec-title">Projekt</div><div id="projInfo" class="hint">Kein Projekt</div></div>
-      <div class="sec" style="flex:0"><div class="sec-title">Stufen</div></div>
-      <div class="scroll" id="stageList"></div>
-      <div class="sec"><div class="sec-title">Bilder / GCPs</div><div id="imgList" class="hint">—</div></div>
+      <div>Zielgrafik = Pokémon/GBA-Aufsicht<br>aus <b>echten</b> Satelliten-Geometrien.</div>
+      <div style="margin-top:10px" id="info">Keine Welt</div>
+      <div class="pad">
+        <div class="e"></div><button data-dir="up">▲</button><div class="e"></div>
+        <button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button>
+      </div>
+      <div style="margin-top:10px;opacity:.8;font-size:10px">WASD · Editor-Look ist egal · nur fertige Map-Optik</div>
     </div>
-    <div class="center">
-      <div class="tabs">
-        <button class="tab active" data-panel="prompt">PROMPT</button>
-        <button class="tab" data-panel="ingest">INGEST</button>
-        <button class="tab" data-panel="features">FEATURES</button>
-        <button class="tab" data-panel="validate">VALIDATE</button>
-        <button class="tab" data-panel="coord">COORD</button>
-      </div>
-      <div class="panel show" id="panel-prompt">
-        <div class="prompt-box">
-          <div class="sec-title">Prompt · <span id="curStageLabel">—</span> · <span id="stagePerms" class="badge">—</span></div>
-          <textarea id="promptOut" readonly></textarea>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button class="btn ok" id="btnCopyPrompt">KOPIEREN</button>
-            <button class="btn" id="btnGenPrompt">NEU</button>
-          </div>
-        </div>
-      </div>
-      <div class="panel" id="panel-ingest">
-        <div class="prompt-box">
-          <div class="sec-title">Ingest · <span id="ingestStage">—</span></div>
-          <textarea id="ingestArea" placeholder="JSON-Array…"></textarea>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button class="btn ok" id="btnIngest">INGEST</button>
-            <button class="btn" id="btnClearIngest">LEEREN</button>
-          </div>
-          <div id="ingestMsg" class="hint"></div>
-        </div>
-      </div>
-      <div class="panel" id="panel-features">
-        <div class="sec"><div class="sec-title">Feature-DB (<span id="featCount">0</span>)</div></div>
-        <div class="scroll" id="featList"></div>
-        <div class="sec"><pre id="featDetail">—</pre></div>
-      </div>
-      <div class="panel" id="panel-validate">
-        <div class="prompt-box">
-          <div class="sec-title">Validator 2.2</div>
-          <button class="btn warn" id="btnRunValidate" style="align-self:flex-start;margin-bottom:10px">PRÜFEN</button>
-          <pre id="validateOut">—</pre>
-        </div>
-      </div>
-      <div class="panel" id="panel-coord">
-        <div class="sec">
-          <div class="sec-title">Coordinate Engine (QR)</div>
-          <label>Bild</label><select id="coordImage"></select>
-          <div id="calibInfo" class="hint"></div>
-          <div class="row">
-            <div><label>Pixel X</label><input type="number" id="pxIn" value="0"></div>
-            <div><label>Pixel Y</label><input type="number" id="pyIn" value="0"></div>
-          </div>
-          <button class="btn" id="btnPx2W" style="margin-top:8px;width:100%">PIXEL → WELT</button>
-          <div class="row" style="margin-top:8px">
-            <div><label>Welt X</label><input type="number" id="wxIn" value="5000"></div>
-            <div><label>Welt Y</label><input type="number" id="wyIn" value="5000"></div>
-          </div>
-          <button class="btn" id="btnW2Px" style="margin-top:8px;width:100%">WELT → PIXEL</button>
-          <label style="margin-top:12px">Batch Pixel→Welt – JEDES Item braucht id, kind, points</label>
-          <textarea id="batchPix" placeholder='[{"id":"b1","kind":"polygon","type":"building","points":[[100,200],[300,200],[300,400]]}]' style="min-height:70px"></textarea>
-          <button class="btn ok" id="btnBatchConv" style="margin-top:8px;width:100%">BATCH KONVERTIEREN</button>
-          <pre id="coordOut" style="margin-top:10px">Fit braucht ≥3 Fit-GCPs + ≥1 Kontrollpunkt</pre>
-        </div>
-      </div>
-    </div>
-    <div class="side-r">
-      <div class="sec">
-        <div class="sec-title">Status</div>
-        <div id="rightStatus" class="hint">Bereit</div>
-        <div id="exportBlock" class="hint" style="margin-top:6px"></div>
-      </div>
-      <div class="sec" style="flex:1;overflow:auto">
-        <div class="sec-title">History</div>
-        <div id="historyList" class="hint">—</div>
-      </div>
-      <div class="sec">
-        <button class="btn ok" id="btnExport2" style="width:100%;margin-bottom:6px">BW_WORLD.json</button>
-        <button class="btn" id="btnExportProj" style="width:100%">PROJEKT</button>
-        <button class="btn" id="btnLoadProj" style="width:100%;margin-top:6px">LADEN</button>
-        <input type="file" id="fileProj" accept=".json" style="display:none">
-      </div>
-    </div>
+    <div class="game-wrap"><canvas id="game"></canvas></div>
   </div>
-  <div class="status-bar"><span id="status">EXTRACTOR 2.2</span><span id="featBadge">0</span></div>
+  <div class="status"><span id="status">BW_WORLD laden</span><span id="pos">—</span></div>
 </div>
-
-<div class="modal" id="modalImg">
-  <div class="modal-box">
-    <div class="modal-head">Bild</div>
-    <div class="modal-body">
-      <label>ID</label><input id="mImgId" placeholder="sat_nord">
-      <label>Datei</label><input id="mImgFile" placeholder="sat.jpg">
-      <div class="row"><div><label>Nord</label><input type="number" step="any" id="mImgN" value="49.3142"></div><div><label>Süd</label><input type="number" step="any" id="mImgS" value="49.3130"></div></div>
-      <div class="row"><div><label>West</label><input type="number" step="any" id="mImgW" value="6.7230"></div><div><label>Ost</label><input type="number" step="any" id="mImgE" value="6.7255"></div></div>
-      <div class="row"><div><label>Pixel W</label><input type="number" id="mImgPw"></div><div><label>Pixel H</label><input type="number" id="mImgPh"></div></div>
-    </div>
-    <div class="modal-foot"><button class="btn" id="mImgCancel">ABBRUCH</button><button class="btn ok" id="mImgOk">OK</button></div>
-  </div>
-</div>
-<div class="modal" id="modalGcp">
-  <div class="modal-box">
-    <div class="modal-head">GCP</div>
-    <div class="modal-body">
-      <label>ID</label><input id="mGcpId" placeholder="tennis_nw">
-      <label>Bild</label><select id="mGcpImage"></select>
-      <div class="row"><div><label>Welt X</label><input type="number" id="mGcpWx" value="4850"></div><div><label>Welt Y</label><input type="number" id="mGcpWy" value="3100"></div></div>
-      <div class="row"><div><label>Pixel X</label><input type="number" id="mGcpPx" value="412"></div><div><label>Pixel Y</label><input type="number" id="mGcpPy" value="880"></div></div>
-      <label>Beschreibung</label><input id="mGcpDesc">
-      <label style="margin-top:8px"><input type="checkbox" id="mGcpControl"> Unabhängiger Kontrollpunkt (nicht im Fit)</label>
-    </div>
-    <div class="modal-foot"><button class="btn" id="mGcpCancel">ABBRUCH</button><button class="btn ok" id="mGcpOk">OK</button></div>
-  </div>
-</div>
+<input type="file" id="fileWorld" accept=".json,application/json">
+<input type="file" id="fileSprite" accept="image/*">
 
 <script>
 (function(){
 "use strict";
-
-const STAGES = [
-  {id:"01_zones", label:"Zonen", allow:["geometry","meta"]},
-  {id:"02_buildings", label:"Gebäude", allow:["geometry","meta","measures","render"]},
-  {id:"03_sports", label:"Sport", allow:["geometry","meta","measures","render"]},
-  {id:"04_paths", label:"Wege", allow:["geometry","meta","measures","render"]},
-  {id:"05_vegetation", label:"Vegetation", allow:["geometry","meta","measures","render"]},
-  {id:"06_objects", label:"Objekte", allow:["geometry","meta","measures","render"]},
-  {id:"07_measures", label:"Maße", allow:["measures"]},
-  {id:"08_render", label:"Render", allow:["render"]},
-  {id:"09_validate", label:"Validierung", allow:[]},
-  {id:"10_merge", label:"Merge", allow:["geometry","meta","measures","render"]},
-];
-const WORLD_W=10000, WORLD_H=10000, SCHEMA="1.0";
-const CTRL_TOL=80, FIT_RMSE_MAX=60, COL_MIN=0.025;
-const KINDS=new Set(["polygon","linestring","point"]);
-const MATERIALS={
-  grass:{color:"#3d7a37",walkable:true},meadow:{color:"#4a8f42",walkable:true},field:{color:"#6b9e3a",walkable:true},
-  path:{color:"#8a8a8a",walkable:true},street:{color:"#3d3d3d",walkable:true},paved:{color:"#9a9a9a",walkable:true},
-  tennis:{color:"#c4783a",walkable:true},building:{color:"#5a5a6e",walkable:false},roof_dark:{color:"#3a3a48",walkable:false},
-  roof_red:{color:"#8b3a2a",walkable:false},roof_solar:{color:"#2a2a38",walkable:false},trees:{color:"#1e3d1a",walkable:false},
-  hedge:{color:"#2d4a28",walkable:false},fence:{color:"#6a6a6a",walkable:false},parking:{color:"#5a5a5a",walkable:true},
-  container:{color:"#4a6a8a",walkable:false}
+// Classic Game Boy / Pokémon Crystal-ish 4-green + accents
+const P = {
+  light:  "#e0f8d0",
+  mid:    "#88c070",
+  dark:   "#346856",
+  black:  "#081820",
+  path:   "#c8d8a0",
+  pathD:  "#a0b878",
+  street: "#5a7850",
+  roof:   "#2a4838",
+  wall:   "#4a6850",
+  wallL:  "#6a8870",
+  tennis: "#c8a848",
+  tennisD:"#a08830",
+  tree:   "#1a4030",
+  treeL:  "#2a6040",
+  water:  "#4a7868",
+  court:  "#d0c060"
 };
 
-let project=null, currentStage="01_zones", selectedFeat=null, lastErrors=[];
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+let world=null, playing=false;
+let player={x:4000,y:3600,r:90,facing:1};
+let keys={}, touch={x:0,y:0};
+let view={scale:1,cx:0,cy:0,user:false};
+let coll=[];
+let lastT=0, SPEED=360;
+let sprite=new Image();
+sprite.src="player_scooter.jpeg";
+sprite.onload=()=>draw();
 
-function allow(stage){ const s=STAGES.find(x=>x.id===stage); return new Set(s?s.allow:[]); }
-
-// ----- QR least squares for affine -----
-// Solve min ||A x - b|| for A (n×3), using Householder QR
-function qrSolve3(A, b) {
-  // A: array of rows length 3, b: array length n
-  const n = A.length;
-  if (n < 3) throw new Error("n<3");
-  // copy
-  const M = A.map((row,i) => [row[0], row[1], row[2], b[i]]);
-  // Householder QR on first 3 columns
-  for (let k=0; k<3; k++) {
-    let norm = 0;
-    for (let i=k; i<n; i++) norm += M[i][k]*M[i][k];
-    norm = Math.sqrt(norm);
-    if (norm < 1e-14) throw new Error("Rank-Mangel in Spalte "+k);
-    const sign = M[k][k] >= 0 ? 1 : -1;
-    const u0 = M[k][k] + sign*norm;
-    const u = [];
-    for (let i=k; i<n; i++) u.push(i===k ? u0 : M[i][k]);
-    let unorm2 = 0; for (const v of u) unorm2 += v*v;
-    // apply reflector to columns k..3
-    for (let j=k; j<4; j++) {
-      let dot = 0;
-      for (let i=0; i<u.length; i++) dot += u[i]*M[k+i][j];
-      const scale = 2*dot / unorm2;
-      for (let i=0; i<u.length; i++) M[k+i][j] -= scale*u[i];
-    }
+function resize(){
+  const wrap=canvas.parentElement;
+  const dpr=Math.min(devicePixelRatio||1,2);
+  canvas.width=wrap.clientWidth*dpr; canvas.height=wrap.clientHeight*dpr;
+  canvas.style.width=wrap.clientWidth+"px"; canvas.style.height=wrap.clientHeight+"px";
+  ctx.setTransform(dpr,0,0,dpr,0,0); draw();
+}
+function status(t){document.getElementById("status").textContent=t;}
+function pip(x,y,pts){
+  let ins=false;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+    const xi=pts[i][0],yi=pts[i][1],xj=pts[j][0],yj=pts[j][1];
+    if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/((yj-yi)||1e-12)+xi)) ins=!ins;
   }
-  // back-sub R (3×3 upper) 
-  const x = [0,0,0];
-  for (let i=2; i>=0; i--) {
-    let s = M[i][3];
-    for (let j=i+1; j<3; j++) s -= M[i][j]*x[j];
-    if (Math.abs(M[i][i]) < 1e-14) throw new Error("Singulär bei Back-Sub");
-    x[i] = s / M[i][i];
-  }
-  return x;
+  return ins;
 }
-
-/**
- * Kollinearitäts-Score (verbindlich für Extractor 2.2)
- * ----------------------------------------------------
- * - Nur Pixelkoordinaten der Fit-GCPs (Kontrolle bereits herausgefiltert)
- * - Alle Punkttripel → größte Dreiecksfläche maxArea
- * - score = maxArea / extent²
- * - extent = max(Δx, Δy, 1)
- * - Score < 0.025 → QR-Fit abbrechen
- * - Kontroll-GCPs zählen nicht
- * - Degenerations-/Flächendeckungsindikator, kein vollständiger Stabilitätsnachweis
- */
-function collinearityScore(gcps) {
-  // erwartet bereits nur Fit-Punkte mit {px, py} (oder {x,y})
-  const points = gcps.map(g => ({
-    x: g.px != null ? g.px : g.x,
-    y: g.py != null ? g.py : g.y
-  }));
-  if (points.length < 3) return 0;
-
-  let maxArea = 0;
-  for (let i = 0; i < points.length - 2; i++) {
-    for (let j = i + 1; j < points.length - 1; j++) {
-      for (let k = j + 1; k < points.length; k++) {
-        const p1 = points[i], p2 = points[j], p3 = points[k];
-        const area = 0.5 * Math.abs(
-          p1.x * (p2.y - p3.y) +
-          p2.x * (p3.y - p1.y) +
-          p3.x * (p1.y - p2.y)
-        );
-        if (area > maxArea) maxArea = area;
-      }
-    }
-  }
-
-  const xs = points.map(p => p.x);
-  const ys = points.map(p => p.y);
-  const extent = Math.max(
-    Math.max(...xs) - Math.min(...xs),
-    Math.max(...ys) - Math.min(...ys),
-    1
-  );
-  return maxArea / (extent * extent);
-}
-
-function fitAffineQR(gcps) {
-  // gcps: nur Fit-GCPs (control bereits ausgeschlossen), Felder px,py,wx,wy
-  const n = gcps.length;
-  if (n < 3) throw new Error("≥3 Fit-GCPs nötig");
-
-  const col = collinearityScore(gcps);
-  if (col < COL_MIN) {
-    throw new Error("GCPs fast kollinear: Score " + col.toFixed(4) + " < " + COL_MIN);
-  }
-
-  const A = gcps.map(g=>[g.px, g.py, 1]);
-  const bx = gcps.map(g=>g.wx);
-  const by = gcps.map(g=>g.wy);
-  const [a,b,c] = qrSolve3(A, bx);
-  const [d,e,f] = qrSolve3(A, by);
-
-  // check finite
-  [a,b,c,d,e,f].forEach(v=>{ if (!Number.isFinite(v)) throw new Error("Nicht-endliche Koeffizienten"); });
-
-  let sse=0;
-  gcps.forEach(g=>{
-    const x=a*g.px+b*g.py+c, y=d*g.px+e*g.py+f;
-    sse+=(x-g.wx)**2+(y-g.wy)**2;
-  });
-  const rmse=Math.sqrt(sse/n);
-
-  // scale sanity: pixel→world should not be absurd
-  const scaleApprox = Math.hypot(a,d); // roughly world units per pixel in x-ish
-  if (scaleApprox < 0.01 || scaleApprox > 500) throw new Error("Unplausible Skalierung ("+scaleApprox.toFixed(4)+")");
-
-  return {a,b,c,d,e,f, rmse, n_points:n, collinearity:col, method:"qr"};
-}
-
-function forward(t,px,py){ return [t.a*px+t.b*py+t.c, t.d*px+t.e*py+t.f]; }
-function inverse(t,wx,wy){
-  const det=t.a*t.e-t.b*t.d;
-  if (Math.abs(det)<1e-12) throw new Error("nicht invertierbar");
-  const rx=wx-t.c, ry=wy-t.f;
-  return [(t.e*rx-t.b*ry)/det, (-t.d*rx+t.a*ry)/det];
-}
-function controlResiduals(im){
-  if (!im.transform) return [];
-  return project.gcps.filter(g=>g.image_id===im.id && g.control).map(g=>{
-    const [wx,wy]=forward(im.transform,g.pixel_x,g.pixel_y);
-    const dx=wx-g.world_x, dy=wy-g.world_y;
-    return {id:g.id, err:Math.hypot(dx,dy)};
-  });
-}
-
-// ----- Strict merge: history OUTSIDE data -----
-function strictMerge(rec, incoming, stage) {
-  const al = allow(stage);
-  const data = rec ? JSON.parse(JSON.stringify(rec.data)) : {};
-  data.id = (rec && rec.data.id) || incoming.id;
-  if (!data.id) return null;
-
-  if (al.has("meta")) {
-    ["type","material","name"].forEach(k=>{ if (incoming[k]!=null && incoming[k]!=="") data[k]=incoming[k]; });
-  }
-  if (al.has("geometry") && incoming.geometry && typeof incoming.geometry==="object" && !Array.isArray(incoming.geometry)) {
-    data.geometry = JSON.parse(JSON.stringify(incoming.geometry));
-  }
-  if (al.has("measures") && incoming.measures && typeof incoming.measures==="object") {
-    data.measures = Object.assign({}, data.measures||{}, incoming.measures);
-  }
-  if (al.has("render") && incoming.render && typeof incoming.render==="object") {
-    data.render = Object.assign({}, data.render||{}, incoming.render);
-  }
-  // properties from LLM only if meta allowed (geometry stages) – never invent source_stage inside data
-  if (al.has("meta") && incoming.properties && typeof incoming.properties==="object") {
-    const clean = Object.assign({}, incoming.properties);
-    delete clean.source_stage;
-    delete clean.updated_stages;
-    data.properties = Object.assign({}, data.properties||{}, clean);
-  }
-
-  // history on record, not in feature content
-  const history = (rec && rec.history) ? rec.history.slice() : [];
-  history.push({stage, ts:new Date().toISOString()});
-
-  return { id:data.id, data, history };
-}
-
-function upsertFeatures(stage, list) {
-  const al = allow(stage);
-  if (al.size===0 && stage!=="10_merge") return {n:0, warnings:["Stufe erlaubt keine Schreibfelder"]};
-  const seen=new Set(), warnings=[];
-  let n=0;
-  list.forEach(f=>{
-    if (!f||!f.id){ warnings.push("ohne id übersprungen"); return; }
-    if (seen.has(f.id)){ warnings.push("doppelte id in Antwort: "+f.id); return; }
-    seen.add(f.id);
-    if (project.features[f.id]) {
-      const merged = strictMerge(project.features[f.id], f, stage);
-      if (merged) { project.features[f.id]=merged; n++; }
-    } else {
-      if (!al.has("geometry") && stage!=="10_merge") {
-        warnings.push("neue id '"+f.id+"' ohne Geometrie-Recht ignoriert");
-        return;
-      }
-      const merged = strictMerge(null, f, stage);
-      if (merged) { project.features[f.id]=merged; n++; }
-    }
-  });
-  return {n, warnings};
-}
-
-// ----- Validator 2.2 -----
-function validate() {
-  const errors=[];
-  if (!project) return ["Kein Projekt"];
-
-  // images / GCPs / transforms
-  project.images.forEach(im=>{
-    if (!Number.isFinite(im.north)||!Number.isFinite(im.south)||!Number.isFinite(im.west)||!Number.isFinite(im.east))
-      errors.push("Bild "+im.id+": Bounds nicht endlich");
-    if (im.north<=im.south) errors.push("Bild "+im.id+": north<=south");
-    if (im.east<=im.west) errors.push("Bild "+im.id+": east<=west");
-    if (im.pixel_width!=null && (!Number.isFinite(im.pixel_width)||im.pixel_width<=0))
-      errors.push("Bild "+im.id+": pixel_width ungültig");
-    if (im.pixel_height!=null && (!Number.isFinite(im.pixel_height)||im.pixel_height<=0))
-      errors.push("Bild "+im.id+": pixel_height ungültig");
-
-    if (im.transform) {
-      const t=im.transform;
-      [t.a,t.b,t.c,t.d,t.e,t.f].forEach((v,i)=>{
-        if (!Number.isFinite(v)) errors.push("Transform "+im.id+": Koeff["+i+"] nicht endlich");
-      });
-      if (t.rmse>FIT_RMSE_MAX) errors.push("Transform "+im.id+": Fit-RMSE zu hoch ("+t.rmse.toFixed(1)+")");
-      if (t.collinearity!=null && t.collinearity<COL_MIN) errors.push("Transform "+im.id+": kollinear");
-      const ctrls=controlResiduals(im);
-      if (ctrls.length===0)
-        errors.push("Transform "+im.id+": keine unabhängigen Kontrollpunkte – Kalibrierung nicht freigabefähig");
-      else {
-        const sse=ctrls.reduce((s,r)=>s+r.err*r.err,0);
-        const crmse=Math.sqrt(sse/ctrls.length);
-        if (crmse>CTRL_TOL) errors.push("Transform "+im.id+": Kontroll-RMSE "+crmse.toFixed(1)+" > "+CTRL_TOL);
-        ctrls.forEach(r=>{ if (r.err>CTRL_TOL*1.5) errors.push("Kontrollpunkt "+r.id+" Fehler "+r.err.toFixed(1)); });
-      }
-    }
-  });
-
-  project.gcps.forEach(g=>{
-    if (!project.images.some(i=>i.id===g.image_id)) errors.push("GCP "+g.id+": Bild "+g.image_id+" fehlt");
-    ["world_x","world_y","pixel_x","pixel_y"].forEach(k=>{
-      if (!Number.isFinite(g[k])) errors.push("GCP "+g.id+": "+k+" nicht endlich");
-    });
-    const im=project.images.find(i=>i.id===g.image_id);
-    if (im && im.pixel_width!=null && (g.pixel_x<0||g.pixel_x>im.pixel_width))
-      errors.push("GCP "+g.id+": pixel_x außerhalb Bildbreite");
-    if (im && im.pixel_height!=null && (g.pixel_y<0||g.pixel_y>im.pixel_height))
-      errors.push("GCP "+g.id+": pixel_y außerhalb Bildhöhe");
-  });
-
-  // features
-  const ids=new Set();
-  Object.values(project.features).forEach(rec=>{
-    const f=rec.data, fid=f.id||"?";
-    if (ids.has(fid)) errors.push("Doppelte ID "+fid);
-    ids.add(fid);
-    if (!f.type || typeof f.type!=="string") errors.push("["+fid+"] type fehlt/ungültig");
-    if (f.material!=null && typeof f.material!=="string") errors.push("["+fid+"] material kein String");
-
-    const g=f.geometry;
-    if (g==null) { errors.push("["+fid+"] keine geometry"); return; }
-    if (typeof g!=="object"||Array.isArray(g)) { errors.push("["+fid+"] geometry kein Objekt"); return; }
-    if (!KINDS.has(g.kind)) errors.push("["+fid+"] kind ungültig");
-    if (!Array.isArray(g.points)||!g.points.length) { errors.push("["+fid+"] points fehlen"); return; }
-    if (g.kind==="polygon"&&g.points.length<3) errors.push("["+fid+"] polygon <3");
-    if (g.kind==="linestring"&&g.points.length<2) errors.push("["+fid+"] linestring <2");
-    if (g.kind==="point"&&g.points.length!==1) errors.push("["+fid+"] point ≠1 Punkt");
-
-    // degenerate polygon: all points equal
-    if (g.kind==="polygon") {
-      const p0=g.points[0];
-      if (g.points.every(p=>p[0]===p0[0]&&p[1]===p0[1])) errors.push("["+fid+"] polygon degeneriert (alle Punkte gleich)");
-    }
-
-    g.points.forEach((p,i)=>{
-      if (!Array.isArray(p)||p.length<2) { errors.push("["+fid+"] point["+i+"] ungültig"); return; }
-      const x=p[0],y=p[1];
-      if (typeof x!=="number"||typeof y!=="number"||!Number.isFinite(x)||!Number.isFinite(y))
-        errors.push("["+fid+"] point["+i+"] nicht endlich");
-      else if (x<0||x>WORLD_W||y<0||y>WORLD_H) errors.push("["+fid+"] point["+i+"] außerhalb Grid");
-    });
-
-    if (f.measures!=null) {
-      if (typeof f.measures!=="object"||Array.isArray(f.measures)) errors.push("["+fid+"] measures kein Objekt");
-      else ["width_m","length_m","area_m2"].forEach(k=>{
-        if (k in f.measures && (typeof f.measures[k]!=="number"||!Number.isFinite(f.measures[k])||f.measures[k]<0))
-          errors.push("["+fid+"] measures."+k+" ungültig");
-      });
-    }
-    if (f.render!=null && (typeof f.render!=="object"||Array.isArray(f.render)))
-      errors.push("["+fid+"] render kein Objekt");
-    if (f.properties!=null && (typeof f.properties!=="object"||Array.isArray(f.properties)))
-      errors.push("["+fid+"] properties kein Objekt");
-  });
-
-  // player start required for export-quality world
-  const hasPlayerFeat = Object.values(project.features).some(r=>{
-    const f=r.data;
-    return f.id==="player_start"||f.id==="playerStart"||f.type==="player";
-  });
-  if (!hasPlayerFeat && !project.playerStart)
-    errors.push("Spielerstart fehlt (player_start Feature oder project.playerStart)");
-  if (project.playerStart) {
-    if (!Number.isFinite(project.playerStart.x)||!Number.isFinite(project.playerStart.y))
-      errors.push("project.playerStart nicht endlich");
-    else if (project.playerStart.x<0||project.playerStart.x>WORLD_W||project.playerStart.y<0||project.playerStart.y>WORLD_H)
-      errors.push("project.playerStart außerhalb Grid");
-  }
-
-  lastErrors=errors;
-  return errors;
-}
-
-// ----- Prompt -----
-function featureSummary(){
-  return Object.values(project.features).map(rec=>{
-    const f=rec.data;
-    const st=(rec.history||[]).map(h=>h.stage).filter((v,i,a)=>a.indexOf(v)===i).join(",");
-    return "  - "+f.id+" ["+(f.type||"?")+"] "+(f.name||"")+" hist=["+st+"]";
-  }).join("\n")||"(leer)";
-}
-function featuresFull(){ return JSON.stringify(Object.values(project.features).map(r=>r.data),null,2); }
-function transformBlock(){
-  return project.images.map(im=>{
-    if (!im.transform) return "- "+im.id+": KEINE Transform";
-    const t=im.transform;
-    return "- "+im.id+" (QR):\n    x="+t.a.toFixed(6)+"*px + "+t.b.toFixed(6)+"*py + "+t.c.toFixed(2)+
-      "\n    y="+t.d.toFixed(6)+"*px + "+t.e.toFixed(6)+"*py + "+t.f.toFixed(2)+
-      "\n    RMSE="+t.rmse.toFixed(2)+" n="+t.n_points+" col="+Number(t.collinearity||0).toFixed(4);
-  }).join("\n")||"(keine)";
-}
-function buildPrompt(stage){
-  if (!project) return "INIT";
-  const al=[...allow(stage)].join(", ")||"—";
-  return `Kartograf. schemaVersion "${SCHEMA}". Grid 0–${WORLD_W}.
-ORT: ${project.name} | ${project.location}
-STUFE ${stage} – ERLAUBT: ${al}
-
-BILDER:
-${project.images.map(im=>"- "+im.id+": "+im.filename+" N"+im.north+" S"+im.south+" W"+im.west+" E"+im.east+(im.pixel_width?" "+im.pixel_width+"x"+im.pixel_height:"")).join("\n")}
-
-KALIBRIERUNG QR:
-${transformBlock()}
-
-GCPs (control=unabhängig):
-${project.gcps.map(g=>"- "+g.id+" Welt("+g.world_x+","+g.world_y+") ← "+g.image_id+" px("+g.pixel_x+","+g.pixel_y+")"+(g.control?" [CTRL]":"")).join("\n")}
-
-FEATURES:
-${featureSummary()}
-
-Schema: {id,type,material,name,geometry:{kind,points},measures,render,properties}
-kind muss explizit polygon|linestring|point sein.
-
-${stage==="07_measures"? "NUR measures.\n"+featuresFull():""}
-${stage==="08_render"? "NUR render.\n"+featuresFull():""}
-${stage==="10_merge"? "VOLL:\n"+featuresFull()+"\n→ BW_WORLD.json":""}
-${["01_zones","02_buildings","03_sports","04_paths","05_vegetation","06_objects"].includes(stage)? "JSON-Array von Features. Geometrie in WELTKOORDINATEN (oder klar als Pixel markieren).":""}
-${stage==="09_validate"? "Report-Objekt: missing, overlapping, suggestions.":""}
-
-Nur JSON.`;
-}
-
-// ----- World -----
-function resolvePlayer(){
-  for (const rec of Object.values(project.features)) {
-    const f=rec.data;
-    if (f.id==="player_start"||f.id==="playerStart"||f.type==="player") {
-      const pts=f.geometry&&f.geometry.points;
-      if (pts&&pts[0]&&Number.isFinite(pts[0][0])&&Number.isFinite(pts[0][1]))
-        return {x:pts[0][0], y:pts[0][1]};
-    }
-  }
-  if (project.playerStart && Number.isFinite(project.playerStart.x) && Number.isFinite(project.playerStart.y))
-    return {x:project.playerStart.x, y:project.playerStart.y};
-  return null; // never invent
-}
-
-function worldAspect(){
-  // world grid aspect is authoritative for the game world
-  return WORLD_W / WORLD_H;
-}
-function imagePixelAspect(im){
-  if (im.pixel_width&&im.pixel_height&&im.pixel_height>0) return im.pixel_width/im.pixel_height;
-  return null;
-}
-
-function buildWorld(){
-  const features=Object.values(project.features).map(r=>JSON.parse(JSON.stringify(r.data)));
-  if (!features.some(f=>f.id==="terrain_base")) {
-    features.unshift({
-      id:"terrain_base",type:"terrain",material:"grass",name:"Grundfläche Gras",
-      geometry:{kind:"polygon",points:[[0,0],[WORLD_W,0],[WORLD_W,WORLD_H],[0,WORLD_H]]},
-      properties:{collision:false,walkable:true}
-    });
-  }
-  const used=new Set(features.map(f=>f.material).filter(Boolean));
-  const materials=JSON.parse(JSON.stringify(MATERIALS));
-  used.forEach(m=>{ if(!materials[m]) materials[m]={color:"#888800",walkable:true}; });
-
-  const player=resolvePlayer();
-  // imageAspect for renderer: prefer first image pixel aspect, else world
-  let imageAspect=worldAspect();
-  if (project.images[0]) {
-    const pa=imagePixelAspect(project.images[0]);
-    if (pa) imageAspect=pa;
-  }
-
-  return {
-    schemaVersion:SCHEMA,
-    editorVersion:"3.2-detail-v2.2",
-    meta:{
-      name:project.name, location:project.location, coords:project.coords,
-      imageAspect:Math.round(imageAspect*10000)/10000,
-      worldAspect:Math.round(worldAspect()*10000)/10000,
-      createdAt:new Date().toISOString(),
-      source:"detail-extractor-v2.2-qr"
-    },
-    world:{bounds:{x:0,y:0,w:WORLD_W,h:WORLD_H}, layers:["terrain","sports","paths","buildings","vegetation","objects"]},
-    materials, features,
-    playerStart: player, // may be null – export blocked if null via validator
-    collision:{mode:"fromGeometry",gridSize:64}
-  };
-}
-
-// ----- Project -----
-function newProject(){
-  project={
-    name:"Grundschule in den Bruchwiesen", location:"Saarlouis-Beaumarais, Saarland",
-    coords:"49.31309N, 6.72453E", world_w:WORLD_W, world_h:WORLD_H,
-    images:[], gcps:[], features:{}, history:["init "+new Date().toISOString()], playerStart:null
-  };
-  lastErrors=[]; persist(); refreshAll(); setStatus("INIT 2.2");
-}
-function persist(){ try{ localStorage.setItem("bw_detail_v22", JSON.stringify(project)); }catch(e){} }
-function loadPersisted(){
-  try{ const s=localStorage.getItem("bw_detail_v22"); if(s){ project=JSON.parse(s); refreshAll(); setStatus("geladen"); return true; } }catch(e){}
+function blocked(x,y){
+  if(!world) return true;
+  const b=world.world.bounds;
+  if(x<b.x||y<b.y||x>b.x+b.w||y>b.y+b.h) return true;
+  for(const p of coll) if(pip(x,y,p)) return true;
   return false;
 }
+function rebuildColl(){
+  coll=[];
+  const mats=world.materials||{};
+  (world.features||[]).forEach(f=>{
+    const g=f.geometry; if(!g||g.kind!=="polygon"||!g.points||g.points.length<3) return;
+    const mat=mats[f.material]||{}, props=f.properties||{};
+    let c=props.collision;
+    if(c===undefined) c = mat.walkable===false || ["building","vegetation","object","fence"].includes(f.type);
+    if(c) coll.push(g.points);
+  });
+}
+function loadWorld(data){
+  if(!data?.features||!data?.world) throw new Error("Ungültige Welt");
+  world=data; rebuildColl();
+  if(data.playerStart){player.x=data.playerStart.x; player.y=data.playerStart.y;}
+  else {const b=data.world.bounds; player.x=b.x+b.w/2; player.y=b.y+b.h/2;}
+  view.cx=player.x; view.cy=player.y; view.user=false;
+  document.getElementById("btnPlay").disabled=false;
+  document.getElementById("info").innerHTML=
+    "<b>"+(data.meta?.name||"Bruchwiesen")+"</b><br>"+data.features.length+" Objekte<br>"+coll.length+" Kollisionen";
+  status("GBA-Map bereit – PLAY");
+  draw();
+}
 
-function setStatus(m){ document.getElementById("status").textContent=m; document.getElementById("rightStatus").textContent=m; }
-function esc(s){ return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
+function W2S(wx,wy,w,h){ const s=view.scale; return [w/2+(wx-view.cx)*s, h/2+(wy-view.cy)*s]; }
 
-function refreshExportGate(){
-  const el=document.getElementById("exportBlock");
-  const btns=[document.getElementById("btnExport"), document.getElementById("btnExport2")];
-  if (!project){ el.textContent=""; return; }
-  const errs=lastErrors.length?lastErrors:validate();
-  if (errs.length){
-    el.innerHTML='<span class="err">Export gesperrt · '+errs.length+' Fehler</span>';
-    btns.forEach(b=>b.disabled=true);
-  } else {
-    el.innerHTML='<span class="okmsg">Export freigegeben</span>';
-    btns.forEach(b=>b.disabled=false);
+// --- Pixel-art helpers (chunky, no anti-alias) ---
+function pxFillPoly(pts, fill, stroke){
+  ctx.beginPath();
+  pts.forEach((p,i)=>{ if(i===0)ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]); });
+  ctx.closePath();
+  ctx.fillStyle=fill; ctx.fill();
+  if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=1; ctx.stroke(); }
+}
+function pxLine(pts, color, width){
+  ctx.beginPath();
+  pts.forEach((p,i)=>{ if(i===0)ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]); });
+  ctx.strokeStyle=color; ctx.lineWidth=width; ctx.lineCap="square"; ctx.lineJoin="miter"; ctx.stroke();
+}
+
+// Draw a simple GBA building from bbox of polygon
+function drawBuildingGBA(screenPts){
+  let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  screenPts.forEach(p=>{minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]);});
+  const bw=maxX-minX, bh=maxY-minY;
+  if(bw<4||bh<4) return;
+  // footprint
+  pxFillPoly(screenPts, P.wall, P.black);
+  // roof slab (upper 55%)
+  const roofH = bh*0.45;
+  ctx.fillStyle=P.roof;
+  ctx.fillRect(Math.floor(minX), Math.floor(minY), Math.ceil(bw), Math.ceil(roofH));
+  // roof edge
+  ctx.fillStyle=P.black;
+  ctx.fillRect(Math.floor(minX), Math.floor(minY+roofH-1), Math.ceil(bw), 2);
+  // windows strip
+  const wy=minY+roofH+bh*0.15;
+  const ww=Math.max(3, bw*0.12), gap=ww*1.8;
+  ctx.fillStyle=P.light;
+  for(let x=minX+bw*0.15; x<maxX-bw*0.15; x+=gap){
+    ctx.fillRect(Math.floor(x), Math.floor(wy), Math.ceil(ww), Math.ceil(bh*0.12));
+  }
+  // door
+  const dw=Math.max(4,bw*0.14), dh=Math.max(6,bh*0.22);
+  ctx.fillStyle=P.dark;
+  ctx.fillRect(Math.floor(minX+bw/2-dw/2), Math.floor(maxY-dh-1), Math.ceil(dw), Math.ceil(dh));
+}
+
+function drawTreeCluster(screenPts){
+  let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  screenPts.forEach(p=>{minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]);});
+  // base blob
+  pxFillPoly(screenPts, P.tree, P.black);
+  // lighter blobs for canopy depth
+  const cx=(minX+maxX)/2, cy=(minY+maxY)/2;
+  const rx=(maxX-minX)*0.25, ry=(maxY-minY)*0.25;
+  ctx.fillStyle=P.treeL;
+  for(const [ox,oy] of [[-0.3,-0.2],[0.25,-0.15],[0,0.2]]){
+    ctx.beginPath();
+    ctx.ellipse(cx+ox*(maxX-minX), cy+oy*(maxY-minY), rx, ry, 0, 0, Math.PI*2);
+    ctx.fill();
   }
 }
 
-function refreshAll(){
-  if (!project) return;
-  document.getElementById("projInfo").innerHTML=`<b style="color:var(--cyan)">${esc(project.name)}</b><br>${project.images.length} Bilder · ${project.gcps.length} GCPs · ${Object.keys(project.features).length} Features`;
-
-  const hits={}; STAGES.forEach(s=>hits[s.id]=0);
-  Object.values(project.features).forEach(rec=>{
-    (rec.history||[]).forEach(h=>{ if(hits[h.stage]!=null) hits[h.stage]++; });
-  });
-  const sl=document.getElementById("stageList"); sl.innerHTML="";
-  STAGES.forEach(s=>{
-    const d=document.createElement("div");
-    d.className="stage"+(s.id===currentStage?" sel":"")+(hits[s.id]?" done":"");
-    d.innerHTML=`<span class="num">${s.id.slice(0,2)}</span><span class="lab">${s.label}</span><span class="cnt">${hits[s.id]||""}</span>`;
-    d.onclick=()=>{ currentStage=s.id; refreshAll(); genPrompt(); };
-    sl.appendChild(d);
-  });
-  document.getElementById("stagePerms").textContent=[...allow(currentStage)].join(",")||"—";
-  document.getElementById("curStageLabel").textContent=currentStage;
-  document.getElementById("ingestStage").textContent=currentStage;
-
-  document.getElementById("imgList").innerHTML=project.images.length?project.images.map(im=>{
-    const nf=project.gcps.filter(g=>g.image_id===im.id&&!g.control).length;
-    const nc=project.gcps.filter(g=>g.image_id===im.id&&g.control).length;
-    let b=im.transform?`<span class="badge">QR RMSE ${im.transform.rmse.toFixed(1)}</span>`:`<span class="badge warn">kein Fit</span>`;
-    if (im.transform && nc===0) b+=` <span class="badge err">kein CTRL</span>`;
-    return `<div class="img-card"><div class="id">${esc(im.id)}</div>${esc(im.filename)}<br>Fit ${nf} · Ctrl ${nc} ${b}</div>`;
-  }).join(""):"—";
-
-  const keys=Object.keys(project.features).sort();
-  document.getElementById("featCount").textContent=keys.length;
-  document.getElementById("featBadge").textContent=keys.length+" Features";
-  const fl=document.getElementById("featList"); fl.innerHTML="";
-  keys.forEach(id=>{
-    const f=project.features[id].data;
-    const d=document.createElement("div");
-    d.className="feat"+(selectedFeat===id?" sel":"");
-    d.innerHTML=`<div class="n">${esc(f.name||id)}</div><div class="t">${f.type||"?"} · ${f.material||"?"}</div>`;
-    d.onclick=()=>{ selectedFeat=id; document.getElementById("featDetail").textContent=JSON.stringify({data:project.features[id].data, history:project.features[id].history},null,2); refreshAll(); };
-    fl.appendChild(d);
-  });
-  document.getElementById("historyList").innerHTML=(project.history||[]).slice(-20).reverse().map(h=>"· "+esc(h)).join("<br>")||"—";
-
-  const sel=document.getElementById("coordImage"), gcpSel=document.getElementById("mGcpImage");
-  [sel,gcpSel].forEach(s=>{ if(!s)return; const c=s.value; s.innerHTML=project.images.map(im=>`<option value="${im.id}">${im.id}</option>`).join(""); if(c)s.value=c; });
-  updateCalibInfo(); refreshExportGate();
+function drawTennis(screenPts){
+  pxFillPoly(screenPts, P.tennis, P.black);
+  // simple center line
+  let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  screenPts.forEach(p=>{minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]);});
+  ctx.strokeStyle=P.light; ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo((minX+maxX)/2, minY+2); ctx.lineTo((minX+maxX)/2, maxY-2);
+  ctx.moveTo(minX+2,(minY+maxY)/2); ctx.lineTo(maxX-2,(minY+maxY)/2);
+  ctx.stroke();
 }
 
-function updateCalibInfo(){
-  const im=project&&project.images.find(i=>i.id===document.getElementById("coordImage").value);
-  const el=document.getElementById("calibInfo");
-  if (!im){ el.textContent=""; return; }
-  if (!im.transform){ el.innerHTML='<span class="err">Keine Transform</span>'; return; }
-  const t=im.transform, cres=controlResiduals(im);
-  const crmse=cres.length?Math.sqrt(cres.reduce((s,r)=>s+r.err*r.err,0)/cres.length):null;
-  el.innerHTML=`QR RMSE ${t.rmse.toFixed(2)} · col ${Number(t.collinearity||0).toFixed(3)} · Ctrl ${cres.length}${crmse!=null?" RMSE "+crmse.toFixed(1):" (fehlt!)"}`;
+function draw(){
+  const wrap=canvas.parentElement;
+  const w=wrap.clientWidth, h=wrap.clientHeight;
+  ctx.imageSmoothingEnabled=false;
+  ctx.clearRect(0,0,w,h);
+  // base meadow
+  ctx.fillStyle=P.mid;
+  ctx.fillRect(0,0,w,h);
+  // subtle dither checker for grass texture
+  ctx.fillStyle=P.dark;
+  const step=6;
+  for(let y=0;y<h;y+=step) for(let x=0;x<w;x+=step){
+    if(((x+y)/step)&1) ctx.fillRect(x,y,1,1);
+  }
+
+  if(!world){
+    ctx.fillStyle=P.black; ctx.font="13px monospace"; ctx.textAlign="center";
+    ctx.fillText("BW_WORLD.json → GBA-Zielgrafik", w/2, h/2-40);
+    if(sprite.complete&&sprite.naturalWidth){
+      const sh=100, sw=sh*(sprite.naturalWidth/sprite.naturalHeight);
+      ctx.drawImage(sprite, w/2-sw/2, h/2, sw, sh);
+    }
+    return;
+  }
+
+  const bounds=world.world.bounds;
+  if(!view.user) view.scale=Math.min(w/bounds.w,h/bounds.h)*4.0;
+
+  const order={terrain:0,field:0,meadow:0,sport:1,path:2,street:2,vegetation:3,building:4,object:5,fence:4};
+  const feats=(world.features||[]).slice().sort((a,b)=>(order[a.type]||5)-(order[b.type]||5));
+
+  feats.forEach(f=>{
+    if(f.type==="player") return;
+    const g=f.geometry; if(!g?.points?.length) return;
+    const sp=g.points.map(p=>W2S(p[0],p[1],w,h));
+
+    if(g.kind==="polygon"){
+      if(f.type==="building" || f.material==="building" || (f.material||"").startsWith("roof")){
+        drawBuildingGBA(sp);
+      } else if(f.type==="vegetation" || f.material==="trees" || f.material==="hedge"){
+        drawTreeCluster(sp);
+      } else if(f.type==="sport" || f.material==="tennis"){
+        drawTennis(sp);
+      } else if(f.material==="paved" || f.type==="path" && g.kind==="polygon"){
+        pxFillPoly(sp, P.path, P.pathD);
+      } else if(f.material==="street"){
+        pxFillPoly(sp, P.street, P.black);
+      } else if(f.material==="field"||f.material==="meadow"){
+        pxFillPoly(sp, P.mid, null);
+        // crop lines
+        let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+        sp.forEach(p=>{minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]);});
+        ctx.strokeStyle=P.dark; ctx.lineWidth=1;
+        for(let y=minY+8;y<maxY;y+=10){ ctx.beginPath(); ctx.moveTo(minX,y); ctx.lineTo(maxX,y); ctx.stroke(); }
+      } else {
+        // terrain / generic
+        pxFillPoly(sp, f.material==="grass"?P.mid:P.dark, null);
+      }
+    } else if(g.kind==="linestring"){
+      const lw=Math.max(3, (g.width||100)*view.scale);
+      const isStreet=f.type==="street"||f.material==="street";
+      pxLine(sp, isStreet?P.street:P.path, lw);
+      if(isStreet){
+        ctx.setLineDash([6,6]);
+        pxLine(sp, P.path, 1);
+        ctx.setLineDash([]);
+      }
+    } else if(g.kind==="point"){
+      // single tree
+      const [sx,sy]=sp[0];
+      const r=Math.max(6,(g.radius||50)*view.scale*0.2);
+      ctx.fillStyle=P.tree;
+      ctx.beginPath(); ctx.arc(sx,sy,r,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=P.treeL;
+      ctx.beginPath(); ctx.arc(sx-r*0.2,sy-r*0.2,r*0.45,0,Math.PI*2); ctx.fill();
+    }
+  });
+
+  // Player sprite TZ
+  const [px,py]=W2S(player.x,player.y,w,h);
+  const sprH=Math.max(32, player.r*view.scale*0.9);
+  const sprW=sprite.naturalWidth? sprH*(sprite.naturalWidth/sprite.naturalHeight):sprH;
+  ctx.fillStyle="rgba(8,24,32,0.3)";
+  ctx.beginPath(); ctx.ellipse(px, py+sprH*0.2, sprW*0.3, sprH*0.1, 0,0,Math.PI*2); ctx.fill();
+  ctx.save();
+  ctx.translate(px,py);
+  if(player.facing<0) ctx.scale(-1,1);
+  if(sprite.complete&&sprite.naturalWidth)
+    ctx.drawImage(sprite, -sprW/2, -sprH*0.78, sprW, sprH);
+  else {
+    ctx.fillStyle=P.dark; ctx.fillRect(-10,-16,20,24);
+  }
+  ctx.restore();
 }
 
-function genPrompt(){ document.getElementById("promptOut").value=buildPrompt(currentStage); }
+function tick(t){
+  if(!lastT) lastT=t;
+  const dt=Math.min(0.05,(t-lastT)/1000); lastT=t;
+  if(playing&&world){
+    let dx=0,dy=0;
+    if(keys.w||keys.arrowup) dy--; if(keys.s||keys.arrowdown) dy++;
+    if(keys.a||keys.arrowleft) dx--; if(keys.d||keys.arrowright) dx++;
+    dx+=touch.x; dy+=touch.y;
+    if(dx||dy){
+      const L=Math.hypot(dx,dy)||1; dx/=L; dy/=L;
+      if(dx) player.facing=dx<0?-1:1;
+      const sp=SPEED*dt;
+      if(!blocked(player.x+dx*sp, player.y)) player.x+=dx*sp;
+      if(!blocked(player.x, player.y+dy*sp)) player.y+=dy*sp;
+    }
+    view.cx+=(player.x-view.cx)*Math.min(1,dt*6);
+    view.cy+=(player.y-view.cy)*Math.min(1,dt*6);
+    document.getElementById("pos").textContent=Math.round(player.x)+", "+Math.round(player.y);
+  }
+  draw();
+  requestAnimationFrame(tick);
+}
 
-document.querySelectorAll(".tab").forEach(tab=>{
-  tab.onclick=()=>{
-    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("show"));
-    tab.classList.add("active");
-    document.getElementById("panel-"+tab.dataset.panel).classList.add("show");
-  };
+window.addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true;});
+window.addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false;});
+document.querySelectorAll(".pad button").forEach(btn=>{
+  const d=btn.dataset.dir;
+  btn.onpointerdown=e=>{e.preventDefault();btn.setPointerCapture(e.pointerId);
+    if(d==="up")touch.y=-1; if(d==="down")touch.y=1; if(d==="left")touch.x=-1; if(d==="right")touch.x=1;};
+  btn.onpointerup=()=>{touch.x=0;touch.y=0;};
 });
-
-document.getElementById("btnInit").onclick=()=>{ if(project&&Object.keys(project.features).length&&!confirm("Neu?"))return; newProject(); genPrompt(); };
-document.getElementById("btnAddImg").onclick=()=>{ if(!project)return setStatus("INIT"); document.getElementById("modalImg").classList.add("show"); };
-document.getElementById("mImgCancel").onclick=()=>document.getElementById("modalImg").classList.remove("show");
-document.getElementById("mImgOk").onclick=()=>{
-  const id=document.getElementById("mImgId").value.trim()||"sat_"+Date.now();
-  if (project.images.some(i=>i.id===id)) return alert("ID existiert");
-  const pw=document.getElementById("mImgPw").value, ph=document.getElementById("mImgPh").value;
-  project.images.push({
-    id, filename:document.getElementById("mImgFile").value.trim()||id+".jpg",
-    north:+document.getElementById("mImgN").value, south:+document.getElementById("mImgS").value,
-    west:+document.getElementById("mImgW").value, east:+document.getElementById("mImgE").value,
-    pixel_width:pw?+pw:null, pixel_height:ph?+ph:null, transform:null
-  });
-  project.history.push("add-image "+id); persist(); refreshAll();
-  document.getElementById("modalImg").classList.remove("show"); setStatus("Bild "+id);
-};
-
-document.getElementById("btnAddGcp").onclick=()=>{ if(!project||!project.images.length)return setStatus("Bild zuerst"); document.getElementById("modalGcp").classList.add("show"); };
-document.getElementById("mGcpCancel").onclick=()=>document.getElementById("modalGcp").classList.remove("show");
-document.getElementById("mGcpOk").onclick=()=>{
-  const id=document.getElementById("mGcpId").value.trim()||"gcp_"+Date.now();
-  project.gcps.push({
-    id, world_x:+document.getElementById("mGcpWx").value, world_y:+document.getElementById("mGcpWy").value,
-    image_id:document.getElementById("mGcpImage").value, pixel_x:+document.getElementById("mGcpPx").value,
-    pixel_y:+document.getElementById("mGcpPy").value, description:document.getElementById("mGcpDesc").value.trim(),
-    control:document.getElementById("mGcpControl").checked
-  });
-  project.history.push("add-gcp "+id); persist(); refreshAll();
-  document.getElementById("modalGcp").classList.remove("show"); setStatus("GCP "+id);
-};
-
-document.getElementById("btnFit").onclick=()=>{
-  if (!project) return;
-  let done=0;
-  project.images.forEach(im=>{
-    const fitPts=project.gcps.filter(g=>g.image_id===im.id&&!g.control)
-      .map(g=>({px:g.pixel_x,py:g.pixel_y,wx:g.world_x,wy:g.world_y}));
-    if (fitPts.length<3) return;
-    try {
-      im.transform=fitAffineQR(fitPts);
-      done++;
-      project.history.push("fit-qr "+im.id+" rmse="+im.transform.rmse.toFixed(2));
-    } catch(e) { setStatus("Fit "+im.id+": "+e.message); }
-  });
-  persist(); refreshAll();
-  if (done) setStatus("QR-Fit für "+done+" Bild(er)");
-  else if (!document.getElementById("status").textContent.startsWith("Fit")) setStatus("Keine ≥3 Fit-GCPs");
-};
-
-document.getElementById("btnGenPrompt").onclick=genPrompt;
-document.getElementById("btnCopyPrompt").onclick=()=>{ const t=document.getElementById("promptOut"); t.select(); navigator.clipboard.writeText(t.value).then(()=>setStatus("kopiert")).catch(()=>{}); };
-
-document.getElementById("btnIngest").onclick=()=>{
-  if (!project) return;
-  const raw=document.getElementById("ingestArea").value.trim(); if (!raw) return;
-  let data; try{ data=JSON.parse(raw); }catch(e){ document.getElementById("ingestMsg").innerHTML='<span class="err">'+esc(e.message)+'</span>'; return; }
-  if (currentStage==="09_validate"&&data&&!Array.isArray(data)&&!data.features){
-    project.history.push("validate-report"); persist();
-    document.getElementById("ingestMsg").innerHTML='<span class="okmsg">Report notiert</span>'; return;
-  }
-  if (data&&data.playerStart&&Number.isFinite(data.playerStart.x)) project.playerStart=data.playerStart;
-  const list=Array.isArray(data)?data:(data.features||[]);
-  if (!Array.isArray(list)){ document.getElementById("ingestMsg").innerHTML='<span class="err">Array erwartet</span>'; return; }
-  const r=upsertFeatures(currentStage, list);
-  project.history.push("ingest "+currentStage+" ("+r.n+")"); persist(); refreshAll();
-  document.getElementById("ingestMsg").innerHTML='<span class="okmsg">'+r.n+' Features</span>'+(r.warnings.length?'<br><span class="err">'+r.warnings.map(esc).join("<br>")+'</span>':"");
-};
-document.getElementById("btnClearIngest").onclick=()=>{ document.getElementById("ingestArea").value=""; document.getElementById("ingestMsg").innerHTML=""; };
-
-document.getElementById("btnRunValidate").onclick=()=>{
-  if (!project) return;
-  const errs=validate();
-  document.getElementById("validateOut").textContent=errs.length?errs.map(e=>"• "+e).join("\n"):"✓ 0 Fehler";
-  refreshExportGate(); setStatus(errs.length?errs.length+" Fehler":"OK");
-};
-
-document.getElementById("btnPx2W").onclick=()=>{
-  const im=project&&project.images.find(i=>i.id===document.getElementById("coordImage").value);
-  if (!im||!im.transform) return document.getElementById("coordOut").textContent="Keine Transform";
-  const [wx,wy]=forward(im.transform,+document.getElementById("pxIn").value,+document.getElementById("pyIn").value);
-  document.getElementById("coordOut").textContent=`Welt (${wx.toFixed(1)}, ${wy.toFixed(1)})`;
-};
-document.getElementById("btnW2Px").onclick=()=>{
-  const im=project&&project.images.find(i=>i.id===document.getElementById("coordImage").value);
-  if (!im||!im.transform) return document.getElementById("coordOut").textContent="Keine Transform";
-  try{ const [px,py]=inverse(im.transform,+document.getElementById("wxIn").value,+document.getElementById("wyIn").value);
-    document.getElementById("coordOut").textContent=`Pixel (${px.toFixed(1)}, ${py.toFixed(1)})`;
-  }catch(e){ document.getElementById("coordOut").textContent=e.message; }
-};
-
-document.getElementById("btnBatchConv").onclick=()=>{
-  if (!project) return;
-  const im=project.images.find(i=>i.id===document.getElementById("coordImage").value);
-  if (!im||!im.transform) return setStatus("Keine Transform");
-  let raw; try{ raw=JSON.parse(document.getElementById("batchPix").value); }catch(e){ return setStatus("JSON ungültig"); }
-  if (!Array.isArray(raw)) return setStatus("Array erwartet");
-  const warnings=[], converted=[];
-  raw.forEach((item,idx)=>{
-    if (!item.id){ warnings.push("["+idx+"] id fehlt"); return; }
-    if (!item.kind || !KINDS.has(item.kind)){ warnings.push("["+item.id+"] kind muss polygon|linestring|point sein"); return; }
-    if (!item.type){ warnings.push("["+item.id+"] type fehlt"); return; }
-    if (!Array.isArray(item.points)||!item.points.length){ warnings.push("["+item.id+"] points fehlen"); return; }
-    if (item.kind==="polygon"&&item.points.length<3){ warnings.push("["+item.id+"] polygon <3"); return; }
-    if (item.kind==="linestring"&&item.points.length<2){ warnings.push("["+item.id+"] linestring <2"); return; }
-    if (item.kind==="point"&&item.points.length!==1){ warnings.push("["+item.id+"] point ≠1"); return; }
-    const pts=item.points.map(([px,py])=>{
-      const [wx,wy]=forward(im.transform,px,py);
-      return [Math.round(wx*10)/10, Math.round(wy*10)/10];
-    });
-    converted.push({
-      id:item.id, type:item.type, material:item.material||item.type,
-      name:item.name||item.id,
-      geometry:{kind:item.kind, points:pts, ...(item.width?{width:item.width}:{}), ...(item.radius?{radius:item.radius}:{})},
-      properties:{source_image:im.id, from_pixels:true}
-    });
-  });
-  const stage=["02_buildings","03_sports","04_paths","05_vegetation","06_objects"].includes(currentStage)?currentStage:"02_buildings";
-  const r=upsertFeatures(stage, converted);
-  project.history.push("batch-px "+r.n); persist(); refreshAll();
-  document.getElementById("coordOut").textContent=JSON.stringify({converted:r.n, warnings},null,2);
-  setStatus("Batch "+r.n+" · Warnungen "+warnings.length);
-};
-document.getElementById("coordImage").onchange=updateCalibInfo;
-
-function doExport(){
-  if (!project) return;
-  const errs=validate(); refreshExportGate();
-  if (errs.length){ setStatus("Export BLOCKIERT"); document.getElementById("validateOut").textContent=errs.map(e=>"• "+e).join("\n"); return; }
-  const world=buildWorld();
-  if (!world.playerStart){ setStatus("Export BLOCKIERT: kein playerStart"); return; }
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([JSON.stringify(world,null,2)],{type:"application/json"}));
-  a.download="BW_WORLD_v22.json"; a.click();
-  setStatus("Export OK · "+world.features.length+" Features");
-}
-document.getElementById("btnExport").onclick=doExport;
-document.getElementById("btnExport2").onclick=doExport;
-document.getElementById("btnExportProj").onclick=()=>{
-  if (!project) return;
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([JSON.stringify(project,null,2)],{type:"application/json"}));
-  a.download="project_v22.json"; a.click();
-};
-document.getElementById("btnLoadProj").onclick=()=>document.getElementById("fileProj").click();
-document.getElementById("fileProj").onchange=e=>{
+document.getElementById("btnLoad").onclick=()=>document.getElementById("fileWorld").click();
+document.getElementById("fileWorld").onchange=e=>{
   const f=e.target.files[0]; if(!f)return;
   const r=new FileReader();
-  r.onload=()=>{ try{ project=JSON.parse(r.result); lastErrors=[]; persist(); refreshAll(); genPrompt(); setStatus("geladen"); }catch(err){ setStatus("Parse-Fehler"); } };
+  r.onload=()=>{try{loadWorld(JSON.parse(r.result));}catch(err){status(err.message);}};
   r.readAsText(f);
 };
-
-if (!loadPersisted()) setStatus("EXTRACTOR 2.2 – INIT"); else genPrompt();
+document.getElementById("btnSprite").onclick=()=>document.getElementById("fileSprite").click();
+document.getElementById("fileSprite").onchange=e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const url=URL.createObjectURL(f);
+  sprite=new Image(); sprite.onload=()=>draw(); sprite.src=url;
+};
+document.getElementById("btnPlay").onclick=()=>{if(!world)return; playing=true; status("PLAY");};
+canvas.addEventListener("wheel",e=>{
+  e.preventDefault(); view.user=true;
+  view.scale*=e.deltaY<0?1.1:0.9;
+  view.scale=Math.max(0.02,Math.min(2,view.scale));
+},{passive:false});
+window.addEventListener("resize",resize);
+resize(); requestAnimationFrame(tick);
 })();
 </script>
 </body>
