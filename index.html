@@ -1,861 +1,436 @@
 <!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>BRUCHWIESEN GAME STUDIO 2.0</title>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>BRUCHWIESEN // Game Studio v2</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&display=swap');
-  :root{
-    --bg:#0a0c12; --panel:#10141e; --cyan:#00e5ff; --green:#00ff9d;
-    --magenta:#ff2d78; --yellow:#ffc107; --red:#ff3b5c; --text:#e8f0ff;
-    --dim:#5a6a80; --border:#1c2535; --gba-bg:#9bbc0f; --gba-dark:#0f380f;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;overflow:hidden}
-  .app{display:flex;flex-direction:column;height:100%;height:100dvh}
-  
-  /* Top Bar */
-  .top{height:50px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 12px;flex-shrink:0}
-  .logo{font-family:Orbitron,sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;color:var(--cyan)}
-  .nav-tabs{display:flex;gap:4px;overflow-x:auto}
-  .nav-tab{padding:6px 12px;border-radius:5px;border:1px solid #1e3a5f;background:#0c1520;color:var(--dim);font-size:10px;cursor:pointer;font-family:inherit;text-transform:uppercase;white-space:nowrap}
-  .nav-tab.active{border-color:var(--cyan);color:var(--cyan);background:#0a1a28}
-  .top-actions{display:flex;gap:6px}
-  .btn{height:30px;padding:0 10px;border-radius:5px;border:1px solid #1e3a5f;background:#0f1c2e;color:var(--cyan);font-size:10px;font-family:inherit;text-transform:uppercase;cursor:pointer;white-space:nowrap}
-  .btn:active{opacity:.7}.btn.ok{border-color:var(--green);color:var(--green)}.btn.warn{border-color:var(--yellow);color:var(--yellow)}.btn.danger{border-color:var(--red);color:var(--red)}
-  .btn:disabled{opacity:.35;cursor:not-allowed}
+:root{--bg:#080d12;--panel:#101923;--panel2:#151f2b;--line:#263747;--accent:#b7f36b;--accent2:#75d7bd;--text:#edf4f5;--muted:#91a3ad;--danger:#ff7185;--warn:#ffc66d;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;height:100%;background:var(--bg);color:var(--text);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+body{display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(1000px 500px at 45% -20%,#1d3540 0,transparent 65%),var(--bg)}
+header{height:64px;flex:none;display:flex;align-items:center;gap:16px;padding:0 22px;border-bottom:1px solid var(--line);background:#0b1219eF}
+h1{margin:0;color:var(--text);font-size:15px;font-weight:850;letter-spacing:.12em}h1 span{color:var(--accent)}
+#hn{margin-left:auto;color:var(--muted);font-size:12px;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+main{flex:1;min-height:0;position:relative;overflow:hidden}
+.v{display:none;position:absolute;inset:0;overflow:auto;padding:20px 22px 28px;gap:14px;overscroll-behavior:contain}
+.v.on{display:flex;flex-direction:column}
+#v-play{padding:0;overflow:hidden}
+.pn{background:linear-gradient(145deg,var(--panel),#0d151d);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 8px 28px #0002}
+h2{margin:0;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.bt,select,textarea,input{font:inherit;font-size:13px;color:var(--text);background:#0b131b;border:1px solid #34495a;min-height:42px;padding:9px 12px;border-radius:9px;letter-spacing:0;text-transform:none}
+.bt{cursor:pointer;transition:.16s ease}.bt:hover{border-color:var(--accent);transform:translateY(-1px)}.bt.pr{background:var(--accent);color:#14200c;border-color:var(--accent);font-weight:800}.bt.on{background:#b7f36b20;border-color:var(--accent);color:var(--accent)}.bt:disabled{opacity:.32;cursor:not-allowed;transform:none}
+select{background:var(--panel2)}textarea,input[type=text]{width:100%;font-weight:400;letter-spacing:0;text-transform:none}textarea{min-height:120px;resize:vertical;line-height:1.5}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1;min-width:0}
+.msg{font-size:12px;padding:8px 10px;border:1px solid var(--line);background:#0b131b;border-radius:8px;margin-bottom:5px}.msg.e{border-color:var(--danger);color:var(--danger)}.msg.w{border-color:var(--warn);color:var(--warn)}.msg.k{border-color:#7fbd69;color:#c4f39a}
+.hint{color:var(--muted);font-size:11px;line-height:1.5}.st{display:flex;gap:6px;flex-wrap:wrap}.st b{border:1px solid var(--line);background:#0b131b;padding:5px 8px;border-radius:7px;font-size:11px;color:var(--accent2);font-weight:600}
+#wz{overflow:auto;border:1px solid var(--line);border-radius:13px;max-height:62vh;background:#0b131b;-webkit-overflow-scrolling:touch}#wv{width:100%;height:auto;display:block;image-rendering:pixelated;touch-action:manipulation;cursor:crosshair}
+#st{position:absolute;inset:0;background:#0f380f;touch-action:none}#g{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);image-rendering:pixelated}
+#hud{position:absolute;left:14px;top:14px;font-size:11px;padding:7px 10px;background:#07100ee8;border:1px solid #b7f36b;color:#d8ffad;border-radius:8px}
+#rst,#pz,#md{position:absolute;top:14px;min-height:36px;padding:5px 11px;font-size:11px;background:#07100ee8;color:#d8ffad;border-color:#b7f36b;border-radius:8px}#rst{right:14px}#pz{right:106px}#md{right:14px;top:58px}
+#pad{position:absolute;left:20px;bottom:24px;width:136px;height:136px;border-radius:50%;border:1.5px solid #b7f36b;background:#b7f36b18;touch-action:none}#kn{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:#b7f36b55;border:1.5px solid #b7f36b;pointer-events:none}
+#bb{position:absolute;right:25px;bottom:47px;width:84px;height:84px;border-radius:50%;border:1.5px solid #b7f36b;background:#b7f36b18;color:#d8ffad;font-weight:850;font-size:13px;touch-action:none}#bb.on{background:#b7f36b66}
+#interact{position:absolute;right:122px;bottom:58px;min-height:54px;padding:0 15px;border-radius:999px;background:#07100ee8;color:#d8ffad;border:1px solid #b7f36b;font-weight:800}
+#dialogueBox{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);width:min(620px,calc(100% - 32px));padding:15px 17px;background:#101923f5;border:1px solid #b7f36b;border-radius:12px;box-shadow:0 12px 40px #0008;color:#edf4f5;z-index:5}#dialogueBox strong{display:block;color:var(--accent);margin-bottom:5px}#dialogueBox button{float:right}
+nav{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line);background:#0b1219;flex:none}
+nav button{flex:1;font:700 12px inherit;color:var(--muted);background:transparent;border:1px solid var(--line);min-height:44px;border-radius:9px;cursor:pointer;letter-spacing:.04em}nav button.on{color:#14200c;background:var(--accent);border-color:var(--accent)}nav button:disabled{opacity:.3}
+.studio-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.studio-head p{margin:3px 0 0;color:var(--muted);font-size:12px}
+#v-world .workgrid{display:grid;grid-template-columns:minmax(280px,380px) minmax(0,1fr);gap:14px;align-items:start}
+#v-world .leftstack,#v-world .rightstack{display:flex;flex-direction:column;gap:14px;min-width:0}
+#v-world #wz{max-height:58vh}
+.asset-preview{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:10px;background:#0b131b}
+#npcList .npcrow{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid var(--line);border-radius:8px;margin-top:7px}.npcrow .npcdot{width:12px;height:12px;border-radius:50%;background:var(--accent2);flex:none}.npcrow .npcname{flex:1;min-width:0}.npcrow small{display:block;color:var(--muted)}
+@media(max-width:850px){header{height:56px;padding:0 14px}main{overflow:auto}.v{padding:12px 12px 20px}#v-world .workgrid{grid-template-columns:1fr}#v-world #wz{max-height:none}nav{gap:5px;padding:7px}nav button{font-size:10px;min-height:42px;padding:0 4px}}
+@media(min-width:1200px){#v-world{padding-left:28px;padding-right:28px}}
 
-  /* Main Layout */
-  .main{flex:1;display:flex;overflow:hidden;position:relative}
-  .view-panel{display:none;flex:1;flex-direction:column;overflow:hidden;height:100%}
-  .view-panel.active{display:flex}
+#mapImagePreview[hidden]{display:none!important}
+#mapImagePreview:not([hidden]){display:block!important}
+#mapImageStatus{align-self:center}
+</style></head><body>
+<header><h1>BRUCHWIESEN<span> // </span>GAME STUDIO <small style='font-size:10px;color:#79b6ad'>v2</small></h1><div id="hn">keine Welt geladen</div></header>
+<main>
 
-  .studio-split{flex:1;display:flex;overflow:hidden}
-  .side{width:280px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
-  .side-r{width:280px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
-  .center-pane{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#07090f;position:relative}
-  .sec{padding:10px 12px;border-bottom:1px solid var(--border)}
-  .sec-title{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-  .scroll{flex:1;overflow:auto}
-  
-  .status-bar{height:26px;background:#080c14;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:10px;color:var(--dim);flex-shrink:0}
-  
-  input,select,textarea{width:100%;background:#080c14;border:1px solid #1a2a40;border-radius:5px;color:var(--text);padding:7px 9px;font-size:11px;font-family:inherit}
-  textarea{min-height:90px;resize:vertical}
-  label{font-size:9px;color:var(--dim);display:block;margin:6px 0 3px}
-  .row{display:flex;gap:6px}.row>*{flex:1}
-  .hint{font-size:9px;color:var(--dim);line-height:1.35;margin-top:4px}
-  .okmsg{color:var(--green);font-size:10px}.err{color:var(--red);font-size:10px}
-  pre{background:#080c14;padding:8px;border-radius:5px;font-size:10px;overflow:auto;max-height:220px;white-space:pre-wrap}
-  
-  #mapCanvas{display:block;width:100%;height:100%;cursor:crosshair}
-  .tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-  .tool-btn{padding:8px;border-radius:6px;border:1px solid #1e3a5f;background:#0c1520;color:var(--text);font-size:10px;font-family:inherit;cursor:pointer;text-align:center}
-  .tool-btn:hover,.tool-btn.active{border-color:var(--cyan);background:#0a2a3a;color:var(--cyan)}
-  
-  .game-wrap{flex:1;position:relative;background:var(--gba-bg);min-width:0}
-  #gameCanvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
-  .pad{display:grid;grid-template-columns:repeat(3,38px);gap:3px;margin-top:8px}
-  .pad button{height:38px;border:2px solid #306230;background:#0f380f;color:#9bbc0f;font-size:14px;cursor:pointer}
-  .pad .e{visibility:hidden}
-  
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
-  .modal.show{display:flex}
-  .modal-box{background:var(--panel);border:1px solid var(--border);border-radius:10px;width:100%;max-width:440px;max-height:85vh;display:flex;flex-direction:column}
-  .modal-head{padding:12px 14px;border-bottom:1px solid var(--border);font-family:Orbitron,sans-serif;font-size:12px;color:var(--cyan)}
-  .modal-body{padding:12px 14px;overflow:auto;flex:1}
-  .modal-foot{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
-  .badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:8px;background:#0a2a3a;color:var(--cyan)}
-  .badge.ok{background:#0a2a18;color:var(--green)}.badge.warn{background:#2a2000;color:var(--yellow)}
-  
-  .item-row{padding:6px 8px;border-bottom:1px solid #1a2230;font-size:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-  .item-row:hover,.item-row.sel{background:#0c1a28}
-  .del-btn{background:transparent;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:2px 6px}
-</style>
-</head>
-<body>
-<div class="app">
-  <div class="top">
-    <div class="logo">BW GAME STUDIO 2.0</div>
-    <div class="nav-tabs">
-      <button class="nav-tab active" data-view="project">1. Projekt</button>
-      <button class="nav-tab" data-view="extractor">2. KI-Daten</button>
-      <button class="nav-tab" data-view="mapeditor">3. Map Editor</button>
-      <button class="nav-tab" data-view="worldbuilder">4. World Builder</button>
-      <button class="nav-tab" data-view="engine">5. Game Engine</button>
-    </div>
-    <div class="top-actions">
-      <button class="btn ok" id="btnGlobalExport">BW_WORLD.JSON</button>
-    </div>
-  </div>
+<section class="v on" id="v-world">
+ <div class="studio-head"><div><h2>WORLD WORKSHOP</h2><p>Satellitenbild → externes LLM → JSON → editierbare Spielwelt</p></div><div class="row"><button class="bt" id="importProject">Projekt / BW_WORLD öffnen</button><button class="bt" id="downloadProject">Projekt sichern</button><input type="file" id="projectFile" accept=".json,application/json" hidden></div></div>
+ <div class="workgrid"><div class="leftstack">
+ <div class="pn"><h2>01 · Kartenanalyse vorbereiten</h2>
+  <p class="hint">Kartenbild in dein externes LLM hochladen, diesen Prompt dazugeben und das erzeugte JSON hier wieder importieren.</p>
+  <textarea id="mapPrompt" readonly>Analysiere das beigefügte Karten-/Satellitenbild als Grundlage für eine 2D-Top-Down-Spielwelt. Gib ausschließlich valides JSON zurück, ohne Markdown und ohne Erklärtext. Verwende exakt diese Struktur: {"meta":{"name":"..."},"image":{"width":BILD_BREITE_IN_PIXEL,"height":BILD_HOEHE_IN_PIXEL},"features":[...]}. Jedes Feature hat id, type, name und geometry. Erlaubte type-Werte: building, street, path, grass, tree, water, sport, parking, object. geometry ist {"type":"Polygon","coordinates":[[[x,y],...]]} für Flächen, {"type":"LineString","coordinates":[[x,y],...]} für Straßen/Wege oder {"type":"Point","coordinates":[x,y]} für einzelne Objekte. Alle Koordinaten sind Pixelkoordinaten relativ zum hochgeladenen Bild: Ursprung links oben, x nach rechts, y nach unten. Polygone müssen geschlossen oder als Eckpunktfolge mit mindestens 3 Punkten angegeben sein. Erfasse sichtbare Gebäudegrundrisse, Straßenachsen, Wege, Wasserflächen, Grünflächen und markante Einzelobjekte getrennt und mit stabilen IDs. Zeichne keine nicht sichtbaren Details hinzu. Wo Grenzen unsicher sind, markiere properties.confidence als niedrig/mittel/hoch und beschreibe die Unsicherheit knapp in properties.note. Keine erfundenen Maße, keine GPS-Koordinaten, keine Raster-Tiles. Priorität: geometrisch plausible, nachvollziehbare Konturen. Das Ergebnis muss direkt importierbar sein.</textarea>
+  <button class="bt" id="copyPrompt">Prompt kopieren</button><div class="row"><button class="bt" id="mapImageBtn">Kartenbild hinzufügen</button><input type="file" id="mapImageFile" accept="image/*" hidden><span class="hint" id="mapImageStatus">Optional: Bild hier ablegen und im externen LLM verwenden.</span></div>
+  <img id="mapImagePreview" alt="Vorschau des Kartenbilds" hidden style="display:none;max-width:100%;max-height:220px;object-fit:contain;border:1px solid var(--line);border-radius:8px;margin-top:8px">
+  <div class="hint" id="promptStatus">Der Prompt ist auf den JSON-Importer dieses Studios abgestimmt.</div>
+ </div><div class="pn"><h2>01 · Source World · JSON vom externen LLM</h2>
+  <textarea id="ta" placeholder="JSON einfügen: Feature-Array, {features:[…]} oder Kategorien wie {buildings:[…], roads:[…]}"></textarea>
+  <div class="row"><button class="bt pr" id="go">Ableiten</button><button class="bt" id="demo">Beispiel</button><button class="bt" id="bf">Datei …</button></div>
+  <input type="file" id="fi" accept=".json,.txt,application/json" hidden>
+  <select id="mode"><option value="auto">Koordinaten: automatisch</option><option value="norm">Normalisiert 0–1</option><option value="pixel">Bild-Pixel</option><option value="world">Welt 0–10000</option></select>
+  <div class="hint" id="det"></div></div>
+ <div id="rep"></div>
+ <div class="pn"><h2>Export</h2><button class="bt" id="cp">BW_WORLD.json kopieren</button><textarea id="ex" readonly hidden></textarea>
+  <div class="hint">Exportformat ist mit der integrierten Engine und dem bisherigen BW_WORLD-Renderer kompatibel. Source World (Geometrie + raw-Originalwerte) und Game World (Raster, Director-Änderungen) bleiben getrennt; die Source World wird nicht verändert.</div></div>
 
-  <div class="main">
-
-    <!-- VIEW 1: PROJEKT & BILDER -->
-    <div class="view-panel active" id="view-project">
-      <div class="studio-split">
-        <div class="side">
-          <div class="sec"><div class="sec-title">Projektverwaltung</div><div id="projMetaInfo" class="hint">Grundschule Bruchwiesen</div></div>
-          <div class="sec">
-            <button class="btn ok" id="btnNewProj" style="width:100%;margin-bottom:6px">Neues Projekt</button>
-            <button class="btn" id="btnSaveProj" style="width:100%;margin-bottom:6px">Projekt speichern</button>
-            <button class="btn" id="btnLoadProj" style="width:100%">Projekt laden</button>
-            <input type="file" id="fileLoadProj" accept=".json" style="display:none">
-          </div>
-          <div class="sec" style="flex:1;overflow:auto">
-            <div class="sec-title">Luftbilder (Persistent)</div>
-            <button class="btn" id="btnAddImg" style="width:100%;margin-bottom:6px">+ Bild hinzufügen</button>
-            <div id="projectImgList" class="hint">Keine Bilder</div>
-          </div>
-        </div>
-        <div class="center-pane" style="padding:20px;overflow:auto">
-          <div class="sec-title" style="font-size:14px;color:var(--cyan);margin-bottom:10px">BRUCHWIESEN GAME STUDIO 2.0 · PRODUKTIONSSYSTEM</div>
-          <div class="hint" style="line-height:1.6;font-size:11px">
-            Willkommen im professionellen **Bruchwiesen Game Studio 2.0**. Alle Bugs der ersten Version wurden behoben:<br><br>
-            • **Navigation**: Alle Reiter (*Map Editor*, *World Builder*) verknüpfen nun fehlerfrei.<br>
-            • **Persistenz**: Luftbilder werden als Base64-Daten sicher im Projektstand gespeichert.<br>
-            • **Map Editor**: Mit echten Zoom-Funktionen (+, -, ⊡), präzisem Auswählen, Verschieben und Löschen von Elementen.<br>
-            • **Game Engine**: Vollwertige GBA-Grafikengine mit vollständiger Straßen-/Wegdarstellung, Kollisionsprüfung gegen Gebäude/Hindernisse und dem Original-Charakter (TZ auf Walmart-Scooter).
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- VIEW 2: KI-DATEN / EXTRACTOR -->
-    <div class="view-panel" id="view-extractor">
-      <div class="studio-split">
-        <div class="side">
-          <div class="sec"><div class="sec-title">Extraktions-Stufen</div></div>
-          <div class="scroll" id="extractorStages"></div>
-        </div>
-        <div class="center-pane">
-          <div class="sec" style="display:flex;justify-content:space-between;align-items:center">
-            <div class="sec-title">Prompt & Robuster JSON-Ingest</div>
-            <button class="btn ok" id="btnCopyPrompt">Prompt kopieren</button>
-          </div>
-          <div style="flex:1;display:flex;flex-direction:column;padding:12px;gap:10px;overflow:auto">
-            <div>
-              <label>Prompt für externes LLM (ChatGPT/Gemini/Claude)</label>
-              <textarea id="extractorPromptOut" readonly style="min-height:140px"></textarea>
-            </div>
-            <div style="flex:1;display:flex;flex-direction:column">
-              <label>JSON-Antwort hier einfügen (Validierender Ingest)</label>
-              <textarea id="extractorIngestArea" placeholder='[{"id":"gebaeude_1","type":"building","geometry":{"kind":"polygon","points":[[1000,1000],[1500,1000],[1500,1500],[1000,1500]]}}]' style="flex:1;min-height:120px"></textarea>
-              <div style="display:flex;gap:8px;margin-top:6px">
-                <button class="btn ok" id="btnRunIngest">Daten prüfen & übernehmen</button>
-                <button class="btn" id="btnClearIngest">Leeren</button>
-              </div>
-              <div id="ingestMsg" class="hint" style="margin-top:4px"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- VIEW 3: MAP EDITOR -->
-    <div class="view-panel" id="view-mapeditor">
-      <div class="studio-split">
-        <div class="side">
-          <div class="sec"><div class="sec-title">Werkzeuge</div>
-            <div class="tools-grid">
-              <button class="tool-btn" data-type="building" data-kind="polygon" data-mat="building">⌂ Gebäude</button>
-              <button class="tool-btn" data-type="street" data-kind="linestring" data-mat="street">═ Straße</button>
-              <button class="tool-btn" data-type="path" data-kind="linestring" data-mat="path">─ Weg</button>
-              <button class="tool-btn" data-type="vegetation" data-kind="polygon" data-mat="trees">♣ Bäume</button>
-              <button class="tool-btn" data-type="sport" data-kind="polygon" data-mat="tennis">▭ Sport</button>
-              <button class="tool-btn" data-type="player" data-kind="point" data-mat="path">● Start</button>
-            </div>
-          </div>
-          <div class="sec">
-            <div class="row">
-              <button class="btn" id="editorUndo" style="width:100%">Punkt zurück</button>
-              <button class="btn ok" id="editorFinish" style="width:100%">Fertig</button>
-            </div>
-            <button class="btn danger" id="editorCancel" style="width:100%;margin-top:6px">Abbrechen</button>
-          </div>
-          <div class="sec" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
-            <div class="sec-title">Eingezeichnete Elemente</div>
-            <div class="scroll" id="editorFeatList"></div>
-          </div>
-        </div>
-        <div class="center-pane">
-          <canvas id="mapCanvas"></canvas>
-          <div style="position:absolute;top:10px;right:10px;display:flex;gap:4px">
-            <button class="btn" id="edZoomIn">+</button>
-            <button class="btn" id="edZoomOut">−</button>
-            <button class="btn" id="edZoomFit">⊡</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- VIEW 4: WORLD BUILDER -->
-    <div class="view-panel" id="view-worldbuilder">
-      <div style="flex:1;padding:20px;overflow:auto;max-width:800px;margin:0 auto">
-        <div class="sec-title" style="font-size:13px;color:var(--cyan);margin-bottom:10px">World Builder & Geometrie-Validator</div>
-        <button class="btn ok" id="btnRunValidator" style="margin-bottom:12px">Welt prüfen & analysieren</button>
-        <pre id="validatorOutput">Noch nicht geprüft.</pre>
-      </div>
-    </div>
-
-    <!-- VIEW 5: GAME ENGINE -->
-    <div class="view-panel" id="view-engine">
-      <div class="studio-split">
-        <div class="side">
-          <div class="sec"><div class="sec-title">Game Engine GBA</div>
-            <div class="hint">Steuerung: WASD / Pfeiltasten oder Touch-Pad.<br><br>Figur: TZ auf Walmart-Scooter</div>
-          </div>
-          <div class="sec">
-            <button class="btn ok" id="enginePlayBtn" style="width:100%">START / PLAY</button>
-          </div>
-          <div class="sec">
-            <div class="pad">
-              <div class="e"></div><button data-dir="up">▲</button><div class="e"></div>
-              <button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button>
-            </div>
-          </div>
-          <div class="sec" style="margin-top:auto" id="engineInfo">Keine Welt geladen</div>
-        </div>
-        <div class="game-wrap">
-          <canvas id="gameCanvas"></canvas>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="status-bar"><span id="statusBar">Bereit</span><span id="statusCoord">—</span></div>
-</div>
-
-<!-- Modal: Bild hinzufügen -->
-<div class="modal" id="modalImg">
-  <div class="modal-box">
-    <div class="modal-head">Luftbild hinzufügen</div>
-    <div class="modal-body">
-      <label>Datei auswählen</label>
-      <input type="file" id="fileImageInput" accept="image/*">
-      <label>Bild-ID</label><input id="mImgId" value="sat_bruchwiesen">
-    </div>
-    <div class="modal-foot">
-      <button class="btn" id="mImgCancel">Abbruch</button>
-      <button class="btn ok" id="mImgOk">Laden & Speichern</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Name für Element -->
-<div class="modal" id="modalName">
-  <div class="modal-box">
-    <div class="modal-head">Element benennen</div>
-    <div class="modal-body">
-      <label>Bezeichnung</label>
-      <input id="inputFeatName" value="Hauptgebäude">
-    </div>
-    <div class="modal-foot">
-      <button class="btn" id="mNameCancel">Abbruch</button>
-      <button class="btn ok" id="mNameOk">Speichern</button>
-    </div>
-  </div>
-</div>
-
+</div><div class="rightstack">
+ <div class="pn"><h2>02 · Game World</h2><div class="st" id="wst"></div></div>
+ <div class="row"><button class="bt on" id="mS">Startpunkt</button><button class="bt" id="mA">Bereich markieren</button><button class="bt" id="zo">－</button><button class="bt" id="zi">＋</button></div>
+ <div class="row"><button class="bt" id="tc">Kollision</button><button class="bt" id="tg">Geometrie</button><button class="bt on" id="tn">Netz</button></div>
+ <div class="row"><select id="rs"><option value="60">Raster 60</option><option value="90" selected>Raster 90</option><option value="120">Raster 120</option></select></div>
+ <div id="wz"><canvas id="wv"></canvas></div>
+ <div class="hint" id="wm">Tippe auf die Karte, um den Startpunkt zu setzen. Türkis = Kreuzung, rot = Lücke, gelb = loses Ende.</div>
+ <div class="pn"><h2>03 · AI Game Director</h2>
+  <input type="text" id="cmd" placeholder="z. B. Mach aus diesem Bereich einen Spielplatz">
+  <button class="bt" id="dp">Vorschlag erstellen</button>
+  <div id="prop"></div><div id="log"></div></div>
+ <button class="bt pr" id="pl">▶ Spielen</button>
+</div></div></section>
+<section class="v" id="v-characters">
+ <div class="studio-head"><div><h2>CHARACTER STUDIO</h2><p>Eigene Figuren, Richtungsansichten und Animationen verwalten.</p></div></div>
+ <div class="pn"><h2>01 · Spielfigur-Animationen</h2><div id="fst"></div>
+  <div class="row"><button class="bt pr" id="sS">Scooter-Sheet hochladen</button><button class="bt" id="sW">Walking-Sheet hochladen</button></div>
+  <button class="bt" id="sR">Standard-Sprite wiederherstellen</button><input type="file" id="sfi" accept="image/*" hidden>
+  <div class="hint">Sprite-Sheet: 8 Spalten × 4 Zeilen. Zeilen: vorne, hinten, links, rechts; je Richtung 8 Animationsframes. Transparenter Hintergrund und identischer Fuß-/Bodenanker in allen Zellen. Das hochgeladene Sheet wird im Spiel direkt verwendet.</div>
+ </div>
+ <div class="pn"><h2>02 · NPC erstellen</h2>
+  <input id="npcName" type="text" placeholder="Name der Figur, z. B. Förster Hannes">
+  <input id="npcRole" type="text" placeholder="Rolle, z. B. Förster / Nachbar / Verkäufer">
+  <textarea id="npcDialogue" placeholder="Erster Dialogsatz der Figur …"></textarea>
+  <button class="bt pr" id="npcPlace">Figur anlegen und auf Karte platzieren</button>
+  <div class="hint" id="npcPlaceHint">Nach dem Klick zurück zur Welt wechseln und die gewünschte Position auf der Karte anklicken.</div>
+ </div>
+ <div class="pn"><h2>03 · Figuren in dieser Welt</h2><div id="npcList"><div class="hint">Noch keine NPCs angelegt.</div></div></div>
+</section>
+<section class="v" id="v-story">
+ <div class="studio-head"><div><h2>STORY & DIALOGUE</h2><p>Dialoge direkt an deine Figuren hängen.</p></div></div>
+ <div class="pn"><h2>Dialog bearbeiten</h2><select id="storyNpc"><option value="">Erst einen NPC anlegen</option></select>
+  <textarea id="storyText" placeholder="Dialogtext der ausgewählten Figur …"></textarea>
+  <button class="bt pr" id="saveStory">Dialog speichern</button>
+  <div class="hint">Der gespeicherte Dialog wird im Spiel angezeigt, wenn du dich der Figur näherst und E drückst.</div>
+ </div>
+ <div class="pn"><h2>Interaktionsregeln</h2><div class="hint">Aktueller Spielumfang: Nähe zu NPC erkennen, Dialog öffnen und schließen. Verzweigte Antworten und Questbedingungen bleiben bewusst außerhalb dieses ersten funktionsfähigen Umfangs.</div></div>
+</section>
+<section class="v" id="v-play"><div id="st"><canvas id="g"></canvas>
+ <div id="hud">–</div><div id="dialogueBox" hidden><button class="bt" id="closeDialogue">Schließen</button><strong id="dialogueName">Figur</strong><span id="dialogueText"></span></div><button class="bt" id="pz">⏸ Pause</button><button class="bt" id="md">🛴 Scooter</button><button class="bt" id="rst">↺ Start</button>
+ <div id="pad"><div id="kn"></div></div><button id="interact">E · TALK</button><button id="bb">BOOST</button></div></section>
+</main>
+<nav><button data-v="world" class="on">◫ Welt</button><button data-v="characters">♟ Figuren</button><button data-v="story">▤ Dialoge</button><button data-v="play" disabled>▶ Engine / Spielen</button></nav>
 <script>
-(function(){
 "use strict";
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const TS=16;
+const T={grass:{l:'Grünfläche',z:1,b:0,k:'Polygon'},water:{l:'Wasser',z:2,b:1,k:'Polygon'},parking:{l:'Parkplatz',z:3,b:0,k:'Polygon'},sport:{l:'Sportfläche',z:3,b:0,k:'Polygon'},street:{l:'Straße',z:4,b:0,w:170,k:'LineString'},path:{l:'Weg',z:5,b:0,w:70,k:'LineString'},building:{l:'Gebäude',z:6,b:1,k:'Polygon'},tree:{l:'Baum',z:7,b:1,k:'Point'},object:{l:'Objekt',z:8,b:1,k:'Point'}};
+const KEYS=Object.keys(T),KI=Object.fromEntries(KEYS.map((k,i)=>[k,i]));
+const MAT={building:'building',street:'street',path:'path',grass:'grass',tree:'trees',water:'water',sport:'grass',parking:'street',object:'object'};
+let SRC=null,ISS=[],NET=null,RAW='',NPCS=[],NPC_DRAFT=null,G={n:90,start:null,ov:[],pend:null},B=null,view='world',raf=0,last=0,pid=null,pv={x:0,y:0},bo=0,kb=0,zm=1,mode='start',paused=false,sel=null,dn=null;
+const P={x:0,y:0,f:1,mv:0,d:'r',h:'r',ph:0,tr:0},opt={col:0,geo:0,net:1},ks=new Set();
+const SPR=new Image();SPR.src='data:image/png;base64,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';
 
-const WORLD_W=10000, WORLD_H=10000, SCHEMA="1.0";
-const STAGES=[
-  {id:"01_zones", label:"1. Zonen"},
-  {id:"02_buildings", label:"2. Gebäude"},
-  {id:"03_sports", label:"3. Sport"},
-  {id:"04_paths", label:"4. Wege"},
-  {id:"05_vegetation", label:"5. Vegetation"},
-  {id:"06_objects", label:"6. Objekte"},
-  {id:"10_merge", label:"7. Merge & Start"}
-];
+/* ===== Figur-Animation: Modus × 4 Richtungen × 8 Frames ===== */
+const DIRS=['d','u','l','r'],DN={d:'vorne',u:'hinten',l:'links',r:'rechts'};let FR={scooter:{},walk:{}},SK={scooter:{},walk:{}},SPRITE_DATA={scooter:null,walk:null},MODE='scooter';
+const flipC=c=>{const o=document.createElement('canvas');o.width=c.width;o.height=c.height;const x=o.getContext('2d');x.translate(c.width,0);x.scale(-1,1);x.drawImage(c,0,0);return o};
+/* Aus dem einen Original-Sprite (Seitenansicht, nach rechts): 8 pixelsaubere Watschel-Posen per Zeilenversatz (Neigung) und Hüpfer. Das Original selbst wird nie verändert. */
+/* Standard-Sheet 8×4 (Zeilen: vorne, hinten, links, rechts). Norden = Rückansicht, Süden = Vorderansicht. */
+const DEFAULT_SHEET='data:image/png;base64,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';
+function genScooter(){const w=SPR.naturalWidth,h=SPR.naturalHeight,R=[];
+for(let i=0;i<8;i++){const t=i/8*Math.PI*2,lean=Math.round(Math.sin(t)*2),up=Math.cos(2*t)>.3?1:0,c=document.createElement('canvas');c.width=w+6;c.height=h+2;const x=c.getContext('2d');
+ for(let y=0;y<h;y+=2){const s=Math.round(lean*(1-(y+1)/h));x.drawImage(SPR,0,y,w,2,3+s,2-up+y,w,2)}R.push(c)}
+FR.scooter={r:R,l:R.map(flipC)};SK.scooter={r:'Original',l:'Original gespiegelt',d:'Platzhalter',u:'Platzhalter'};fstat();loadSheet('scooter',DEFAULT_SHEET,1)}
+function frames(m,d){const f=FR[m];return f[d]||f[P.h]||f.r||null}
+function fstat(){$('#fst').innerHTML=['scooter','walk'].map(m=>{const ok=DIRS.filter(d=>SK[m][d]&&!/^Platz/.test(SK[m][d])).length;return `<div class="msg ${ok==4?'k':ok?'w':'e'}">${m=='scooter'?'Fat-Scooter':'Walking'}: ${DIRS.map(d=>DN[d]+' '+(SK[m][d]||'fehlt')).join(' · ')}</div>`}).join('')}
+function fmsg(t,lv){const e=document.createElement('div');e.className='msg '+lv;e.textContent=t;$('#fst').prepend(e);setTimeout(()=>e.remove(),5000)}
+function loadSheet(m,url,def){const im=new Image();im.onload=()=>{const cw=im.naturalWidth/8,ch=im.naturalHeight/4;
+if(!Number.isInteger(cw)||!Number.isInteger(ch)||cw<8||ch<8){fmsg(`Sheet ungültig: ${im.naturalWidth}×${im.naturalHeight} lässt sich nicht in 8×4 gleich große Zellen teilen.`,'e');return}
+const nf={};DIRS.forEach((d,r)=>{nf[d]=Array.from({length:8},(_,i)=>{const c=document.createElement('canvas');c.width=cw;c.height=ch;c.getContext('2d').drawImage(im,i*cw,r*ch,cw,ch,0,0,cw,ch);return c});SK[m][d]=(def?'Standard ':'Sheet ')+cw+'×'+ch});
+FR[m]=nf;if(!def)SPRITE_DATA[m]=url;fstat();if(!def)fmsg((m=='walk'?'Walking':'Scooter')+'-Sheet geladen ('+cw+'×'+ch+' pro Frame).','k')};
+im.onerror=()=>fmsg('Bild konnte nicht gelesen werden.','e');im.src=url}
+SPR.complete&&SPR.naturalWidth?genScooter():SPR.addEventListener('load',genScooter);
+/* ===== SOURCE WORLD: Import, Klassifikation, Transformation (aus dem Object Deriver, unverändert) ===== */
+function cls(s){s=String(s||'').toLowerCase();
+const R=[[/park(ing|platz)|stellplatz/,'parking'],[/build|geb[äa]u|haus|house|school|schule|dach|roof|garage|shed/,'building'],[/street|road|stra[ßs]e|gasse|fahrbahn/,'street'],[/path|weg|gehweg|sidewalk|trail/,'path'],[/tree|baum|bush|busch|hecke|hedge/,'tree'],[/water|wasser|fluss|bach|teich|river|pond/,'water'],[/sport|spielplatz|pitch|court/,'sport'],[/grass|gras|rasen|lawn|green|gr[üu]n|park|veg|wiese|garten|garden/,'grass']];
+for(const[r,t]of R)if(r.test(s))return t;return 'object'}
+function flat(c){if(c==null)return[];if(!Array.isArray(c))return typeof c=='object'&&c.x!=null?[[+c.x,+c.y]]:[];
+if(!c.length)return[];if(typeof c[0]=='number')return[[c[0],c[1]]];
+if(c[0]&&!Array.isArray(c[0])&&typeof c[0]=='object')return c.map(p=>[+p.x,+p.y]);
+if(typeof c[0][0]=='number')return c.map(p=>[p[0],p[1]]);return flat(c[0])}
+function extract(r){
+const img=r.image||(r.meta&&r.meta.image)||r.img||{},bounds=r.world&&r.world.bounds||{};
+const iw=+(img.width||img.w||r.imageWidth||r.width||bounds.w)||0,ih=+(img.height||img.h||r.imageHeight||r.height||bounds.h)||0;
+let list=[];const arr=Array.isArray(r)?r:(r.features||r.objects||r.items||(r.data&&(r.data.features||r.data.objects)));
+if(Array.isArray(arr))list=arr.map(o=>[o,null]);
+else for(const[k,v]of Object.entries(r.data||r))if(Array.isArray(v)&&v.length&&typeof v[0]=='object')v.forEach(o=>list.push([o,k]));
+const items=[],issues=[],seen=new Set();let n=0;
+for(const[o,key]of list){n++;if(!o||typeof o!='object')continue;
+const g=o.geometry||o.geom||o.shape,gt=g&&(g.type||g.kind);let c=g?(g.coordinates!==undefined?g.coordinates:(g.points!==undefined?g.points:g)):(o.coordinates??o.points??o.polygon??o.polyline??o.path??o.outline??o.vertices??o.position??o.center??(o.x!=null?[o.x,o.y]:null));
+const notes=[];
+if(!c&&Array.isArray(o.bbox)&&o.bbox.length==4){const[x,y,w,h]=o.bbox;c=[[x,y],[x+w,y],[x+w,y+h],[x,y+h]];notes.push('bbox als x,y,w,h gelesen')}
+let pts=flat(c);
+let ts=typeof o.type=='string'&&!/^(multi)?(point|linestring|polygon)$/i.test(o.type)?o.type:(o.category||o.kind||o.class||key||o.material||'');
+let type=cls(ts);if(type=='object'&&o.name)type=cls(o.name);
+if((type=='grass'||type=='object')&&/tree|trees|hedge|vegetation/i.test(String(o.material||'')))type='tree';
+if(type=='grass'&&/field|meadow/i.test(String(o.material||'')))type='grass';
+let kind=/point/i.test(gt||'')?'Point':/line/i.test(gt||'')?'LineString':/poly/i.test(gt||'')?'Polygon':T[type].k;
+if(pts.length==1)kind='Point';
+if(kind=='Polygon'&&pts.length>3&&pts[0][0]==pts[pts.length-1][0]&&pts[0][1]==pts[pts.length-1][1])pts.pop();
+let id=String(o.id??`${type}_${String(n).padStart(3,'0')}`);
+if(!pts.length){issues.push({lv:'e',m:`„${id}“: keine Geometrie, übersprungen`});continue}
+if(seen.has(id)){issues.push({lv:'w',m:`Doppelte ID „${id}“ umbenannt`});id+='_'+n}seen.add(id);
+if(type=='object'&&ts)notes.push('Typ „'+ts+'“ unbekannt → Objekt');
+notes.forEach(m=>issues.push({lv:'w',m:`„${id}“: ${m}`}));
+items.push({id,type,kind,mat:o.material&&typeof o.material=='string'?o.material:MAT[type],name:o.name||o.label||T[type].l,raw:pts,pts:[]})}
+return{items,iw,ih,issues,name:r.meta&&r.meta.name||r.name||'BRUCHWIESEN Welt'}}
+function derive(S){
+const all=S.items.flatMap(i=>i.raw);let mx=0,ax=0,ay=0;all.forEach(p=>{mx=Math.max(mx,Math.abs(p[0]),Math.abs(p[1]));ax=Math.max(ax,p[0]);ay=Math.max(ay,p[1])});
+const im=S.iw&&S.ih?[S.iw,S.ih]:[0,0];let m=$('#mode').value;
+if(m=='auto')m=mx<=1.01?'norm':(im[0]&&mx<=Math.max(im[0],im[1])*1.02)?'pixel':mx<=10050?'world':'pixel';
+let pw=im[0],ph=im[1];if(m=='pixel'&&!pw){pw=ax||1;ph=ay||1}
+const asp=im[0]&&im[1]?im[1]/im[0]:(m=='pixel'?ph/pw:1),W=10000,H=Math.max(1000,Math.round(10000*asp));
+const f=m=='norm'?p=>[p[0]*W,p[1]*H]:m=='pixel'?p=>[p[0]/pw*W,p[1]/ph*H]:p=>p;
+$('#det').textContent=`Erkannt: ${({norm:'normalisiert',pixel:'Bild-Pixel ('+Math.round(pw)+'×'+Math.round(ph)+')',world:'Weltkoordinaten'})[m]} → Welt ${W}×${H}`;
+const iss=S.issues.slice();
+S.items.forEach(i=>{i.pts=i.raw.map(f);i.bad=false;
+if(i.kind=='Polygon'&&i.pts.length<3){i.bad=true;iss.push({lv:'e',m:`„${i.id}“: Polygon mit nur ${i.pts.length} Punkten`})}
+if(i.kind=='LineString'&&i.pts.length<2){i.bad=true;iss.push({lv:'e',m:`„${i.id}“: Linie mit nur einem Punkt`})}
+if(i.pts.some(p=>p[0]<-50||p[1]<-50||p[0]>W+50||p[1]>H+50))iss.push({lv:'w',m:`„${i.id}“: liegt außerhalb der Weltgrenzen`});
+const xs=i.pts.map(p=>p[0]),ys=i.pts.map(p=>p[1]);i.bb=[Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)]});
+/* Source World einfrieren: ab hier nicht mehr veränderbar */
+S.items.forEach(i=>{i.raw.forEach(Object.freeze);i.pts.forEach(Object.freeze);Object.freeze(i.raw);Object.freeze(i.pts);Object.freeze(i.bb);Object.freeze(i)});Object.freeze(S.items);
+return{src:{W,H,items:S.items,name:(S.name||'BRUCHWIESEN Welt')},iss}}
 
-let studio = {
-  project:{
-    name:"Grundschule in den Bruchwiesen",
-    location:"Saarlouis-Beaumarais, Saarland",
-    images:[], gcps:[], features:{}, playerStart:null
-  },
-  currentStage:"02_buildings",
-  editor:{
-    image:null, naturalW:1000, naturalH:1000,
-    scale:1, panX:0, panY:0,
-    tool:null, draft:[], selectedId:null
-  },
-  engine:{
-    playing:false, player:{x:5000,y:5000,r:12,facing:1},
-    keys:{}, touch:{x:0,y:0}, coll:[], sprite:new Image()
-  }
-};
-studio.engine.sprite.src="player_scooter.jpeg";
+/* ===== Geometrie ===== */
+function dseg(px,py,a,b){const dx=b[0]-a[0],dy=b[1]-a[1],l=dx*dx+dy*dy;let t=l?((px-a[0])*dx+(py-a[1])*dy)/l:0;t=Math.max(0,Math.min(1,t));return Math.hypot(px-a[0]-t*dx,py-a[1]-t*dy)}
+function pip(px,py,Q){let r=false;for(let i=0,j=Q.length-1;i<Q.length;j=i++){const a=Q[i],b=Q[j];if((a[1]>py)!=(b[1]>py)&&px<(b[0]-a[0])*(py-a[1])/(b[1]-a[1])+a[0])r=!r}return r}
+function sx(a,b,c,d){const r=(b[0]-a[0])*(d[1]-c[1])-(b[1]-a[1])*(d[0]-c[0]);if(!r)return null;const t=((c[0]-a[0])*(d[1]-c[1])-(c[1]-a[1])*(d[0]-c[0]))/r,u=((c[0]-a[0])*(b[1]-a[1])-(c[1]-a[1])*(b[0]-a[0]))/r;return t>=0&&t<=1&&u>=0&&u<=1?[a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1])]:null}
+function cellsIn(R,cols,rows,cw,ch,fn){for(let r=Math.max(0,Math.floor(R[1]/ch));r<=Math.min(rows-1,Math.floor(R[3]/ch));r++)for(let q=Math.max(0,Math.floor(R[0]/cw));q<=Math.min(cols-1,Math.floor(R[2]/cw));q++){const x=(q+.5)*cw,y=(r+.5)*ch;if(x>=R[0]&&x<=R[2]&&y>=R[1]&&y<=R[3])fn(q,r,x,y)}}
 
-// Navigation tabs
-document.querySelectorAll(".nav-tab").forEach(tab=>{
-  tab.onclick=()=>{
-    document.querySelectorAll(".nav-tab").forEach(t=>t.classList.remove("active"));
-    document.querySelectorAll(".view-panel").forEach(p=>p.classList.remove("active"));
-    tab.classList.add("active");
-    const v=tab.dataset.view;
-    document.getElementById("view-"+v).classList.add("active");
-    if(v==="mapeditor") { resizeMap(); drawMap(); }
-    if(v==="engine") { initEngineWorld(); resizeGame(); }
-  };
-});
+/* ===== Straßennetz: Kreuzungen, Verbindungen, Lücken ===== */
+function net(){const L=SRC.items.filter(i=>i.kind=='LineString'&&!i.bad),W=SRC.W,H=SRC.H,par=L.map((_,i)=>i),fd=i=>par[i]==i?i:par[i]=fd(par[i]),un=(a,b)=>{par[fd(a)]=fd(b)};
+const ix=[],gap=[],dead=[];
+for(let a=0;a<L.length;a++)for(let b=a+1;b<L.length;b++){let hit=false;
+ for(let i=0;i<L[a].pts.length-1;i++)for(let j=0;j<L[b].pts.length-1;j++){const p=sx(L[a].pts[i],L[a].pts[i+1],L[b].pts[j],L[b].pts[j+1]);if(p){hit=true;if(!ix.some(q=>Math.hypot(q[0]-p[0],q[1]-p[1])<100))ix.push(p)}}
+ if(hit)un(a,b)}
+L.forEach((l,a)=>{for(const e of[l.pts[0],l.pts[l.pts.length-1]]){let best=1e9,bj=-1;
+ L.forEach((m,b)=>{if(a==b)return;for(let k=0;k<m.pts.length-1;k++){const d=dseg(e[0],e[1],m.pts[k],m.pts[k+1]);if(d<best){best=d;bj=b}}});
+ if(best<=70)un(a,bj);else if(best<=300)gap.push({id:l.id,p:e,d:Math.round(best)});
+ else if(e[0]>100&&e[1]>100&&e[0]<W-100&&e[1]<H-100)dead.push({id:l.id,p:e})}});
+const comp=new Set(L.map((_,i)=>fd(i))).size,is=[];
+if(L.length){is.push({lv:'k',m:`Netz: ${ix.length} Kreuzungen, ${L.length} Linien`});
+ gap.forEach(g=>is.push({lv:'e',m:`Unterbrochene Verbindung: „${g.id}“ endet ${g.d} Einheiten vor der nächsten Linie`}));
+ dead.forEach(g=>is.push({lv:'w',m:`Loses Linienende: „${g.id}“`}));
+ if(comp>1)is.push({lv:'w',m:`${comp} getrennte Straßen-/Wegnetze`})}
+return{ix,gap,dead,comp,is}}
 
-function setStatus(t){ document.getElementById("statusBar").textContent=t; }
+/* ===== GAME WORLD: Tiles + Kollision aus Source-Geometrie, darüber Director-Änderungen ===== */
+function build(n){const W=SRC.W,H=SRC.H,cols=n,rows=Math.max(1,Math.round(n*H/W)),cw=W/cols,ch=H/rows,tol=Math.min(cw,ch)*.35;
+const gt=new Uint8Array(cols*rows),bk=new Uint8Array(cols*rows),pb=new Uint8Array(cols*rows),props=[];
+const pk=(x,y,t,b)=>{const q=Math.floor(x/cw),r=Math.floor(y/ch);if(b&&q>=0&&r>=0&&q<cols&&r<rows)bk[r*cols+q]=pb[r*cols+q]=1;props.push({t,x:x/cw*TS,y:y/ch*TS})};
+for(const f of SRC.items.filter(i=>!i.bad).sort((a,b)=>T[a.type].z-T[b.type].z)){const D=T[f.type],Q=f.pts;
+ if(f.kind=='Point'){pk(Q[0][0],Q[0][1],f.type=='tree'?'tree':'object',D.b);continue}
+ const pad=f.kind=='LineString'?Math.max((D.w||50)/2,tol):0;
+ const q0=Math.max(0,Math.floor((f.bb[0]-pad)/cw)),q1=Math.min(cols-1,Math.floor((f.bb[2]+pad)/cw)),r0=Math.max(0,Math.floor((f.bb[1]-pad)/ch)),r1=Math.min(rows-1,Math.floor((f.bb[3]+pad)/ch));
+ for(let r=r0;r<=r1;r++)for(let q=q0;q<=q1;q++){const px=(q+.5)*cw,py=(r+.5)*ch;let h;
+  if(f.kind=='Polygon')h=pip(px,py,Q);else{h=false;for(let k=0;k<Q.length-1&&!h;k++)h=dseg(px,py,Q[k],Q[k+1])<=pad}
+  if(h){gt[r*cols+q]=KI[f.type];bk[r*cols+q]=D.b|pb[r*cols+q]}}}
+for(const o of G.ov){cellsIn(o.rect,cols,rows,cw,ch,(q,r)=>{const i=r*cols+q;if(gt[i]==KI.building)return;gt[i]=KI[o.tile];bk[i]=T[o.tile].b|pb[i]});
+ for(const p of o.props)pk(p[0],p[1],p[2],1)}
+props.sort((a,b)=>a.y-b.y);
+return{cols,rows,gt,bk,props,cw,ch,mw:cols*TS,mh:rows*TS,cv:null}}
 
-// --- 1. PROJEKT & PERSISTENZ (MIT BASE64 BILDERN) ---
-function persist(){ 
-  try{ 
-    localStorage.setItem("bw_studio_v2", JSON.stringify(studio.project)); 
-  }catch(e){ console.warn("LocalStorage limit erreicht", e); } 
-}
+/* ===== GBA-Texturen (prozedural, deterministisch) ===== */
+const C=['#0f380f','#306230','#8bac0f','#9bbc0f','#c9dc84','#e4f0a8'];
+function mk(f,s){const c=document.createElement('canvas');c.width=c.height=TS;const x=c.getContext('2d');let z=s*9301+49297;
+const R=()=>(z=(z*1664525+1013904223)>>>0)/4294967296,p=(a,b,k)=>{x.fillStyle=k;x.fillRect(a,b,1,1)};f(x,p,R,s);return c}
+const fl=(x,k)=>{x.fillStyle=k;x.fillRect(0,0,TS,TS)},sp=(p,R,k,n)=>{for(let i=0;i<n;i++)p(R()*TS|0,R()*TS|0,k)};
+const V=(n,f)=>Array.from({length:n},(_,s)=>mk(f,s));
+const canopy=(p,R)=>{for(let y=0;y<TS;y++)for(let x=0;x<TS;x++){const d=Math.hypot(x-7.5,y-7.5);if(d<=7.4)p(x,y,d>6.2?C[0]:(R()<.22?C[2]:C[1]))}};
+const TX={
+grass:V(4,(x,p,R)=>{fl(x,C[2]);sp(p,R,C[3],14);for(let i=0;i<3;i++){const a=R()*14|0,b=2+R()*12|0;p(a,b,C[1]);p(a,b-1,C[1])}}),
+street:V(4,(x,p,R)=>{fl(x,C[4]);sp(p,R,C[3],8);sp(p,R,C[5],6)}),
+path:V(4,(x,p,R)=>{fl(x,'#b4cc50');sp(p,R,C[4],10);sp(p,R,C[3],6)}),
+parking:V(2,(x,p,R)=>{fl(x,'#a9c040');x.fillStyle=C[5];x.fillRect(0,0,1,TS);x.fillRect(8,0,1,TS);sp(p,R,C[3],8)}),
+sport:V(2,(x,p,R,s)=>{fl(x,s?'#8bb01e':'#7fa518');sp(p,R,C[3],5)}),
+water:V(2,(x,p,R,s)=>{fl(x,'#4a7a2a');for(const y of[3,10])for(let i=0;i<5;i++)p((i+2+s*4+(y>5?6:0))%TS,y,C[2])}),
+building:V(1,(x,p,R)=>{fl(x,C[1]);x.fillStyle=C[0];for(const y of[3,7,11,15])x.fillRect(0,y,TS,1);for(const y of[0,4,8,12])x.fillRect(y%8?13:5,y,1,3);sp(p,R,C[2],6)}),
+tree:V(2,(x,p,R)=>{fl(x,C[2]);canopy(p,R)}),
+object:V(1,(x,p)=>{fl(x,C[3]);x.fillStyle=C[0];x.fillRect(4,4,8,8);x.fillStyle=C[1];x.fillRect(5,5,6,6)})};
+const TREE=(()=>{const c=document.createElement('canvas');c.width=16;c.height=22;const x=c.getContext('2d');
+x.fillStyle=C[0];x.fillRect(6,15,4,7);x.fillStyle=C[1];x.fillRect(7,15,2,6);
+canopy((a,b,k)=>{x.fillStyle=k;x.fillRect(a,b,1,1)},()=>.5);return c})();
+const OBJ=(()=>{const c=document.createElement('canvas');c.width=6;c.height=10;const x=c.getContext('2d');x.fillStyle=C[0];x.fillRect(0,0,6,10);x.fillStyle=C[1];x.fillRect(1,1,4,8);return c})();
+function paint(){const{cols,rows,gt}=B,cv=document.createElement('canvas');cv.width=B.mw;cv.height=B.mh;const x=cv.getContext('2d');
+const at=(q,r)=>q<0||r<0||q>=cols||r>=rows?-1:gt[r*cols+q],bl=KI.building,wt=KI.water;
+for(let r=0;r<rows;r++)for(let q=0;q<cols;q++){const t=gt[r*cols+q],k=KEYS[t],v=TX[k],X=q*TS,Y=r*TS;
+ x.drawImage(v[k=='sport'?(q+r)&1:(q*3+r*5+((q*r)&3))%v.length],X,Y);
+ if(t==bl){x.fillStyle=C[0];
+  if(at(q,r+1)!=bl){x.fillRect(X,Y+9,TS,1);x.fillStyle=C[3];x.fillRect(X,Y+10,TS,4);x.fillStyle=C[0];x.fillRect(X,Y+14,TS,2)}
+  if(at(q,r-1)!=bl)x.fillRect(X,Y,TS,1);if(at(q-1,r)!=bl)x.fillRect(X,Y,1,TS);if(at(q+1,r)!=bl)x.fillRect(X+TS-1,Y,1,TS)}
+ else if(t==wt){x.fillStyle=C[1];
+  if(at(q,r-1)!=wt)x.fillRect(X,Y,TS,1);if(at(q,r+1)!=wt)x.fillRect(X,Y+TS-1,TS,1);if(at(q-1,r)!=wt)x.fillRect(X,Y,1,TS);if(at(q+1,r)!=wt)x.fillRect(X+TS-1,Y,1,TS)}}}
+B.cv=cv}
 
-function loadPersisted(){
-  try{ 
-    const s=localStorage.getItem("bw_studio_v2"); 
-    if(s){ 
-      studio.project=JSON.parse(s); 
-      restoreImages();
-      refreshAll(); 
-      return true; 
-    } 
-  }catch(e){}
-  return false;
-}
+/* ===== Engine: Start, Bewegung, Kollision ===== */
+function free(x,y){const hw=7.5,hh=3;for(const[dx,dy]of[[-hw,-hh],[hw,-hh],[-hw,hh],[hw,hh]]){const q=Math.floor((x+dx)/TS),r=Math.floor((y+dy)/TS);if(q<0||r<0||q>=B.cols||r>=B.rows||B.bk[r*B.cols+q])return false}return true}
+function nearest(px,py){if(free(px,py))return[px,py];const q0=Math.floor(px/TS),r0=Math.floor(py/TS);let best=null,bd=1e9;
+for(let r=r0-25;r<=r0+25;r++)for(let q=q0-25;q<=q0+25;q++){const cx=(q+.5)*TS,cy=(r+.5)*TS,d=Math.hypot(cx-px,cy-py);if(d<bd&&free(cx,cy)){bd=d;best=[cx,cy]}}return best}
+function msg(t,lv){const e=$('#wm');e.textContent=t;e.className=lv?'msg '+lv:'hint'}
+function setStart(wx,wy,quiet){const px=wx/SRC.W*B.mw,py=wy/SRC.H*B.mh,s=nearest(px,py);
+if(!s){msg('Kein begehbarer Punkt in der Nähe des Startpunkts.','e');G.start=null;refreshNav();return}
+const moved=Math.hypot(s[0]-px,s[1]-py)>.5;G.start={x:s[0]/B.mw*SRC.W,y:s[1]/B.mh*SRC.H};P.x=s[0];P.y=s[1];
+if(window.BRUCHWIESEN_PLAYER){window.BRUCHWIESEN_PLAYER.position.x=P.x;window.BRUCHWIESEN_PLAYER.position.y=P.y;window.BRUCHWIESEN_PLAYER.direction=P.d||'r';}
+if(!quiet||moved)msg(moved?'Startpunkt lag auf blockierter Fläche und wurde auf die nächste begehbare Stelle gesetzt.':'Startpunkt gesetzt.',moved?'w':'k');
+refreshNav();save();drawWorld()}
+function tick(dt){const player=window.BRUCHWIESEN_PLAYER;if(player){const input={x:(ks.has('r')?1:0)-(ks.has('l')?1:0),y:(ks.has('d')?1:0)-(ks.has('u')?1:0),boost:bo||kb};const desired=MODE==='scooter'?window.PLAYER_STATES.RIDING:window.PLAYER_STATES.WALKING;if(desired===window.PLAYER_STATES.RIDING&&player.state===window.PLAYER_STATES.WALKING)player.triggerMount();if(desired===window.PLAYER_STATES.WALKING&&player.state===window.PLAYER_STATES.RIDING)player.triggerDismount();player.update(dt,{input,isBlocked:(x,y)=>!free(x,y),baseSpeed:MODE==='walk'?48:68,ridingSpeed:MODE==='scooter'?118:68,boostMultiplier:(bo||kb)?1.45:1});P.x=player.position.x;P.y=player.position.y;P.d=player.direction;P.h=player.direction;P.mv=player.moving;P.tr=player.transitionProgress;if(player.state===window.PLAYER_STATES.RIDING)MODE='scooter';else if(player.state===window.PLAYER_STATES.WALKING)MODE='walk';return}
+const kx=(ks.has('r')?1:0)-(ks.has('l')?1:0),ky=(ks.has('d')?1:0)-(ks.has('u')?1:0);
+let ax=pv.x+kx,ay=pv.y+ky;const l=Math.hypot(ax,ay);if(l>1){ax/=l;ay/=l}
+const sp=(MODE=='walk'?(bo||kb?84:48):(bo||kb?118:68))*dt;P.mv=l>.05;const ox=P.x,oy=P.y;
+let nx=P.x+ax*sp;if(free(nx,P.y))P.x=nx;let ny=P.y+ay*sp;if(free(P.x,ny))P.y=ny;
+const mv=Math.hypot(P.x-ox,P.y-oy);
+if(mv>0)P.ph+=mv/(MODE=='walk'?4.5:5.5);else if(Math.floor(P.ph)%8)P.ph+=dt*12;else P.ph=0;
+if(P.tr>0)P.tr-=dt;
+if(P.mv){const hz=P.d=='l'||P.d=='r',ex=Math.abs(ax),ey=Math.abs(ay);if(hz?ey>ex*1.25:ex>ey*1.25)P.d=hz?(ay<0?'u':'d'):(ax<0?'l':'r');else if(hz)P.d=ax<0?'l':'r';if(P.d=='l'||P.d=='r')P.h=P.d}}
+const gc=$('#g'),gx=gc.getContext('2d');let hudT=0;
+function fitGame(){const st=$('#st'),d=devicePixelRatio||1,w=st.clientWidth*d,h=st.clientHeight*d;if(!w)return;
+const sc=Math.max(2,Math.round(w/240)),vw=Math.floor(w/sc),vh=Math.floor(h/sc);
+gc.width=vw;gc.height=vh;gc.style.width=vw*sc/d+'px';gc.style.height=vh*sc/d+'px';gx.imageSmoothingEnabled=false}
+function render(t){const w=gc.width,h=gc.height;gx.fillStyle=C[0];gx.fillRect(0,0,w,h);
+const cx=Math.round(B.mw<=w?(B.mw-w)/2:Math.max(0,Math.min(B.mw-w,P.x-w/2))),cy=Math.round(B.mh<=h?(B.mh-h)/2:Math.max(0,Math.min(B.mh-h,P.y-h/2)));
+gx.drawImage(B.cv,-cx,-cy);
+for(const n of NPCS){const nx=Math.round(n.x/SRC.W*B.mw-cx),ny=Math.round(n.y/SRC.H*B.mh-cy);if(nx<-20||ny<-20||nx>w+20||ny>h+20)continue;gx.fillStyle='#071820';gx.fillRect(nx-5,ny-8,10,12);gx.fillStyle='#75d7bd';gx.fillRect(nx-4,ny-10,8,8);gx.fillStyle='#e9fff7';gx.fillRect(nx-2,ny-8,2,2);gx.fillRect(nx+1,ny-8,2,2);gx.fillStyle='#071820';gx.fillRect(nx-3,ny+4,6,3)}
+let done=false;const pl=()=>{done=true;const fs=frames(MODE,P.d);if(!fs)return;const X=Math.round(P.x-cx),Y=Math.round(P.y-cy),c=fs[Math.floor(P.ph)%8],hop=P.tr>0?Math.round(Math.sin((1-P.tr/.3)*Math.PI)*5):0;
+ngx.fillStyle='rgba(15,56,15,.35)';ngx.beginPath();ngx.ellipse(X,Y+2,c.width*.38,3,0,0,7);ngx.fill();
+ngx.drawImage(c,Math.round(X-c.width/2),Y+4-c.height-hop)};
+for(const p of B.props){if(!done&&p.y>P.y)pl();const X=Math.round(p.x-cx),Y=Math.round(p.y-cy);
+ if(X<-20||Y<-24||X>w+20||Y>h+24)continue;
+ if(p.t=='tree')gx.drawImage(TREE,X-8,Y-21);else gx.drawImage(OBJ,X-3,Y-9)}
+if(!done)pl();
+if(paused){gx.fillStyle='rgba(15,56,15,.55)';gx.fillRect(0,0,w,h);gx.fillStyle=C[5];gx.font='bold 10px monospace';gx.textAlign='center';gx.fillText('PAUSE',w/2,h/2)}
+if(t-hudT>200){hudT=t;const q=Math.floor(P.x/TS),r=Math.floor(P.y/TS);$('#hud').textContent=`${q},${r} · ${T[KEYS[B.gt[r*B.cols+q]]].l.toUpperCase()}`}}
+function frame(t){if(window.BRUCHWIESEN_ENGINE&&window.BRUCHWIESEN_ENGINE.running){return;}raf=0;if(view!='play')return;const dt=Math.min(.05,(t-last)/1000||0);last=t;if(!paused)tick(dt);render(t);raf=requestAnimationFrame(frame)}
 
-function restoreImages(){
-  if(studio.project.images.length && studio.project.images[0].dataUrl){
-    const imData=studio.project.images[0];
-    const img=new Image();
-    img.onload=()=>{
-      studio.editor.image=img;
-      studio.editor.naturalW=img.naturalWidth;
-      studio.editor.naturalH=img.naturalHeight;
-      fitEditorImage();
-      drawMap();
-    };
-    img.src=imData.dataUrl;
-  }
-}
+/* ===== Weltansicht ===== */
+const rc=()=>sel?[Math.min(sel[0],sel[2]),Math.min(sel[1],sel[3]),Math.max(sel[0],sel[2]),Math.max(sel[1],sel[3])]:null;
+function drawWorld(){if(!B||!B.cv)return;const cv=$('#wv'),x=cv.getContext('2d'),mw=B.mw,mh=B.mh,kx=mw/SRC.W,ky=mh/SRC.H;cv.width=mw;cv.height=mh;x.drawImage(B.cv,0,0);
+if(opt.col){x.fillStyle='rgba(255,59,107,.42)';for(let r=0;r<B.rows;r++)for(let q=0;q<B.cols;q++)if(B.bk[r*B.cols+q])x.fillRect(q*TS,r*TS,TS,TS)}
+if(opt.geo){x.strokeStyle='#39ff14';x.lineWidth=Math.max(1.5,mw/450);
+ for(const f of SRC.items){if(f.bad)continue;x.beginPath();if(f.kind=='Point')x.arc(f.pts[0][0]*kx,f.pts[0][1]*ky,4,0,7);else{f.pts.forEach((p,i)=>i?x.lineTo(p[0]*kx,p[1]*ky):x.moveTo(p[0]*kx,p[1]*ky));if(f.kind=='Polygon')x.closePath()}x.stroke()}}
+if(opt.net&&NET){const ring=(p,r,c)=>{x.strokeStyle=c;x.lineWidth=3;x.beginPath();x.arc(p[0]*kx,p[1]*ky,r,0,7);x.stroke()};
+ x.fillStyle='#19e6ff';NET.ix.forEach(p=>{x.beginPath();x.arc(p[0]*kx,p[1]*ky,5,0,7);x.fill()});
+ NET.gap.forEach(g=>ring(g.p,10,'#ff3b6b'));NET.dead.forEach(g=>ring(g.p,8,'#ffc83b'))}
+const dash=(R,c)=>{x.setLineDash([6,4]);x.strokeStyle=c;x.fillStyle=c+'33';x.lineWidth=2;x.fillRect(R[0]*kx,R[1]*ky,(R[2]-R[0])*kx,(R[3]-R[1])*ky);x.strokeRect(R[0]*kx,R[1]*ky,(R[2]-R[0])*kx,(R[3]-R[1])*ky);x.setLineDash([])};
+if(G.pend)dash(G.pend.rect,'#ffc83b');else if(sel)dash(rc(),'#19e6ff');
+NPCS.forEach(n=>{const px=n.x*kx,py=n.y*ky;x.fillStyle='#75d7bd';x.strokeStyle='#07131a';x.lineWidth=3;x.beginPath();x.arc(px,py,9,0,7);x.fill();x.stroke();x.fillStyle='#07131a';x.font='bold 9px sans-serif';x.textAlign='center';x.fillText((n.name||'NPC').slice(0,10),px,py-14)});
+if(G.start&&SPR.complete&&SPR.naturalWidth){const px=G.start.x*kx,py=G.start.y*ky;x.strokeStyle='#ff3b6b';x.lineWidth=3;x.beginPath();x.arc(px,py,16,0,7);x.stroke();x.drawImage(SPR,px-SPR.naturalWidth/2,py-SPR.naturalHeight+4)}}
+function stats(){const its=SRC.items.filter(i=>!i.bad),bl=B.bk.reduce((a,b)=>a+b,0),n={};its.forEach(f=>n[f.type]=(n[f.type]||0)+1);
+$('#wst').innerHTML=`<b>${its.length} Objekte</b><b>${B.cols}×${B.rows} Tiles</b><b>${Math.round(100*(1-bl/B.bk.length))}% begehbar</b><b>${NET.ix.length} Kreuzungen</b><b>${NET.gap.length} Lücken</b>`+Object.keys(n).map(k=>`<b>${T[k].l} ${n[k]}</b>`).join('')}
 
-document.getElementById("btnNewProj").onclick=()=>{
-  if(confirm("Neues Projekt starten? Alle aktuellen Daten werden zurückgesetzt.")) {
-    studio.project={name:"Grundschule in den Bruchwiesen",location:"Saarlouis-Beaumarais",images:[],gcps:[],features:{},playerStart:null};
-    studio.editor.image=null;
-    persist(); refreshAll(); setStatus("Neues Projekt erstellt");
-  }
-};
-document.getElementById("btnSaveProj").onclick=()=>{
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([JSON.stringify(studio.project,null,2)],{type:"application/json"}));
-  a.download="bruchwiesen_studio_v2_project.json"; a.click();
-};
-document.getElementById("btnLoadProj").onclick=()=>document.getElementById("fileLoadProj").click();
-document.getElementById("fileLoadProj").onchange=e=>{
-  const f=e.target.files[0]; if(!f)return;
-  const r=new FileReader();
-  r.onload=()=>{ 
-    try{ 
-      studio.project=JSON.parse(r.result); 
-      restoreImages();
-      persist(); 
-      refreshAll(); 
-      setStatus("Projekt erfolgreich geladen"); 
-    }catch(err){ setStatus("Fehler beim Laden der Projektdatei"); }
-  };
-  r.readAsText(f);
-};
+/* ===== AI Game Director: Vorschlag → Freigabe → Protokoll → Rückgängig (verändert nur die Game World) ===== */
+const DR=[[/spielplatz|spielfl/,'sport','Spielplatz',1],[/parkplatz|stellplatz/,'parking','Parkplatz',0],[/wasser|teich|\bsee\b/,'water','Teich',0],[/wald|baum|b[äa]ume/,'grass','Baumgruppe',2],[/wiese|rasen|gr[üu]n|garten|park/,'grass','Grünfläche',0],[/stra[ßs]e/,'street','Straße',0],[/weg|pfad/,'path','Weg',0],[/sport/,'sport','Sportfläche',0]];
+function propose(){if(!B)return;const R=rc(),c=$('#cmd').value.toLowerCase();
+if(!R||R[2]-R[0]<200||R[3]-R[1]<200)return msg('Erst einen Bereich markieren: Modus „Bereich“, dann auf der Karte ziehen.','w');
+const rule=DR.find(r=>r[0].test(c));if(!rule)return msg('Anweisung nicht verstanden. Beispiele: Spielplatz, Wiese, Teich, Parkplatz, Baumgruppe, Weg.','w');
+const[,tile,name,kind]=rule,cnt={};let cells=0,prot=0;
+cellsIn(R,B.cols,B.rows,B.cw,B.ch,(q,r)=>{const t=KEYS[B.gt[r*B.cols+q]];cnt[t]=(cnt[t]||0)+1;cells++;if(t=='building')prot++});
+if(!cells)return msg('Der Bereich ist zu klein (keine Kachel getroffen).','w');
+const props=[],ok=(x,y)=>B.gt[Math.floor(y/B.ch)*B.cols+Math.floor(x/B.cw)]!=KI.building;
+if(kind==1)[.25,.5,.75].forEach(f=>{const x=R[0]+(R[2]-R[0])*f,y=R[1]+(R[3]-R[1])*.5;if(ok(x,y))props.push([x,y,'object'])});
+if(kind==2)cellsIn(R,B.cols,B.rows,B.cw,B.ch,(q,r,x,y)=>{if(q%4==1&&r%4==1&&ok(x,y)&&props.length<60)props.push([x,y,'tree'])});
+G.pend={cmd:$('#cmd').value,tile,name,rect:R,props,cnt,prot,cells};renderProp();drawWorld()}
+function renderProp(){const p=G.pend;if(!p){$('#prop').innerHTML='';return}
+$('#prop').innerHTML=`<div class="msg w"><b>Vorschlag: ${esc(p.name)}</b><br>${p.cells} Kacheln im Bereich. Bestand: ${Object.entries(p.cnt).map(([k,v])=>T[k].l+' '+v).join(', ')}.<br>`+(p.prot?`${p.prot} Gebäude-Kacheln bleiben geschützt. `:'')+(p.props.length?`+ ${p.props.length} Objekte. `:'')+`Nur die Game World ändert sich, die Source World bleibt unberührt.</div><div class="row"><button class="bt pr" id="ok">Freigeben</button><button class="bt" id="no">Verwerfen</button></div>`;
+$('#ok').onclick=()=>{G.ov.push({id:'D'+Date.now(),cmd:p.cmd,name:p.name,tile:p.tile,rect:p.rect,props:p.props,t:new Date().toLocaleTimeString('de-DE')});G.pend=null;sel=null;renderProp();rebuild();msg(p.name+' übernommen. Rückgängig im Protokoll.','k')};
+$('#no').onclick=()=>{G.pend=null;renderProp();drawWorld()}}
+function renderLog(){$('#log').innerHTML=G.ov.length?'<h2>Protokoll</h2>'+G.ov.map(o=>`<div class="row" style="align-items:center;margin-top:6px"><div class="hint" style="flex:3">${esc(o.t)} · ${esc(o.name)} · „${esc(o.cmd)}“</div><button class="bt" data-u="${o.id}">↶ Zurück</button></div>`).join(''):'<div class="hint">Noch keine Director-Änderungen.</div>'}
+$('#log').onclick=e=>{const u=e.target.dataset.u;if(!u)return;G.ov=G.ov.filter(o=>o.id!=u);rebuild();msg('Änderung rückgängig gemacht.','k')};
 
-document.getElementById("btnAddImg").onclick=()=>document.getElementById("modalImg").classList.add("show");
-document.getElementById("mImgCancel").onclick=()=>document.getElementById("modalImg").classList.remove("show");
-document.getElementById("fileImageInput").onchange=e=>{
-  const f=e.target.files[0]; if(f) document.getElementById("mImgId").value=f.name.split('.')[0];
-};
-document.getElementById("mImgOk").onclick=()=>{
-  const fInput=document.getElementById("fileImageInput").files[0];
-  const id=document.getElementById("mImgId").value.trim()||"sat_1";
-  if(!fInput) return alert("Bitte Bilddatei wählen");
-  
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const dataUrl=e.target.result;
-    const img=new Image();
-    img.onload=()=>{
-      studio.project.images=[{
-        id, filename:fInput.name, dataUrl,
-        north:49.314, south:49.313, west:6.723, east:6.725,
-        pixel_width:img.naturalWidth, pixel_height:img.naturalHeight
-      }];
-      studio.editor.image=img; 
-      studio.editor.naturalW=img.naturalWidth; 
-      studio.editor.naturalH=img.naturalHeight;
-      fitEditorImage(); 
-      persist(); 
-      refreshAll();
-      document.getElementById("modalImg").classList.remove("show");
-      setStatus("Luftbild permanent gespeichert & geladen");
-    };
-    img.src=dataUrl;
-  };
-  reader.readAsDataURL(fInput);
-};
+/* ===== Steuerung ===== */
+function refreshNav(){$('[data-v=play]').disabled=!SRC||!G.start;$('#pl').disabled=!SRC||!G.start}
+function show(v){if(v=='src')v='world';if(v=='play'&&(!SRC||!G.start))return;view=v;
+document.querySelectorAll('.v').forEach(e=>e.classList.toggle('on',e.id=='v-'+v));
+document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v==v));
+if(v=='world')drawWorld();if(v=='characters')renderNPCs();if(v=='story')renderStory();
+if(v=='play'){$('#dialogueBox').hidden=true;paused=false;$('#pz').textContent='⏸ Pause';fitGame();last=performance.now();if(window.BRUCHWIESEN_ENGINE && !window.BRUCHWIESEN_ENGINE.running){window.BRUCHWIESEN_ENGINE.init();window.BRUCHWIESEN_ENGINE.start();}if(window.BRUCHWIESEN_ENGINE && window.BRUCHWIESEN_ENGINE.running){return;}if(!raf)raf=requestAnimationFrame(frame)}}
+function rebuild(){B=build(G.n);paint();stats();renderLog();if(G.start)setStart(G.start.x,G.start.y,1);else{refreshNav();drawWorld();save()}}
+function rep(is){const o={e:0,w:1,k:2};is=[...is].sort((a,b)=>o[a.lv]-o[b.lv]);
+$('#rep').innerHTML=is.slice(0,50).map(x=>`<div class="msg ${x.lv}">${esc(x.m)}</div>`).join('')+(is.length>50?`<div class="hint">+ ${is.length-50} weitere Meldungen</div>`:'')}
+function load(text,sv){let raw;
+try{raw=JSON.parse(text)}catch(e){rep([{lv:'e',m:'Kein gültiges JSON: '+e.message}]);return false}
+const S=extract(raw);
+if(!S.items.length){rep([{lv:'e',m:'Keine Objekte mit Geometrie gefunden. Erwartet: features, objects oder Kategorie-Arrays.'},...S.issues]);return false}
+const D=derive(S);SRC=D.src;NET=net();RAW=text;ISS=[...D.iss,...NET.is];
+const cn={};SRC.items.forEach(i=>cn[T[i.type].l]=(cn[T[i.type].l]||0)+1);
+ISS.push({lv:'k',m:`${SRC.items.length} Objekte: ${Object.entries(cn).map(([k,v])=>k+' '+v).join(', ')}. Weiter im Tab „Welt“.`});
+G.ov=(sv&&sv.ov)||[];NPCS=(sv&&sv.npcs)||NPCS||[];G.pend=null;sel=null;G.start=(sv&&sv.start)||null;G.n=(sv&&sv.n)||+$('#rs').value;$('#rs').value=String(G.n);
+$('#hn').textContent=SRC.name;rep(ISS);renderProp();rebuild();
+msg(G.start?'Startpunkt übernommen. Tippe auf die Karte, um ihn zu ändern.':'Tippe auf die Karte, um den Startpunkt zu setzen.');refreshNav();show('world');return true}
+function save(){try{if(SRC&&B)localStorage.setItem('bw_gba_v2',JSON.stringify({raw:RAW,n:G.n,start:G.start,ov:G.ov,npcs:NPCS,mapImage:MAP_IMAGE_DATA}))}catch(e){}}
+function renderNPCs(){const box=$('#npcList');if(!NPCS.length){box.innerHTML='<div class="hint">Noch keine NPCs angelegt.</div>'}else box.innerHTML=NPCS.map((n,i)=>`<div class="npcrow"><span class="npcdot"></span><div class="npcname"><b>${esc(n.name)}</b><small>${esc(n.role||'NPC')} · ${Math.round(n.x)}, ${Math.round(n.y)}</small></div><button class="bt" data-npc-del="${i}">Entfernen</button></div>`).join('');
+$('#storyNpc').innerHTML=NPCS.length?NPCS.map((n,i)=>`<option value="${i}">${esc(n.name)}</option>`).join(''):'<option value="">Erst einen NPC anlegen</option>';}
+function renderStory(){renderNPCs();const i=+$('#storyNpc').value||0;if(NPCS[i])$('#storyText').value=NPCS[i].dialogue||'';else $('#storyText').value=''}
+$('#npcPlace').onclick=()=>{const name=$('#npcName').value.trim();if(!name){$('#npcPlaceHint').textContent='Bitte zuerst einen Namen eingeben.';return}NPC_DRAFT={name,role:$('#npcRole').value.trim(),dialogue:$('#npcDialogue').value.trim()||'Hallo! Schön, dass du da bist.'};show('world');mode='npc';$('#wm').textContent='Jetzt die gewünschte Position für '+name+' auf der Karte anklicken.';$('#npcPlaceHint').textContent='Warte auf Position in der Welt…';$('#mS').classList.remove('on');$('#mA').classList.remove('on')};
+$('#npcList').onclick=e=>{const i=e.target.dataset.npcDel;if(i===undefined)return;NPCS.splice(+i,1);save();renderNPCs();drawWorld()};
+$('#storyNpc').onchange=()=>{const n=NPCS[+$('#storyNpc').value];$('#storyText').value=n?.dialogue||''};
+$('#saveStory').onclick=()=>{const n=NPCS[+$('#storyNpc').value];if(!n)return;n.dialogue=$('#storyText').value.trim();save();$('#storyText').blur();};
+function makeBWWorld(){if(!SRC)return null;return {schemaVersion:'1.0',meta:{name:SRC.name,source:'BRUCHWIESEN GAME STUDIO'},world:{bounds:{x:0,y:0,w:SRC.W,h:SRC.H}},features:SRC.items.filter(f=>!f.bad).map(f=>({id:f.id,type:f.type==='tree'?'vegetation':f.type,material:MAT[f.type]||f.type,geometry:{kind:f.kind.toLowerCase(),points:f.pts.map(p=>[p[0],p[1]])},properties:{collision:!!T[f.type].b}})),playerStart:G.start||null,gameWorld:{grid:G.n,overrides:G.ov}}}
+$('#cp').onclick=async()=>{const data=makeBWWorld();if(!data){msg('Erst eine Welt importieren.','w');return}const txt=JSON.stringify(data,null,2);$('#ex').hidden=false;$('#ex').value=txt;try{await navigator.clipboard.writeText(txt);$('#cp').textContent='BW_WORLD kopiert ✓'}catch(e){$('#ex').focus();$('#ex').select();$('#cp').textContent='JSON markiert – kopieren'} };
+$('#copyPrompt').onclick=async()=>{try{await navigator.clipboard.writeText($('#mapPrompt').value);$('#promptStatus').textContent='Prompt kopiert. Jetzt zusammen mit dem Kartenbild an dein externes LLM senden.'}catch(e){$('#mapPrompt').focus();$('#mapPrompt').select();$('#promptStatus').textContent='Text markiert – bitte kopieren.'}};
+let MAP_IMAGE_DATA=null;
+function setMapImage(data){MAP_IMAGE_DATA=data;const im=$('#mapImagePreview');im.src=data;im.hidden=false;$('#mapImageStatus').textContent='Kartenbild geladen – zusammen mit dem Prompt extern verwenden.'}
+$('#mapImageBtn').onclick=()=>$('#mapImageFile').click();
+$('#mapImageFile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;if(f.size>12000000){$('#mapImageStatus').textContent='Bild ist größer als 12 MB. Bitte vorher verkleinern.';return}const fr=new FileReader();fr.onload=()=>setMapImage(fr.result);fr.onerror=()=>$('#mapImageStatus').textContent='Bild konnte nicht gelesen werden.';fr.readAsDataURL(f)};
+$('#importProject').onclick=()=>$('#projectFile').click();$('#projectFile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);if(d.format==='BRUCHWIESEN_PROJECT'&&d.world?.raw){NPCS=d.npcs||[];load(d.world.raw,{n:d.world.grid,start:d.world.start,ov:d.world.overrides,npcs:NPCS});if(d.sprites){for(const m of ['scooter','walk'])if(d.sprites[m])loadSheet(m,d.sprites[m])}if(d.mapImage){setMapImage(d.mapImage)}}else if(Array.isArray(d.features)&&d.world?.bounds){NPCS=[];load(t)}else{throw new Error('Weder BRUCHWIESEN-Projekt noch kompatible BW_WORLD-Datei')}}catch(err){alert('Projekt konnte nicht geöffnet werden: '+err.message)}})};
+$('#downloadProject').onclick=()=>{const data={format:'BRUCHWIESEN_PROJECT',version:1,world:{raw:RAW,grid:G.n,start:G.start,overrides:G.ov},npcs:NPCS,sprites:SPRITE_DATA,mapImage:MAP_IMAGE_DATA};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bruchwiesen-project.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$('#closeDialogue').onclick=()=>{$('#dialogueBox').hidden=true};$('#interact').onclick=interactNPC;
+function interactNPC(){let best=null,bd=Infinity;for(const n of NPCS){const d=Math.hypot(n.x/SRC.W*B.mw-P.x,n.y/SRC.H*B.mh-P.y);if(d<bd){bd=d;best=n}}if(best&&bd<42){$('#dialogueName').textContent=best.name+(best.role?' · '+best.role:'');$('#dialogueText').textContent=best.dialogue||'…';$('#dialogueBox').hidden=false}else{$('#hud').textContent='KEINE FIGUR IN REICHWEITE';hudT=performance.now()+1200}}
+$('#go').onclick=()=>load($('#ta').value);
+$('#demo').onclick=()=>{$('#ta').value=JSON.stringify(DEMO,null,1);load($('#ta').value)};
+$('#bf').onclick=()=>$('#fi').click();
+$('#fi').onchange=e=>{const f=e.target.files[0];if(f)f.text().then(t=>{$('#ta').value=t.length<400000?t:'';load(t)});e.target.value=''};
+$('#rs').onchange=e=>{if(SRC){G.n=+e.target.value;rebuild()}};
+const tg=(id,k)=>$(id).onclick=e=>{opt[k]=!opt[k];e.target.classList.toggle('on',!!opt[k]);drawWorld()};tg('#tc','col');tg('#tg','geo');tg('#tn','net');
+const zs=f=>{zm=Math.max(1,Math.min(4,zm*f));$('#wv').style.width=zm*100+'%'};$('#zi').onclick=()=>zs(2);$('#zo').onclick=()=>zs(.5);
+const md=m=>{mode=m;$('#mS').classList.toggle('on',m=='start');$('#mA').classList.toggle('on',m=='area');$('#wv').style.touchAction=m=='area'?'none':'manipulation';if(m=='start'){sel=null;drawWorld()}};
+$('#mS').onclick=()=>md('start');$('#mA').onclick=()=>md('area');$('#dp').onclick=propose;
+$('#pl').onclick=()=>show('play');
+$('#pz').onclick=()=>{paused=!paused;$('#pz').textContent=paused?'▶ Weiter':'⏸ Pause';if(paused&&window.BRUCHWIESEN_ENGINE){window.BRUCHWIESEN_ENGINE.pause();}else if(window.BRUCHWIESEN_ENGINE){window.BRUCHWIESEN_ENGINE.resume();}};
+$('#rst').onclick=()=>{if(G.start){P.x=G.start.x/SRC.W*B.mw;P.y=G.start.y/SRC.H*B.mh;if(window.BRUCHWIESEN_PLAYER){window.BRUCHWIESEN_PLAYER.position.x=P.x;window.BRUCHWIESEN_PLAYER.position.y=P.y;}}};
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.v));
+const wv=$('#wv'),wp=e=>{const b=wv.getBoundingClientRect();return[Math.max(0,Math.min(SRC.W,(e.clientX-b.left)/b.width*SRC.W)),Math.max(0,Math.min(SRC.H,(e.clientY-b.top)/b.height*SRC.H))]};
+wv.onpointerdown=e=>{if(!B)return;dn=[e.clientX,e.clientY];if(mode=='area'){wv.setPointerCapture(e.pointerId);const p=wp(e);sel=[p[0],p[1],p[0],p[1]];G.pend=null;renderProp()}};
+wv.onpointermove=e=>{if(dn&&mode=='area'&&sel){const p=wp(e);sel[2]=p[0];sel[3]=p[1];drawWorld()}};
+wv.onpointerup=e=>{if(!dn||!B)return;const moved=Math.hypot(e.clientX-dn[0],e.clientY-dn[1])>8;dn=null;
+if(mode=='area'){drawWorld();msg(moved?'Bereich markiert. Anweisung eingeben und „Vorschlag erstellen“ tippen.':'Zum Markieren ziehen.');return}
+if(moved)return;const p=wp(e);if(mode=='npc'&&NPC_DRAFT){NPCS.push({...NPC_DRAFT,x:p[0],y:p[1]});NPC_DRAFT=null;mode='start';save();renderNPCs();drawWorld();msg('Figur platziert. Dialoge kannst du im Bereich STORY bearbeiten.','k');$('#npcPlaceHint').textContent='Figur erfolgreich platziert.';return}setStart(p[0],p[1])};
+const pad=$('#pad'),kn=$('#kn'),bb=$('#bb');
+function padMove(e){const b=pad.getBoundingClientRect(),R=b.width/2,dx=e.clientX-b.left-R,dy=e.clientY-b.top-R,l=Math.hypot(dx,dy)||1,m=Math.min(l,R*.9),a=m/(R*.9);
+kn.style.transform=`translate(${dx/l*m}px,${dy/l*m}px)`;pv=a<.18?{x:0,y:0}:{x:dx/l*a,y:dy/l*a}}
+pad.onpointerdown=e=>{pad.setPointerCapture(e.pointerId);pid=e.pointerId;padMove(e)};
+pad.onpointermove=e=>{if(e.pointerId==pid)padMove(e)};
+pad.onpointerup=pad.onpointercancel=e=>{if(e.pointerId==pid){pid=null;pv={x:0,y:0};kn.style.transform=''}};
+bb.onpointerdown=e=>{bb.setPointerCapture(e.pointerId);bo=1;bb.classList.add('on')};
+bb.onpointerup=bb.onpointercancel=()=>{bo=0;bb.classList.remove('on')};
+const KM={arrowleft:'l',a:'l',arrowright:'r',d:'r',arrowup:'u',w:'u',arrowdown:'d',s:'d'};
+addEventListener('keydown',e=>{if(/INPUT|TEXTAREA/.test(e.target.tagName))return;const k=KM[e.key.toLowerCase()];if(k){ks.add(k);if(view=='play')e.preventDefault()}if(e.key=='Shift')kb=1;if(view=='play'){const q=e.key.toLowerCase();if(q=='p')$('#pz').click();if(q=='e')interactNPC();if(e.key=='Escape')$('#dialogueBox').hidden=true}});
+addEventListener('keyup',e=>{const k=KM[e.key.toLowerCase()];if(k)ks.delete(k);if(e.key=='Shift')kb=0});
+addEventListener('blur',()=>{ks.clear();kb=0});
+let SM='scooter';const mlab=()=>{$('#md').textContent=MODE=='walk'?'🚶 Zu Fuß':'🛴 Scooter'};
+$('#sS').onclick=()=>{SM='scooter';$('#sfi').click()};$('#sW').onclick=()=>{SM='walk';$('#sfi').click()};
+$('#sfi').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const fr=new FileReader();fr.onload=()=>loadSheet(SM,fr.result);fr.readAsDataURL(f)};
+$('#sR').onclick=()=>{FR={scooter:{},walk:{}};SK={scooter:{},walk:{}};SPRITE_DATA={scooter:null,walk:null};MODE='scooter';mlab();genScooter()};
+$('#md').onclick=()=>{const player=window.BRUCHWIESEN_PLAYER;if(player){if(player.state===window.PLAYER_STATES.RIDING){player.triggerDismount();MODE='walk';}else if(player.state===window.PLAYER_STATES.WALKING){player.triggerMount();MODE='scooter';}else if(player.state===window.PLAYER_STATES.MOUNTING){player.state=window.PLAYER_STATES.RIDING;MODE='scooter';}else if(player.state===window.PLAYER_STATES.DISMOUNTING){player.state=window.PLAYER_STATES.WALKING;MODE='walk';}mlab();return}const m=MODE=='walk'?'scooter':'walk';if(!FR[m].r){$('#hud').textContent='KEIN WALKING-SHEET';hudT=performance.now()+1800;return}MODE=m;P.tr=.3;mlab()};
+new ResizeObserver(()=>{if(view=='play')fitGame()}).observe($('#st'));
+document.addEventListener('gesturestart',e=>e.preventDefault());
 
-// --- 2. EXTRACTOR / ROBUSTER JSON-INGEST ---
-function buildPrompt(stage){
-  return `Kartografiere für ${studio.project.name}, Saarlouis-Beaumarais. Stufe: ${stage}.
-Grid 0–${WORLD_W}. Liefere ein valides JSON-Array mit Objekten:
-{
-  "id": "eindeutige_id",
-  "type": "building" | "street" | "path" | "vegetation" | "sport" | "object",
-  "material": "building" | "street" | "path" | "trees" | "tennis",
-  "name": "Bezeichnung",
-  "geometry": {
-    "kind": "polygon" | "linestring" | "point",
-    "points": [[x1, y1], [x2, y2], ...]
-  }
-}
-Nur reines JSON ohne Markdown-Blobs oder Erklärungen zurückgeben.`;
-}
-
-function refreshExtractorStages(){
-  const list=document.getElementById("extractorStages"); list.innerHTML="";
-  STAGES.forEach(s=>{
-    const d=document.createElement("div");
-    d.style.padding="8px"; d.style.borderBottom="1px solid var(--border)"; d.style.cursor="pointer";
-    d.innerHTML=`<b style="color:${s.id===studio.currentStage?"var(--cyan)":""}">${s.label}</b>`;
-    d.onclick=()=>{ studio.currentStage=s.id; refreshExtractorStages(); document.getElementById("extractorPromptOut").value=buildPrompt(s.id); };
-    list.appendChild(d);
-  });
-  document.getElementById("extractorPromptOut").value=buildPrompt(studio.currentStage);
-}
-
-document.getElementById("btnCopyPrompt").onclick=()=>{
-  const t=document.getElementById("extractorPromptOut"); t.select(); navigator.clipboard.writeText(t.value); setStatus("Prompt in Zwischenablage kopiert");
-};
-
-document.getElementById("btnRunIngest").onclick=()=>{
-  try{
-    const raw=document.getElementById("extractorIngestArea").value.trim();
-    if(!raw) return;
-    const data=JSON.parse(raw);
-    const list=Array.isArray(data)?data:(data.features||[]);
-    if(!Array.isArray(list)) throw new Error("JSON muss ein Array oder Objekt mit 'features'-Array sein.");
-    
-    let count=0, errors=[];
-    list.forEach((f, idx)=>{
-      if(!f.id || !f.type || !f.geometry || !Array.isArray(f.geometry.points)){
-        errors.push(`Index ${idx}: Pflichtfelder (id, type, geometry.points) fehlen.`);
-        return;
-      }
-      studio.project.features[f.id]={
-        id:f.id, 
-        data:f, 
-        history:[studio.currentStage]
-      };
-      count++;
-    });
-    
-    persist(); refreshAll();
-    let msg=`<span class="okmsg">✓ ${count} Features erfolgreich validiert & importiert.</span>`;
-    if(errors.length) msg+=`<br><span class="err">Warnungen: ${errors.join("<br>")}</span>`;
-    document.getElementById("ingestMsg").innerHTML=msg;
-    setStatus(`Ingest abgeschlossen (${count} Features)`);
-  }catch(e){ 
-    document.getElementById("ingestMsg").innerHTML=`<span class="err">JSON-Fehler: ${e.message}</span>`; 
-  }
-};
-document.getElementById("btnClearIngest").onclick=()=>document.getElementById("extractorIngestArea").value="";
-
-// --- 3. MAP EDITOR (MIT ZOOM, AUSWAHL & LÖSCHEN) ---
-const mapCanvas=document.getElementById("mapCanvas");
-const mapCtx=mapCanvas.getContext("2d");
-
-function resizeMap(){
-  const wrap=mapCanvas.parentElement;
-  mapCanvas.width=wrap.clientWidth; mapCanvas.height=wrap.clientHeight;
-  drawMap();
-}
-function fitEditorImage(){
-  if(!studio.editor.image) return;
-  const wrap=mapCanvas.parentElement;
-  const sx=wrap.clientWidth/studio.editor.naturalW, sy=wrap.clientHeight/studio.editor.naturalH;
-  studio.editor.scale=Math.min(sx,sy)*0.95;
-  studio.editor.panX=(wrap.clientWidth-studio.editor.naturalW*studio.editor.scale)/2;
-  studio.editor.panY=(wrap.clientHeight-studio.editor.naturalH*studio.editor.scale)/2;
-}
-
-function drawMap(){
-  const wrap=mapCanvas.parentElement;
-  mapCtx.clearRect(0,0,wrap.clientWidth,wrap.clientHeight);
-  mapCtx.fillStyle="#05070c"; mapCtx.fillRect(0,0,wrap.clientWidth,wrap.clientHeight);
-  if(!studio.editor.image) return;
-
-  mapCtx.save();
-  mapCtx.translate(studio.editor.panX, studio.editor.panY);
-  mapCtx.scale(studio.editor.scale, studio.editor.scale);
-  mapCtx.drawImage(studio.editor.image, 0, 0);
-
-  // Zeichne alle Features
-  Object.values(studio.project.features).forEach(rec=>{
-    const f=rec.data; const g=f.geometry;
-    if(!g||!g.points) return;
-    const isSelected = (rec.id === studio.editor.selectedId);
-    
-    mapCtx.strokeStyle=isSelected ? "#00ff9d" : (f.type==="building"?"#ff2d78":"#00e5ff");
-    mapCtx.fillStyle=isSelected ? "rgba(0,255,157,0.35)" : "rgba(0,229,255,0.2)";
-    mapCtx.lineWidth=(isSelected ? 3 : 2)/studio.editor.scale;
-    
-    mapCtx.beginPath();
-    g.points.forEach((p,i)=>{
-      const px=p[0]*(studio.editor.naturalW/WORLD_W), py=p[1]*(studio.editor.naturalH/WORLD_H);
-      if(i===0) mapCtx.moveTo(px,py); else mapCtx.lineTo(px,py);
-    });
-    if(g.kind==="polygon"){ mapCtx.closePath(); mapCtx.fill(); }
-    mapCtx.stroke();
-  });
-
-  // Draft Linien
-  if(studio.editor.draft.length){
-    mapCtx.strokeStyle="#00ff9d"; mapCtx.fillStyle="rgba(0,255,157,0.3)";
-    mapCtx.lineWidth=2/studio.editor.scale;
-    mapCtx.beginPath();
-    studio.editor.draft.forEach((p,i)=>{ if(i===0)mapCtx.moveTo(p[0],p[1]); else mapCtx.lineTo(p[0],p[1]); });
-    mapCtx.stroke();
-  }
-  mapCtx.restore();
-}
-
-// Zoom Controls
-document.getElementById("edZoomIn").onclick=()=>{ studio.editor.scale*=1.2; drawMap(); };
-document.getElementById("edZoomOut").onclick=()=>{ studio.editor.scale*=0.8; drawMap(); };
-document.getElementById("edZoomFit").onclick=()=>{ fitEditorImage(); drawMap(); };
-
-// Pan & Zoom mit Mausrad
-mapCanvas.addEventListener("wheel", e=>{
-  if(!studio.editor.image) return;
-  e.preventDefault();
-  const rect=mapCanvas.getBoundingClientRect();
-  const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
-  const factor=e.deltaY<0?1.1:0.9;
-  studio.editor.scale*=factor;
-  drawMap();
-},{passive:false});
-
-let isDragging=false, lastX=0, lastY=0;
-mapCanvas.addEventListener("pointerdown", e=>{
-  if(!studio.editor.image) return;
-  const rect=mapCanvas.getBoundingClientRect();
-  const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
-  const px=(sx-studio.editor.panX)/studio.editor.scale;
-  const py=(sy-studio.editor.panY)/studio.editor.scale;
-
-  if(e.button===2 || !studio.editor.tool){
-    isDragging=true; lastX=sx; lastY=sy; return;
-  }
-
-  if(studio.editor.tool.kind==="point" || studio.editor.tool.type==="player"){
-    commitEditorDraft([[px,py]]);
-    return;
-  }
-  studio.editor.draft.push([px,py]);
-  drawMap();
-});
-
-mapCanvas.addEventListener("pointermove", e=>{
-  if(isDragging){
-    const rect=mapCanvas.getBoundingClientRect();
-    const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
-    studio.editor.panX+=(sx-lastX); studio.editor.panY+=(sy-lastY);
-    lastX=sx; lastY=sy; drawMap();
-  }
-});
-mapCanvas.addEventListener("pointerup", ()=>isDeserializing() );
-function isDeserializing(){ isDragging=false; }
-
-document.querySelectorAll(".tool-btn").forEach(btn=>{
-  btn.onclick=()=>{
-    document.querySelectorAll(".tool-btn").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    studio.editor.tool={type:btn.dataset.type, kind:btn.dataset.kind, mat:btn.dataset.mat};
-    studio.editor.draft=[];
-    setStatus("Editor-Werkzeug: "+btn.dataset.type);
-  };
-});
-
-document.getElementById("editorUndo").onclick=()=>{ studio.editor.draft.pop(); drawMap(); };
-document.getElementById("editorFinish").onclick=()=>{ if(studio.editor.draft.length>=2) commitEditorDraft(studio.editor.draft); };
-document.getElementById("editorCancel").onclick=()=>{ studio.editor.draft=[]; drawMap(); };
-
-function commitEditorDraft(ptsPx){
-  const worldPts=ptsPx.map(([px,py])=>[
-    Math.round(px*(WORLD_W/studio.editor.naturalW)),
-    Math.round(py*(WORLD_H/studio.editor.naturalH))
-  ]);
-  if(studio.editor.tool && studio.editor.tool.type==="player"){
-    studio.project.playerStart={x:worldPts[0][0], y:worldPts[0][1]};
-    studio.editor.draft=[]; persist(); refreshAll(); setStatus("Spielerstart erfolgreich gesetzt");
-    return;
-  }
-  window._pendingEdit={points:worldPts};
-  document.getElementById("inputFeatName").value=(studio.editor.tool?studio.editor.tool.type:"objekt")+"_"+Date.now();
-  document.getElementById("modalName").classList.add("show");
-}
-
-document.getElementById("mNameCancel").onclick=()=>document.getElementById("modalName").classList.remove("show");
-document.getElementById("mNameOk").onclick=()=>{
-  const name=document.getElementById("inputFeatName").value.trim()||"Objekt";
-  const id=name.toLowerCase().replace(/[^a-z0-9]+/g,"_")+"_"+Date.now();
-  const pending=window._pendingEdit;
-  const type=studio.editor.tool?studio.editor.tool.type:"building";
-  const kind=studio.editor.tool?studio.editor.tool.kind:"polygon";
-  const mat=studio.editor.tool?studio.editor.mat:"building";
-
-  studio.project.features[id]={
-    id, data:{
-      id, type, material:mat, name,
-      geometry:{kind, points:pending.points}
-    }, history:["map_editor"]
-  };
-  studio.editor.draft=[]; window._pendingEdit=null;
-  document.getElementById("modalName").classList.remove("show");
-  persist(); refreshAll(); drawMap(); setStatus("Element gespeichert: "+name);
-};
-
-function refreshEditorFeatureList(){
-  const list=document.getElementById("editorFeatList"); list.innerHTML="";
-  Object.keys(studio.project.features).forEach(id=>{
-    const rec=studio.project.features[id];
-    const row=document.createElement("div");
-    row.className="item-row"+(studio.editor.selectedId===id?" sel":"");
-    row.innerHTML=`<span><b>${rec.data.name||id}</b> (${rec.data.type})</span>`;
-    
-    const del=document.createElement("button");
-    del.className="del-btn"; del.textContent="✕";
-    del.onclick=(e)=>{
-      e.stopPropagation();
-      delete studio.project.features[id];
-      if(studio.editor.selectedId===id) studio.editor.selectedId=null;
-      persist(); refreshAll(); drawMap(); setStatus("Element gelöscht");
-    };
-    row.appendChild(del);
-    row.onclick=()=>{ studio.editor.selectedId=id; refreshEditorFeatureList(); drawMap(); };
-    list.appendChild(row);
-  });
-}
-
-// --- 4. WORLD BUILDER & VALIDATOR ---
-document.getElementById("btnRunValidator").onclick=()=>{
-  const feats=Object.values(studio.project.features);
-  const errs=[];
-  if(!feats.length) errs.push("Keine Features in der Welt vorhanden.");
-  if(!studio.project.playerStart && !feats.some(f=>f.data.type==="player")) errs.push("Kein Spielerstart (playerStart) definiert.");
-  
-  feats.forEach(rec=>{
-    const f=rec.data;
-    if(!f.geometry || !Array.isArray(f.geometry.points) || f.geometry.points.length<2){
-      errs.push(`Feature ${f.id}: Ungültige Geometrie.`);
-    }
-  });
-
-  const out=document.getElementById("validatorOutput");
-  if(errs.length){
-    out.innerHTML=`<span class="err">Validierungs-Fehler:\n`+errs.join("\n")+"</span>";
-    setStatus("Weltprüfung fehlgeschlagen");
-  } else {
-    out.innerHTML=`<span class="okmsg">✓ Weltmodell erfolgreich validiert!\n- Features: ${feats.length}\n- Spielerstart: (${studio.project.playerStart?.x || 'Auto'}, ${studio.project.playerStart?.y || 'Auto'})\n- Status: Bereit für Game Engine.</span>`;
-    setStatus("Weltprüfung bestanden");
-  }
-};
-
-// --- 5. ECHTE GAME ENGINE (GBA-GRAFIK, LINIEN & KOLLISIONEN) ---
-const gameCanvas=document.getElementById("gameCanvas");
-const gameCtx=gameCanvas.getContext("2d");
-
-function resizeGame(){
-  const wrap=gameCanvas.parentElement;
-  gameCanvas.width=wrap.clientWidth; gameCanvas.height=wrap.clientHeight;
-}
-
-function initEngineWorld(){
-  const p=studio.project;
-  if(p.playerStart) { 
-    studio.engine.player.x=p.playerStart.x; 
-    studio.engine.player.y=p.playerStart.y; 
-  }
-  rebuildEngineCollisions();
-  document.getElementById("engineInfo").innerHTML=`<b>${p.name}</b><br>${Object.keys(p.features).length} Objekte<br>${studio.engine.coll.length} Kollisionen`;
-}
-
-function pip(x,y,pts){
-  let ins=false;
-  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
-    const xi=pts[i][0],yi=pts[i][1],xj=pts[j][0],yj=pts[j][1];
-    if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/((yj-yi)||1e-12)+xi)) ins=!ins;
-  }
-  return ins;
-}
-
-function rebuildEngineCollisions(){
-  studio.engine.coll=[];
-  Object.values(studio.project.features).forEach(rec=>{
-    const f=rec.data; const g=f.geometry;
-    if(!g || g.kind!=="polygon" || !g.points || g.points.length<3) return;
-    // Gebäude und Vegetation blockieren standardmäßig
-    const isBlocking = f.type==="building" || f.type==="vegetation" || f.material==="building" || f.material==="trees";
-    if(isBlocking) studio.engine.coll.push(g.points);
-  });
-}
-
-function isBlocked(x,y){
-  if(x<0||y<0||x>WORLD_W||y>WORLD_H) return true;
-  for(const poly of studio.engine.coll){
-    if(pip(x,y,poly)) return true;
-  }
-  return false;
-}
-
-function buildWorldJson(){
-  const feats=Object.values(studio.project.features).map(r=>r.data);
-  if(!feats.some(f=>f.id==="terrain_base")){
-    feats.unshift({id:"terrain_base", type:"terrain", material:"grass", geometry:{kind:"polygon", points:[[0,0],[WORLD_W,0],[WORLD_W,WORLD_H],[0,WORLD_H]]}});
-  }
-  return {
-    schemaVersion:SCHEMA,
-    meta:{name:studio.project.name, location:studio.project.location},
-    world:{bounds:{x:0,y:0,w:WORLD_W,h:WORLD_H}},
-    materials:{
-      grass:{color:"#3d7a37",walkable:true},building:{color:"#5a5a6e",walkable:false},
-      street:{color:"#3d3d3d",walkable:true},path:{color:"#8a8a8a",walkable:true},trees:{color:"#1e3d1a",walkable:false}
-    },
-    features: feats,
-    playerStart: studio.project.playerStart || {x:5000, y:5000}
-  };
-}
-
-document.getElementById("enginePlayBtn").onclick=()=>{ 
-  studio.engine.playing=true; 
-  setStatus("GAME ENGINE: GBA Play Modus aktiv"); 
-};
-
-function renderGameFrame(){
-  const wrap=gameCanvas.parentElement;
-  const w=wrap.clientWidth, h=wrap.clientHeight;
-  gameCtx.imageSmoothingEnabled=false;
-  gameCtx.clearRect(0,0,w,h);
-  
-  // GBA Hintergrund (Gras Grün)
-  gameCtx.fillStyle="#88c070"; gameCtx.fillRect(0,0,w,h);
-
-  const world=buildWorldJson();
-  const pl=studio.engine.player;
-  const scale=Math.min(w/WORLD_W, h/WORLD_H)*3.5;
-  const W2S=(wx,wy)=>[w/2 + (wx-pl.x)*scale, h/2 + (wy-pl.y)*scale];
-
-  // Sortierung: Terrain -> Straßen/Wege -> Vegetation -> Gebäude
-  const order={terrain:0,field:0,path:1,street:1,vegetation:2,building:3,object:3};
-  const sortedFeats=(world.features||[]).slice().sort((a,b)=>(order[a.type]||3)-(order[b.type]||3));
-
-  sortedFeats.forEach(f=>{
-    const g=f.geometry; if(!g||!g.points) return;
-    const pts=g.points.map(pt=>W2S(pt[0],pt[1]));
-
-    if(g.kind==="polygon"){
-      gameCtx.beginPath();
-      pts.forEach((pt,i)=>{ if(i===0) gameCtx.moveTo(pt[0],pt[1]); else gameCtx.lineTo(pt[0],pt[1]); });
-      gameCtx.closePath();
-      gameCtx.fillStyle=f.type==="building"?"#2a4838":(f.type==="vegetation"?"#1a4030":"#5a7850");
-      gameCtx.fill();
-      gameCtx.strokeStyle="#081820"; gameCtx.lineWidth=1; gameCtx.stroke();
-    } else if(g.kind==="linestring"){
-      // Linienrendern für Straßen & Wege
-      gameCtx.beginPath();
-      pts.forEach((pt,i)=>{ if(i===0) gameCtx.moveTo(pt[0],pt[1]); else gameCtx.lineTo(pt[0],pt[1]); });
-      gameCtx.strokeStyle=f.type==="street"?"#3d3d3d":"#c8d8a0";
-      gameCtx.lineWidth=Math.max(2, 6*scale);
-      gameCtx.lineCap="round"; gameCtx.stroke();
-    }
-  });
-
-  // Spieler-Sprite (TZ auf Scooter oder Fallback)
-  const [px,py]=W2S(pl.x,pl.y);
-  const sprH=Math.max(32, pl.r*scale*2);
-  const sprW=studio.engine.sprite.naturalWidth ? sprH*(studio.engine.sprite.naturalWidth/studio.engine.sprite.naturalHeight):sprH;
-  
-  gameCtx.fillStyle="rgba(8,24,32,0.3)";
-  gameCtx.beginPath(); gameCtx.ellipse(px, py+sprH*0.2, sprW*0.3, sprH*0.1, 0,0,Math.PI*2); gameCtx.fill();
-
-  if(studio.engine.sprite.complete && studio.engine.sprite.naturalWidth){
-    gameCtx.drawImage(studio.engine.sprite, px-sprW/2, py-sprH*0.75, sprW, sprH);
-  } else {
-    gameCtx.fillStyle="#ff2d78"; gameCtx.fillRect(px-10, py-16, 20, 24);
-  }
-}
-
-function gameTick(){
-  if(studio.engine.playing){
-    let dx=0, dy=0;
-    const k=studio.engine.keys, t=studio.engine.touch;
-    if(k.w||k.arrowup||t.y<0) dy--;
-    if(k.s||k.arrowdown||t.y>0) dy++;
-    if(k.a||k.arrowleft||t.x<0) dx--;
-    if(k.d||k.arrowright||t.x>0) dx++;
-    
-    if(dx||dy){
-      const len=Math.hypot(dx,dy); dx/=len; dy/=len;
-      if(dx) studio.engine.player.facing=dx<0?-1:1;
-      const spd=400*(1/60);
-      const nx=studio.engine.player.x+dx*spd;
-      const ny=studio.engine.player.y+dy*spd;
-      
-      // Kollisionsprüfung mit Gebäuden
-      if(!isBlocked(nx, studio.engine.player.y)) studio.engine.player.x=nx;
-      if(!isBlocked(studio.engine.player.x, ny)) studio.engine.player.y=ny;
-    }
-  }
-  renderGameFrame();
-  requestAnimationFrame(gameTick);
-}
-requestAnimationFrame(gameTick);
-
-window.addEventListener("keydown",e=>{ studio.engine.keys[e.key.toLowerCase()]=true; });
-window.addEventListener("keyup",e=>{ studio.engine.keys[e.key.toLowerCase()]=false; });
-
-document.querySelectorAll(".pad button").forEach(btn=>{
-  const d=btn.dataset.dir;
-  btn.onpointerdown=e=>{ e.preventDefault(); if(d==="up")studio.engine.touch.y=-1; if(d==="down")studio.engine.touch.y=1; if(d==="left")studio.engine.touch.x=-1; if(d==="right")studio.engine.touch.x=1; };
-  btn.onpointerup=()=>{ studio.engine.touch.x=0; studio.engine.touch.y=0; };
-});
-
-// --- GLOBAL EXPORT ---
-document.getElementById("btnGlobalExport").onclick=()=>{
-  const world=buildWorldJson();
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([JSON.stringify(world,null,2)],{type:"application/json"}));
-  a.download="BW_WORLD.json"; a.click();
-  setStatus("BW_WORLD.json exportiert");
-};
-
-function refreshAll(){
-  refreshExtractorStages();
-  refreshEditorFeatureList();
-  const il=document.getElementById("projectImgList");
-  if(studio.project.images.length){
-    il.innerHTML=`<b>${studio.project.images[0].filename}</b> (${studio.project.images[0].pixel_width}x${studio.project.images[0].pixel_height} px)`;
-  } else {
-    il.textContent="Kein Luftbild geladen";
-  }
-}
-
-window.addEventListener("resize",()=>{ resizeMap(); resizeGame(); });
-if(!loadPersisted()) refreshAll();
-resizeMap(); resizeGame();
-
-})();
+const DEMO={image:{width:1000,height:1280},features:[
+{id:'street_main',category:'Straße',geometry:{type:'LineString',coordinates:[[690,0],[650,300],[600,700],[560,1000],[520,1280]]}},
+{id:'street_cross',category:'Straße',geometry:{type:'LineString',coordinates:[[0,660],[1000,620]]}},
+{id:'path_garden',category:'Gehweg',name:'Gartenweg',coordinates:[[250,880],[400,900],[560,920]]},
+{id:'b_west_1',type:'building',name:'Wohnhaus West',geometry:{type:'Polygon',coordinates:[[[160,400],[430,400],[430,600],[160,600]]]}},
+{id:'b_west_2',type:'building',name:'Großes Dach',geometry:{type:'Polygon',coordinates:[[[290,10],[560,10],[560,380],[290,380]]]}},
+{id:'b_east_1',type:'building',name:'Doppelhaus Ost',geometry:{type:'Polygon',coordinates:[[[780,700],[1000,700],[1000,950],[780,950]]]}},
+{id:'b_east_2',type:'building',bbox:[760,1050,230,200],name:'Reihenhaus Süd'},
+{id:'garden_1',type:'vegetation',name:'Vorgarten',geometry:{type:'Polygon',coordinates:[[[380,700],[580,700],[580,820],[380,820]]]}},
+{id:'forest_sw',type:'vegetation',name:'Wiese Südwest',geometry:{type:'Polygon',coordinates:[[[0,1000],[470,1000],[470,1280],[0,1280]]]}},
+{id:'tree_1',type:'tree',geometry:{type:'Point',coordinates:[500,1050]}},
+{id:'tree_2',type:'tree',geometry:{type:'Point',coordinates:[320,1120]}},
+{id:'park_1',type:'parking',name:'Stellplätze',geometry:{type:'Polygon',coordinates:[[[640,1020],[740,1020],[740,1250],[640,1250]]]}},
+{id:'tree_1',type:'tree',geometry:{type:'Point',coordinates:[90,120]}},
+{id:'bad_poly',type:'building',geometry:{type:'Polygon',coordinates:[[[50,50],[80,80]]]}}]};
+try{const s=JSON.parse(localStorage.getItem('bw_gba_v2')||'null');if(s&&s.raw){$('#ta').value=s.raw.length<400000?s.raw:'';if(s.mapImage)setMapImage(s.mapImage);if(load(s.raw,s))show('world')}else{renderNPCs();show('world')}}catch(e){}
 </script>
-</body>
-</html>
+<script type="module" src="./src/main.js"></script>
+</body></html>
